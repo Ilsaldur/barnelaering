@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { TopBar, Mascot, NumberLine, Confetti, StarRating, BigButton } from '../components/ui.jsx'
 import { useStars } from '../StarContext.jsx'
 import { sound } from '../sound.js'
 
 const QUESTIONS_PER_ROUND = 8
 
+// Brukes når Math kjøres uten config (gammel 3-nivå-meny).
 const LEVELS = {
-  lett: { label: 'Lett', emoji: '🐣', color: 'bg-emerald-500', max: 10, sub: 'Tall 1–10' },
-  middels: { label: 'Middels', emoji: '🐥', color: 'bg-amber-500', max: 20, sub: 'Tall 1–20' },
-  vanskelig: { label: 'Vanskelig', emoji: '🦅', color: 'bg-rose-500', max: 100, sub: '1–100 og gangetabell' },
+  lett: { label: 'Lett', emoji: '🐣', color: 'bg-emerald-500', sub: 'Tall 1–10', params: { ops: ['add', 'sub'], max: 10 } },
+  middels: { label: 'Middels', emoji: '🐥', color: 'bg-amber-500', sub: 'Tall 1–20', params: { ops: ['add', 'sub'], max: 20 } },
+  vanskelig: { label: 'Vanskelig', emoji: '🦅', color: 'bg-rose-500', sub: '1–100 og gangetabell', params: { ops: ['add', 'sub', 'mul'], max: 100, mulMax: 5 } },
 }
 
 const EMOJIS = ['🍎', '🎈', '⭐', '🍓', '🐠', '🌸', '🍪', '🚗']
@@ -20,61 +21,53 @@ function pick(arr) {
   return arr[randInt(0, arr.length - 1)]
 }
 
-// Lag en oppgave tilpasset valgt nivå.
-function makeProblem(level) {
-  const cfg = LEVELS[level]
-  // På vanskelig nivå dukker gangetabell opp av og til.
-  if (level === 'vanskelig' && Math.random() < 0.45) {
-    const a = randInt(1, 5)
-    const b = randInt(1, 5)
-    return {
-      type: 'mul',
-      a,
-      b,
-      answer: a * b,
-      text: `${a} × ${b}`,
-      visual: false,
-    }
-  }
-
-  const isAdd = Math.random() < 0.5
-  if (isAdd) {
-    let a = randInt(1, Math.floor(cfg.max / 2))
-    let b = randInt(1, cfg.max - a)
-    return {
-      type: 'add',
-      a,
-      b,
-      answer: a + b,
-      text: `${a} + ${b}`,
-      // Vis tellbare ting på lette/middels-oppgaver med små tall.
-      visual: a + b <= 20,
-    }
-  } else {
-    let a = randInt(2, cfg.max)
-    let b = randInt(1, a)
-    return {
-      type: 'sub',
-      a,
-      b,
-      answer: a - b,
-      text: `${a} − ${b}`,
-      visual: a <= 20,
-    }
+// Fyll ut standardverdier for et sett regne-parametre.
+function fullParams(p) {
+  return {
+    ops: p.ops || ['add', 'sub'],
+    max: p.max || 20,
+    mulMax: p.mulMax || 5,
+    mulFactors: p.mulFactors || null,
+    divMax: p.divMax || 10,
   }
 }
 
+// Lag ett regnestykke ut fra parametrene.
+function makeProblem(params) {
+  const op = pick(params.ops)
+
+  if (op === 'mul') {
+    const a = params.mulFactors ? pick(params.mulFactors) : randInt(1, params.mulMax)
+    const b = randInt(1, params.mulFactors ? 10 : params.mulMax)
+    return { type: 'mul', a, b, answer: a * b, text: `${a} × ${b}`, visual: false }
+  }
+  if (op === 'div') {
+    const b = randInt(2, params.divMax)
+    const ans = randInt(2, params.divMax)
+    const a = b * ans
+    return { type: 'div', a, b, answer: ans, text: `${a} ÷ ${b}`, visual: false }
+  }
+  if (op === 'add') {
+    const a = randInt(1, Math.max(1, Math.floor(params.max / 2)))
+    const b = randInt(1, Math.max(1, params.max - a))
+    return { type: 'add', a, b, answer: a + b, text: `${a} + ${b}`, visual: a + b <= 20 }
+  }
+  // sub
+  const a = randInt(2, params.max)
+  const b = randInt(1, a)
+  return { type: 'sub', a, b, answer: a - b, text: `${a} − ${b}`, visual: a <= 20 }
+}
+
 // Lag 4 svaralternativer der ett er riktig.
-function makeOptions(answer, max) {
+function makeOptions(answer) {
+  const ceil = Math.max(answer + 12, 25)
   const opts = new Set([answer])
   let guard = 0
   while (opts.size < 4 && guard < 50) {
     guard++
-    const delta = randInt(-4, 4)
-    const cand = answer + delta
-    if (cand >= 0 && cand <= max + 25) opts.add(cand)
+    const cand = answer + randInt(-5, 5)
+    if (cand >= 0 && cand <= ceil) opts.add(cand)
   }
-  // Fyll på hvis vi mangler noen.
   let n = 0
   while (opts.size < 4) opts.add(answer + ++n)
   return [...opts].sort(() => Math.random() - 0.5)
@@ -114,38 +107,52 @@ function VisualCount({ problem }) {
   return null
 }
 
-export default function MathActivity({ go }) {
+export default function MathActivity({ go, config }) {
   const { addStars } = useStars()
+  // Med config hopper vi over nivåmenyen og bruker gradens parametre direkte.
+  const configured = !!(config && config.ops)
+  const cfgParams = configured ? fullParams(config) : null
+  const title = config?.title ? `${config.title} ${config.emoji || '🔢'}`.trim() : 'Matte 🔢'
+
   const [level, setLevel] = useState(null)
-  const [stage, setStage] = useState('menu') // menu | play | done
-  const [problem, setProblem] = useState(null)
-  const [options, setOptions] = useState([])
+  const [stage, setStage] = useState(configured ? 'play' : 'menu') // menu | play | done
+  const [problem, setProblem] = useState(() => (configured ? withEmoji(makeProblem(cfgParams)) : null))
+  const [options, setOptions] = useState(() => (problem ? makeOptions(problem.answer) : []))
   const [qIndex, setQIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
-  const [picked, setPicked] = useState(null) // valgt svar
-  const [feedback, setFeedback] = useState(null) // 'right' | 'wrong'
+  const [picked, setPicked] = useState(null)
+  const [feedback, setFeedback] = useState(null)
   const [showNumberLine, setShowNumberLine] = useState(true)
   const [confetti, setConfetti] = useState(false)
 
-  function nextProblem(lvl) {
-    const p = makeProblem(lvl)
+  function withEmoji(p) {
     p._emoji = pick(EMOJIS)
+    return p
+  }
+
+  function activeParams() {
+    return configured ? cfgParams : fullParams(LEVELS[level].params)
+  }
+
+  function nextProblem(params) {
+    const p = withEmoji(makeProblem(params))
     setProblem(p)
-    setOptions(makeOptions(p.answer, LEVELS[lvl].max))
+    setOptions(makeOptions(p.answer))
     setPicked(null)
     setFeedback(null)
   }
 
+  // Brukes både for valgt nivå (legacy) og for "en gang til" (config).
   function start(lvl) {
-    setLevel(lvl)
+    if (lvl) setLevel(lvl)
     setQIndex(0)
     setCorrect(0)
     setStage('play')
-    nextProblem(lvl)
+    nextProblem(lvl ? fullParams(LEVELS[lvl].params) : activeParams())
   }
 
   function answer(opt) {
-    if (feedback) return // hindrer dobbeltklikk
+    if (feedback) return
     setPicked(opt)
     if (opt === problem.answer) {
       setFeedback('right')
@@ -158,18 +165,16 @@ export default function MathActivity({ go }) {
   }
 
   function next() {
-    const isLast = qIndex + 1 >= QUESTIONS_PER_ROUND
-    if (isLast) {
+    if (qIndex + 1 >= QUESTIONS_PER_ROUND) {
       finish()
     } else {
       setQIndex((i) => i + 1)
-      nextProblem(level)
+      nextProblem(activeParams())
     }
   }
 
   function finish() {
     setStage('done')
-    // Stjerner: 1 for å prøve, +1 for halvparten, +1 for nesten alt.
     let earned = 1
     if (correct >= QUESTIONS_PER_ROUND / 2) earned = 2
     if (correct >= QUESTIONS_PER_ROUND - 1) earned = 3
@@ -179,7 +184,7 @@ export default function MathActivity({ go }) {
     setTimeout(() => setConfetti(false), 2500)
   }
 
-  // ---- MENY: velg vanskelighetsnivå ----
+  // ---- MENY: velg vanskelighetsnivå (kun uten config) ----
   if (stage === 'menu') {
     return (
       <div className="animate-pop-in">
@@ -225,12 +230,18 @@ export default function MathActivity({ go }) {
             <StarRating earned={earned} />
           </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <BigButton color="bg-emerald-500" onClick={() => start(level)}>
+            <BigButton color="bg-emerald-500" onClick={() => start(configured ? null : level)}>
               🔁 En gang til
             </BigButton>
-            <BigButton color="bg-sky-500" onClick={() => setStage('menu')}>
-              📊 Bytt nivå
-            </BigButton>
+            {configured ? (
+              <BigButton color="bg-sky-500" onClick={() => go('home')}>
+                🏠 Tilbake
+              </BigButton>
+            ) : (
+              <BigButton color="bg-sky-500" onClick={() => setStage('menu')}>
+                📊 Bytt nivå
+              </BigButton>
+            )}
           </div>
         </div>
       </div>
@@ -238,13 +249,13 @@ export default function MathActivity({ go }) {
   }
 
   // ---- SPILL: selve quizen ----
-  const lineMax = problem.type === 'mul' ? 25 : Math.max(problem.a, problem.answer, 10)
+  const showLine = problem.type === 'add' || problem.type === 'sub'
+  const lineMax = Math.min(Math.max(problem.a, problem.answer, 10), 20)
   return (
     <div className="animate-pop-in">
       <Confetti show={confetti} />
-      <TopBar title="Matte 🔢" onHome={() => go('home')} />
+      <TopBar title={title} onHome={() => go('home')} />
 
-      {/* Framgang */}
       <div className="bg-white/80 rounded-full h-5 overflow-hidden mb-4 shadow-inner">
         <div
           className="bg-amber-400 h-full transition-all duration-300"
@@ -256,7 +267,6 @@ export default function MathActivity({ go }) {
       </p>
 
       <div className="bg-white/95 rounded-3xl p-5 md:p-8 shadow-xl">
-        {/* Visuell mengde med emojis */}
         {problem.visual && (
           <div className="mb-4">
             <VisualCount problem={problem} />
@@ -267,8 +277,7 @@ export default function MathActivity({ go }) {
           {problem.text} = ?
         </p>
 
-        {/* Tallinje som hjelpemiddel */}
-        {problem.type !== 'mul' && (
+        {showLine && (
           <div className="mt-2">
             <button
               onClick={() => {
@@ -282,7 +291,7 @@ export default function MathActivity({ go }) {
             {showNumberLine && (
               <NumberLine
                 from={0}
-                to={Math.min(lineMax, 20)}
+                to={lineMax}
                 highlight={[problem.answer].filter((n) => n <= 20)}
                 marker={problem.type === 'add' ? problem.a : undefined}
               />
@@ -290,7 +299,6 @@ export default function MathActivity({ go }) {
           </div>
         )}
 
-        {/* Svaralternativer – store knapper */}
         <div className="grid grid-cols-2 gap-3 md:gap-4 mt-4">
           {options.map((opt) => {
             const isPicked = picked === opt
@@ -316,7 +324,6 @@ export default function MathActivity({ go }) {
           })}
         </div>
 
-        {/* Tilbakemelding + maskot */}
         {feedback && (
           <div className="mt-5 flex flex-col items-center gap-3">
             <Mascot

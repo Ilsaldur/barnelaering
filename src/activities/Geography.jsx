@@ -20,9 +20,10 @@ function countriesFor(region) {
   return COUNTRIES
 }
 
-export default function Geography({ go }) {
+export default function Geography({ go, config }) {
   const { addStars } = useStars()
-  const [region, setRegion] = useState('norden')
+  const locked = !!config?.region // grad låser hvilket område som vises
+  const [region, setRegion] = useState(config?.region || 'norden')
   const [mode, setMode] = useState('explore') // explore | quiz | done
   const [selected, setSelected] = useState(null)
 
@@ -211,7 +212,7 @@ export default function Geography({ go }) {
   return (
     <div className="animate-pop-in">
       <TopBar title="Land og flagg 🌍" onHome={() => go('home')} />
-      <RegionPicker />
+      {!locked && <RegionPicker />}
 
       <div className="flex justify-center mb-4">
         <BigButton color="bg-rose-500" onClick={startQuiz}>

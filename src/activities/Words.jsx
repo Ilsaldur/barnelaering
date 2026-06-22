@@ -36,8 +36,10 @@ function shuffle(arr) {
   return [...arr].sort(() => Math.random() - 0.5)
 }
 
-export default function Words({ go }) {
+export default function Words({ go, config }) {
   const { addStars } = useStars()
+  // Yngre grader får bare korte ord (config.maxLen).
+  const pool = config?.maxLen ? WORDS.filter((w) => w.word.length <= config.maxLen) : WORDS
   const [stage, setStage] = useState('play') // play | done
   const [question, setQuestion] = useState(() => makeQuestion())
   const [qIndex, setQIndex] = useState(0)
@@ -47,8 +49,8 @@ export default function Words({ go }) {
   const [confetti, setConfetti] = useState(false)
 
   function makeQuestion() {
-    const target = WORDS[randInt(0, WORDS.length - 1)]
-    const wrong = shuffle(WORDS.filter((w) => w.word !== target.word)).slice(0, 3)
+    const target = pool[randInt(0, pool.length - 1)]
+    const wrong = shuffle(pool.filter((w) => w.word !== target.word)).slice(0, 3)
     return { target, options: shuffle([target, ...wrong]) }
   }
 
@@ -121,7 +123,7 @@ export default function Words({ go }) {
   return (
     <div className="animate-pop-in">
       <Confetti show={confetti} />
-      <TopBar title="Ord og bilder 🔤" onHome={() => go('home')} />
+      <TopBar title={config?.title ? `${config.title} ${config.emoji || '🔤'}` : 'Ord og bilder 🔤'} onHome={() => go('home')} />
       <div className="bg-white/80 rounded-full h-5 overflow-hidden mb-4 shadow-inner">
         <div
           className="bg-violet-500 h-full transition-all duration-300"

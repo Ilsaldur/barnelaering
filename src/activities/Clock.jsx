@@ -5,6 +5,14 @@ import { sound } from '../sound.js'
 
 const QUESTIONS_PER_ROUND = 6
 
+// Hvilke minutter quizen bruker, ut fra grad.
+const MIN_POOLS = {
+  whole: [0],
+  half: [0, 30],
+  quarter: [0, 15, 30, 45],
+  five: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
+}
+
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
@@ -137,8 +145,10 @@ function AnalogClock({ hour, minute, onChange, interactive = true, size = 280 })
   )
 }
 
-export default function Clock({ go }) {
+export default function Clock({ go, config }) {
   const { addStars } = useStars()
+  const minutePool = MIN_POOLS[config?.minutes] || MIN_POOLS.quarter
+  const learnTitle = config?.title ? `${config.title} 🕐` : 'Lær klokka 🕐'
   const [mode, setMode] = useState('learn') // learn | quiz | done
   const [hour, setHour] = useState(3)
   const [minute, setMinute] = useState(0)
@@ -154,14 +164,14 @@ export default function Clock({ go }) {
 
   function makeQuestion() {
     const h = randInt(1, 12)
-    const m = shuffle([0, 0, 15, 30, 30, 45])[0] // oftest hele og halve
+    const m = shuffle(minutePool)[0]
     const correctText = timeText(h, m)
     const opts = new Set([correctText])
     let guard = 0
-    while (opts.size < 4 && guard < 40) {
+    while (opts.size < 4 && guard < 60) {
       guard++
       const hh = randInt(1, 12)
-      const mm = shuffle([0, 15, 30, 45])[0]
+      const mm = shuffle(minutePool)[0]
       opts.add(timeText(hh, mm))
     }
     setTarget({ hour: h, minute: m, text: correctText })
@@ -294,7 +304,7 @@ export default function Clock({ go }) {
   // ---- LÆR: dra viserne ----
   return (
     <div className="animate-pop-in">
-      <TopBar title="Lær klokka 🕐" onHome={() => go('home')} />
+      <TopBar title={learnTitle} onHome={() => go('home')} />
       <div className="bg-white/95 rounded-3xl p-5 md:p-8 shadow-xl">
         <p className="text-center text-lg md:text-xl font-bold text-slate-500 mb-2">
           Dra <span className="text-pink-500">den lange</span> og{' '}

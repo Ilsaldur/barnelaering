@@ -18,22 +18,47 @@ npm run build
 npm run preview
 ```
 
-## Aktiviteter
+## Nivåer
 
-| Seksjon | Hva man lærer |
-|--------|----------------|
-| 🔢 **Matte** | Tre nivåer: Lett (1–10), Middels (1–20), Vanskelig (1–100 + gangetabell 1–5). Pluss/minus vises med emojis, tallinje som hjelpemiddel, quiz med poeng, stjerner og heiende maskot. |
-| 🌍 **Land og flagg** | Klikkbart "kart" med flagg → navn + hovedstad. Quiz: «Hvilket land har hovedstaden Oslo?». Start med Norden, utvid til Europa og hele verden. |
-| 🕐 **Klokka** | Lær å lese analog klokke ved å **dra viserne**. Quiz: «Hva er klokka?». |
-| 🔺 **Mønster og sortering** | Fullfør mønstre, og **dra** former fra minst til størst. |
-| 🔤 **Ord og bilder** | Koble bilde til riktig ord. |
-| 🏆 **Mine stjerner** | Belønningssystem: samle stjerner og lås opp klistremerker på tvers av alle aktiviteter. Lagres i nettleseren (localStorage). |
+Startskjermen er en **nivåvelger** – ett barn velger sin egen alder/klasse, og får
+en meny med aktiviteter tilpasset det nivået. Hele læreplanen ligger som data i
+`src/data/levels.js` (legg til/endre aktiviteter der – ingen ny kode trengs).
+
+| Nivå | Innhold (utvalg) |
+|------|------------------|
+| 🧸 **Barnehage** (4 år) | Telling 1–5, farger, former, første bokstav, stor/liten, ord og bilder |
+| ✏️ **1. klasse** (6 år) | Telling til 10, pluss/minus til 20, bokstaver og lyder, mønster, hele klokketimer |
+| 📐 **2. klasse** (7 år) | Pluss/minus til 100, gangetabell (2, 5, 10), hele/halve timer, motsetninger, Norden |
+| 🔬 **3. klasse** (8 år) | Gangetabell 1–10, deling, klokka til 5 min, Europa, mønster og logikk |
+| 🎓 **4. klasse** (9 år) | Gange og deling, brøk/halvparten, hele verden, klokka, lesing |
+
+### Aktivitetsmotorer
+
+Aktivitetene deler noen få gjenbrukbare «motorer» (`src/activities/engines.js`),
+som hver tilpasses per nivå via en `config`:
+
+- **`quiz`** – generisk flervalgsquiz drevet av data (telling, farger, former, bokstaver, brøk …).
+- **`math`** – regnestykker (`ops`, `max`, `mulFactors`, `divMax`), med tallinje og emoji-mengder.
+- **`clock`** – analog klokke; `minutes` velger hele/halve/kvarter/5-min.
+- **`geography`** – land og flagg, låst til `region` (Norden/Europa/verden).
+- **`words`** / **`patterns`** – ord-bilde-kobling og mønster/sortering.
+
+### 🗺️ Eventyrkart (bonus)
+
+En egen lekesone (`src/activities/AdventureMap.jsx`): barnet **drar opptjente stempler**
+(klistremerker) ut på et kart – eller trykker på et sted – for å låse opp små quiz.
+Hvert sted krever et visst antall stjerner, så kartet vokser etter hvert som man samler.
+
+### 🏆 Mine stjerner
+
+Belønningssystem: samle stjerner og lås opp klistremerker på tvers av alle nivåer.
+Lagres i nettleseren (localStorage).
 
 ## Teknisk
 
 - **Lyd** lages i nettleseren med Web Audio API (`src/sound.js`) – ingen lydfiler, fungerer uten internett.
 - **Belønning** håndteres med React Context + localStorage (`src/StarContext.jsx`).
-- **Navigasjon** mellom seksjoner er enkel skjerm-state i `src/App.jsx` (ingen ekstra router).
+- **Navigasjon** (hjem → nivå → aktivitet, + kart/stjerner) er enkel state i `src/App.jsx` (ingen ekstra router).
 - Alt er på norsk, med store, lesbare fonter og en positiv, oppmuntrende tone.
 
 ### Geografi-kart
@@ -44,6 +69,9 @@ i `src/activities/Geography.jsx`.
 
 ### Utvide
 
+- Nye aktiviteter eller nivåer: rediger `src/data/levels.js` (mest er ren data).
+- Nye quiz-temaer: lag en `bank` i `levels.js` og bruk `engine: 'quiz'`.
+- Flere steder/oppgaver på kartet: `NODES` i `src/activities/AdventureMap.jsx`.
 - Flere land: legg til i `src/data/countries.js`.
 - Flere ord: legg til i `WORDS`-lista i `src/activities/Words.jsx`.
 - Flere klistremerker: legg til i `STICKERS` i `src/StarContext.jsx`.
