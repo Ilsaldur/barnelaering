@@ -47,3 +47,28 @@ i `src/activities/Geography.jsx`.
 - Flere land: legg til i `src/data/countries.js`.
 - Flere ord: legg til i `WORDS`-lista i `src/activities/Words.jsx`.
 - Flere klistremerker: legg til i `STICKERS` i `src/StarContext.jsx`.
+
+## Veikart: lagring og kontoer
+
+I dag lagres fremgang (stjerner + klistremerker) i nettleseren med `localStorage`
+(`src/StarContext.jsx`). Det holder for **ett barn på ett nettbrett**, og overlever
+omstart. Eneste reelle risiko: Safari sletter data for vanlige nettsider etter ca.
+7 dager uten besøk – legg appen til på **hjem-skjermen** for å unngå det.
+
+**Når trenger vi kontoer?** Først når ett av disse blir aktuelt:
+
+- **Flere barn** deler appen og hver trenger sine egne stjerner → profiler.
+- **Flere enheter** (nettbrett + PC) der fremgangen skal følge barnet → sky-synk.
+- Fremgang skal overleve at nettleseren tømmes / barnet bytter enhet.
+
+**Anbefalt rekkefølge (lettest først – ikke bygg før behovet er reelt):**
+
+1. **Lokale profiler:** flere navngitte profiler lagret lokalt. Barnet trykker på
+   navn/avatar – ingen innlogging. Løser «flere barn» umiddelbart.
+2. **Sky-synk:** legg på en enkel synk-nøkkel eller forelder-innlogging *over*
+   profilene når fremgang skal følge med på tvers av enheter.
+
+**Viktig prinsipp:** et barn skal aldri logge inn med e-post/passord. Riktig form er
+**forelder-konto** (den voksne logger inn én gang) med **lette barneprofiler** under
+(barnet trykker bare på navnet sitt). Husk personvern/GDPR for barns data hvis
+fremgang havner i skyen.
