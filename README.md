@@ -1,4 +1,4 @@
-# 🦊 Lær og Lek!
+# 🦊 Selmas Skole
 
 En fargerik, interaktiv læringsnettside for barn (ca. 7 år) – på norsk.
 Bygget med **React + Vite + Tailwind CSS**. Lekent design, store knapper,

@@ -22,7 +22,7 @@ export default function Home({ go }) {
       <header className="text-center mb-6">
         <div className="text-7xl md:text-8xl animate-bouncey mb-2">🦊</div>
         <h1 className="text-white font-extrabold text-4xl md:text-6xl drop-shadow-lg">
-          Lær og Lek!
+          Selmas Skole
         </h1>
         <p className="text-white/95 font-bold text-xl md:text-2xl mt-2">
           Velg hva du vil gjøre 👇
