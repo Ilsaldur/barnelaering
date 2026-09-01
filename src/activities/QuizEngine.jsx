@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { TopBar, Mascot, Confetti, StarRating, BigButton } from '../components/ui.jsx'
 import { useStars } from '../StarContext.jsx'
 import { sound } from '../sound.js'
+import { speech } from '../speech.js'
 
 // Generisk flervalgsquiz drevet av data (config.bank).
 // Hvert element: { show?, count?, caption?, prompt?, answer, options? }
@@ -12,9 +13,6 @@ import { sound } from '../sound.js'
 //  - answer:  riktig svar (tekst)
 //  - options: faste svaralternativer. Mangler de, lages de fra de andre svarene.
 
-function randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min
-}
 function shuffle(arr) {
   return [...arr].sort(() => Math.random() - 0.5)
 }
@@ -29,6 +27,15 @@ function buildOptions(item, bank) {
 // Trekk `rounds` oppgaver. Unngå å gjenta samme rett etter hverandre.
 function makeRound(config) {
   const rounds = config.rounds || 6
+
+  // Generert innhold (f.eks. telling): lag nye oppgaver hver gang.
+  if (config.generator) {
+    return Array.from({ length: rounds }, () => {
+      const it = config.generator()
+      return { ...it, _options: it.options ? shuffle(it.options) : buildOptions(it, []) }
+    })
+  }
+
   const bank = config.bank || []
   let pool = shuffle(bank)
   const items = []
@@ -47,7 +54,14 @@ function starsFor(correct, total) {
   return earned
 }
 
-export default function QuizEngine({ go, config }) {
+// Teksten som leses opp for en oppgave.
+function spokenText(item, config) {
+  const parts = [item.prompt || config.prompt || '']
+  if (item.caption) parts.push(item.caption)
+  return parts.filter(Boolean).join('. ')
+}
+
+export default function QuizEngine({ go, config, onNextLevel }) {
   const { addStars } = useStars()
   const [items, setItems] = useState(() => makeRound(config))
   const [stage, setStage] = useState('play') // play | done
@@ -56,11 +70,27 @@ export default function QuizEngine({ go, config }) {
   const [picked, setPicked] = useState(null)
   const [feedback, setFeedback] = useState(null)
   const [confetti, setConfetti] = useState(false)
+  const [talking, setTalking] = useState(speech.enabled())
 
   const total = items.length
   const item = items[qIndex]
   const baseColor = config.color || 'bg-indigo-500'
   const title = `${config.title || 'Quiz'} ${config.emoji || ''}`.trim()
+
+  // Les opp spørsmålet automatisk (hvis opplesing er på).
+  useEffect(() => {
+    if (stage !== 'play' || !item) return
+    speech.speak(spokenText(item, config))
+    return () => speech.stop()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qIndex, stage])
+
+  function toggleTalking() {
+    const next = !talking
+    setTalking(next)
+    speech.setEnabled(next)
+    if (next && item) speech.speak(spokenText(item, config), { force: true })
+  }
 
   function answer(opt) {
     if (feedback) return
@@ -69,9 +99,11 @@ export default function QuizEngine({ go, config }) {
       setFeedback('right')
       setCorrect((c) => c + 1)
       sound.correct()
+      speech.speak('Riktig!')
     } else {
       setFeedback('wrong')
       sound.wrong()
+      speech.speak(`Det riktige er ${item.answer}`)
     }
   }
 
@@ -80,7 +112,7 @@ export default function QuizEngine({ go, config }) {
       setStage('done')
       setConfetti(true)
       sound.fanfare()
-      addStars(starsFor(correct, total))
+      addStars(starsFor(correct, total), { correct, total })
       setTimeout(() => setConfetti(false), 2500)
     } else {
       setQIndex((i) => i + 1)
@@ -99,6 +131,7 @@ export default function QuizEngine({ go, config }) {
   }
 
   if (stage === 'done') {
+    const earned = starsFor(correct, total)
     return (
       <div className="animate-pop-in">
         <Confetti show={confetti} />
@@ -106,9 +139,15 @@ export default function QuizEngine({ go, config }) {
         <div className="bg-white/90 rounded-3xl p-6 text-center shadow-xl mt-4">
           <Mascot mood="cheer" message={`Du fikk ${correct} av ${total} riktig!`} />
           <div className="my-6">
-            <StarRating earned={starsFor(correct, total)} />
+            <StarRating earned={earned} />
           </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {/* Adaptivt: full pott → foreslå neste nivå med en gang */}
+            {onNextLevel && earned === 3 && (
+              <BigButton color="bg-fuchsia-500" onClick={onNextLevel}>
+                🚀 Neste nivå!
+              </BigButton>
+            )}
             <BigButton color="bg-emerald-500" onClick={restart}>
               🔁 En gang til
             </BigButton>
@@ -134,9 +173,23 @@ export default function QuizEngine({ go, config }) {
       </div>
 
       <div className="bg-white/95 rounded-3xl p-5 md:p-8 shadow-xl">
-        <p className="text-center text-xl md:text-2xl font-bold text-slate-600 mb-2">
-          {item.prompt || config.prompt}
-        </p>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <p className="text-center text-xl md:text-2xl font-bold text-slate-600">
+            {item.prompt || config.prompt}
+          </p>
+          {speech.supported() && (
+            <button
+              onClick={() => {
+                sound.click()
+                speech.speak(spokenText(item, config), { force: true })
+              }}
+              className="text-2xl md:text-3xl hover:scale-110 transition-transform"
+              title="Les høyt"
+            >
+              🔊
+            </button>
+          )}
+        </div>
 
         {/* Visuell del: én stor emoji, eller mange (telling), eller bokstav. */}
         {item.show &&
@@ -191,6 +244,17 @@ export default function QuizEngine({ go, config }) {
             <BigButton color="bg-amber-500" onClick={next}>
               {qIndex + 1 >= total ? '🏁 Se resultat' : '➡️ Neste'}
             </BigButton>
+          </div>
+        )}
+
+        {speech.supported() && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={toggleTalking}
+              className="text-sm font-bold text-slate-400 hover:text-slate-600"
+            >
+              {talking ? '🔊 Opplesing på' : '🔇 Opplesing av'}
+            </button>
           </div>
         )}
       </div>

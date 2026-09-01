@@ -27,6 +27,21 @@ const WORDS = [
   { emoji: '🐔', word: 'HØNE' },
   { emoji: '🌙', word: 'MÅNE' },
   { emoji: '🐝', word: 'BIE' },
+  { emoji: '🦁', word: 'LØVE' },
+  { emoji: '🐧', word: 'PINGVIN' },
+  { emoji: '🦋', word: 'SOMMERFUGL' },
+  { emoji: '🍦', word: 'IS' },
+  { emoji: '🧦', word: 'SOKK' },
+  { emoji: '👒', word: 'HATT' },
+  { emoji: '🚂', word: 'TOG' },
+  { emoji: '✈️', word: 'FLY' },
+  { emoji: '🐍', word: 'SLANGE' },
+  { emoji: '🐘', word: 'ELEFANT' },
+  { emoji: '🍇', word: 'DRUER' },
+  { emoji: '🐷', word: 'GRIS' },
+  { emoji: '🎈', word: 'BALLONG' },
+  { emoji: '🌊', word: 'BØLGE' },
+  { emoji: '🔑', word: 'NØKKEL' },
 ]
 
 function randInt(min, max) {
@@ -75,7 +90,7 @@ export default function Words({ go, config }) {
       if (correct >= QUESTIONS_PER_ROUND - 1) earned = 3
       setConfetti(true)
       sound.fanfare()
-      addStars(earned)
+      addStars(earned, { correct, total: QUESTIONS_PER_ROUND })
       setTimeout(() => setConfetti(false), 2500)
     } else {
       setQIndex((i) => i + 1)

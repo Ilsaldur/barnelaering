@@ -180,7 +180,7 @@ export default function MathActivity({ go, config }) {
     if (correct >= QUESTIONS_PER_ROUND - 1) earned = 3
     setConfetti(true)
     sound.fanfare()
-    addStars(earned)
+    addStars(earned, { correct, total: QUESTIONS_PER_ROUND })
     setTimeout(() => setConfetti(false), 2500)
   }
 

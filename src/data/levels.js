@@ -12,7 +12,7 @@
 
 // ---- Gjenbrukbare quiz-banker ----------------------------------------------
 
-const COUNTING_TO_5 = {
+export const COUNTING_TO_5 = {
   title: 'Tell tingene',
   emoji: '🍎',
   color: 'bg-rose-500',
@@ -32,7 +32,7 @@ const COUNTING_TO_5 = {
   ],
 }
 
-const COUNTING_TO_10 = {
+export const COUNTING_TO_10 = {
   title: 'Tell til 10',
   emoji: '🔟',
   color: 'bg-rose-500',
@@ -51,7 +51,7 @@ const COUNTING_TO_10 = {
   ],
 }
 
-const COLORS = {
+export const COLORS = {
   title: 'Farger',
   emoji: '🎨',
   color: 'bg-fuchsia-500',
@@ -66,10 +66,14 @@ const COLORS = {
     { show: '🟪', answer: 'Lilla' },
     { show: '⬛', answer: 'Svart' },
     { show: '🟫', answer: 'Brun' },
+    { show: '⬜', answer: 'Hvit' },
+    { show: '🩷', answer: 'Rosa' },
+    { show: '🩵', answer: 'Lyseblå' },
+    { show: '🩶', answer: 'Grå' },
   ],
 }
 
-const SHAPES = {
+export const SHAPES = {
   title: 'Former',
   emoji: '🔷',
   color: 'bg-amber-500',
@@ -85,7 +89,7 @@ const SHAPES = {
   ],
 }
 
-const FIRST_LETTER = {
+export const FIRST_LETTER = {
   title: 'Første bokstav',
   emoji: '🔤',
   color: 'bg-emerald-500',
@@ -102,10 +106,18 @@ const FIRST_LETTER = {
     { show: '🌙', caption: 'MÅNE', answer: 'M' },
     { show: '🐝', caption: 'BIE', answer: 'B' },
     { show: '🚗', caption: 'BIL', answer: 'B' },
+    { show: '🦁', caption: 'LØVE', answer: 'L' },
+    { show: '🍌', caption: 'BANAN', answer: 'B' },
+    { show: '🐸', caption: 'FROSK', answer: 'F' },
+    { show: '🌈', caption: 'REGNBUE', answer: 'R' },
+    { show: '⚽', caption: 'BALL', answer: 'B' },
+    { show: '🧦', caption: 'SOKK', answer: 'S' },
+    { show: '🎸', caption: 'GITAR', answer: 'G' },
+    { show: '🐧', caption: 'PINGVIN', answer: 'P' },
   ],
 }
 
-const LETTER_SOUNDS = {
+export const LETTER_SOUNDS = {
   title: 'Bokstaver og lyder',
   emoji: '🅰️',
   color: 'bg-emerald-500',
@@ -123,7 +135,7 @@ const LETTER_SOUNDS = {
   ],
 }
 
-const OPPOSITES = {
+export const OPPOSITES = {
   title: 'Motsatt',
   emoji: '↔️',
   color: 'bg-cyan-500',
@@ -137,10 +149,17 @@ const OPPOSITES = {
     { show: '😀', caption: 'GLAD', options: ['Lei seg', 'Sint', 'Trøtt', 'Sulten'], answer: 'Lei seg' },
     { show: '🚀', caption: 'RASK', options: ['Sakte', 'Høy', 'Lett', 'Ny'], answer: 'Sakte' },
     { show: '🌳', caption: 'HØY', options: ['Lav', 'Bred', 'Tung', 'Kald'], answer: 'Lav' },
+    { show: '🚪', caption: 'ÅPEN', options: ['Lukket', 'Stor', 'Ny', 'Tom'], answer: 'Lukket' },
+    { show: '🥛', caption: 'FULL', options: ['Tom', 'Kald', 'Stor', 'Tung'], answer: 'Tom' },
+    { show: '🧽', caption: 'REN', options: ['Skitten', 'Våt', 'Myk', 'Kald'], answer: 'Skitten' },
+    { show: '👶', caption: 'UNG', options: ['Gammel', 'Liten', 'Rask', 'Glad'], answer: 'Gammel' },
+    { show: '🪨', caption: 'HARD', options: ['Myk', 'Tung', 'Kald', 'Stor'], answer: 'Myk' },
+    { show: '💧', caption: 'VÅT', options: ['Tørr', 'Kald', 'Ren', 'Blå'], answer: 'Tørr' },
+    { show: '➡️', caption: 'HØYRE', options: ['Venstre', 'Opp', 'Ned', 'Inn'], answer: 'Venstre' },
   ],
 }
 
-const FRACTIONS = {
+export const FRACTIONS = {
   title: 'Brøk og halvparten',
   emoji: '🍕',
   color: 'bg-orange-500',
@@ -154,6 +173,13 @@ const FRACTIONS = {
     { prompt: '½ av en pizza med 6 stykker er …', options: ['3', '2', '6', '4'], answer: '3' },
     { prompt: 'Hva er dobbelt av 6?', options: ['12', '8', '3', '10'], answer: '12' },
     { prompt: 'Hva er ¼ av 12?', options: ['3', '4', '6', '2'], answer: '3' },
+    { prompt: 'Hva er halvparten av 20?', options: ['10', '5', '40', '15'], answer: '10' },
+    { prompt: 'Hva er dobbelt av 8?', options: ['16', '10', '4', '12'], answer: '16' },
+    { prompt: 'Hvor mange tredjedeler er én hel?', options: ['3', '2', '4', '6'], answer: '3' },
+    { prompt: 'Hva er halvparten av 6?', options: ['3', '2', '12', '4'], answer: '3' },
+    { prompt: '¾ av en kake med 4 stykker er …', options: ['3', '4', '2', '1'], answer: '3' },
+    { prompt: 'Hva er dobbelt av 10?', options: ['20', '12', '5', '15'], answer: '20' },
+    { prompt: 'Hva er ½ av 14?', options: ['7', '6', '28', '9'], answer: '7' },
   ],
 }
 
