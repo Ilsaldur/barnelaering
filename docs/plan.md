@@ -5,8 +5,8 @@
 | Etappe | Status | Sist oppdatert |
 |--------|--------|----------------|
 | 0 – Les og planlegg | Ferdig. Svar fått: bygg på lokal `main`, Supabase-prosjektet `selmas-skole` er riktig, Vitest er greit, startverden i stedet for alder, nytt trinn som nivåer i stigene, stjerneregel for alle motorer, gammel framgang kan nullstilles. Se `docs/etappe0.md`. | 2026-11-05 |
-| 1 – Rett opp det som er galt i dag | Kode ferdig, bygg og tester grønne. Venter på OK fra Jon. Endringslogg og prøveliste i `docs/etappe1.md`. | 2026-11-05 |
-| 2 – Innlogging, profiler og synkronisering | Ikke startet | |
+| 1 – Rett opp det som er galt i dag | Ferdig og pushet. Endringslogg og prøveliste i `docs/etappe1.md`. | 2026-11-05 |
+| 2 – Innlogging, profiler og synkronisering | Kode ferdig. Jon må sette Vercel-nøkler, stenge registrering og legge inn e-poster i Supabase (se `docs/etappe2.md`). | 2026-11-05 |
 | 3 – Mattestigen | Ikke startet | |
 | 4 – Dagens økt, kart og belønning | Ikke startet | |
 | 5 – Lesestigen | Ikke startet | |

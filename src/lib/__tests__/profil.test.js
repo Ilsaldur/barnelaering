@@ -1,0 +1,97 @@
+import { describe, it, expect } from 'vitest'
+import { emptyData, normalize, mergeData, weakestTypes, minutesLastWeek, todayKey } from '../profil.js'
+
+describe('normalize', () => {
+  it('fyller ut en gammel profil uten å miste stjerner', () => {
+    const d = normalize({ stars: 7, best: { pluss: { 0: 3 } }, log: [{ t: 1, stars: 2 }] })
+    expect(d.stars).toBe(7)
+    expect(d.best.pluss[0]).toBe(3)
+    expect(d.fag.matte.nivaa).toBe(null)
+    expect(d.settings.oppdragPerDag).toBe(2)
+    expect(d.v).toBe(2)
+  })
+})
+
+describe('mergeData', () => {
+  it('høyeste stjerner, mestring celle for celle, logg som union', () => {
+    const a = normalize({ stars: 5, best: { pluss: { 0: 2 } }, log: [{ t: 1, stars: 1, topic: 'pluss', level: 0 }] })
+    const b = normalize({ stars: 3, best: { pluss: { 0: 3, 1: 1 } }, log: [{ t: 2, stars: 2, topic: 'pluss', level: 1 }, { t: 1, stars: 1, topic: 'pluss', level: 0 }] })
+    const m = mergeData(a, b)
+    expect(m.stars).toBe(5)
+    expect(m.best.pluss).toEqual({ 0: 3, 1: 1 })
+    expect(m.log).toHaveLength(2)
+  })
+
+  it('nivå følger den sist oppdaterte, beste stjerner per nivå tar maks', () => {
+    const a = emptyData()
+    a.fag.matte = { ...a.fag.matte, nivaa: 12, updatedAt: 100, beste: { 7: 3 } }
+    const b = emptyData()
+    b.fag.matte = { ...b.fag.matte, nivaa: 9, updatedAt: 200, beste: { 7: 1, 8: 2 } }
+    const m = mergeData(a, b)
+    expect(m.fag.matte.nivaa).toBe(9)
+    expect(m.fag.matte.beste).toEqual({ 7: 3, 8: 2 })
+  })
+
+  it('innstillinger: sist oppdatert vinner', () => {
+    const a = emptyData()
+    a.settings = { ...a.settings, autoSpeak: true, updatedAt: 50 }
+    const b = emptyData()
+    b.settings = { ...b.settings, autoSpeak: false, updatedAt: 60 }
+    expect(mergeData(a, b).settings.autoSpeak).toBe(false)
+    expect(mergeData(b, a).settings.autoSpeak).toBe(false)
+  })
+
+  it('dager, kort og eventyr som union', () => {
+    const a = emptyData()
+    a.dager = { '2026-11-05': { oppdrag: 1 } }
+    a.kort = ['dyr-elg']
+    a.eventyr = { skog: 2 }
+    const b = emptyData()
+    b.dager = { '2026-11-05': { oppdrag: 2 }, '2026-11-04': { oppdrag: 2 } }
+    b.kort = ['dyr-rev']
+    const m = mergeData(a, b)
+    expect(m.dager['2026-11-05'].oppdrag).toBe(2)
+    expect(m.dager['2026-11-04'].oppdrag).toBe(2)
+    expect(m.kort.sort()).toEqual(['dyr-elg', 'dyr-rev'])
+    expect(m.eventyr.skog).toBe(2)
+  })
+
+  it('kort i bokser: nyeste vinner', () => {
+    const a = emptyData()
+    a.fag.matte.bokser = { 'gange:6x7': { boks: 1, t: 10 } }
+    const b = emptyData()
+    b.fag.matte.bokser = { 'gange:6x7': { boks: 3, t: 20 } }
+    expect(mergeData(a, b).fag.matte.bokser['gange:6x7'].boks).toBe(3)
+  })
+})
+
+describe('statistikk', () => {
+  it('svakeste oppgavetyper teller bare første forsøk uten hjelp', () => {
+    const now = Date.now()
+    const attempts = [
+      { t: now - 1000, fag: 'matte', type: 'minus_tierovergang', ok: false, forste: true, hjelp: false },
+      { t: now - 2000, fag: 'matte', type: 'minus_tierovergang', ok: false, forste: true, hjelp: false },
+      { t: now - 3000, fag: 'matte', type: 'minus_tierovergang', ok: true, forste: false, hjelp: false },
+      { t: now - 4000, fag: 'matte', type: 'pluss', ok: true, forste: true, hjelp: false },
+      { t: now - 5000, fag: 'matte', type: 'pluss', ok: false, forste: true, hjelp: true },
+      { t: now - 6000, fag: 'matte', type: 'gange', ok: false, forste: true, hjelp: false },
+    ]
+    const w = weakestTypes(attempts, { now })
+    expect(w[0].type).toBe('minus_tierovergang')
+    expect(w[0].pct).toBe(100)
+    expect(w.find((x) => x.type === 'pluss')).toBeUndefined()
+    expect(w.find((x) => x.type === 'gange')).toBeUndefined() // bare ett forsøk
+  })
+  it('minutter siste uke', () => {
+    const now = Date.now()
+    const log = [
+      { t: now - 1000, ms: 120000 },
+      { t: now - 2000, ms: 60000 },
+      { t: now - 10 * 24 * 3600 * 1000, ms: 600000 },
+    ]
+    expect(minutesLastWeek(log, now)).toBe(3)
+  })
+  it('todayKey', () => {
+    expect(todayKey(new Date(2026, 10, 5))).toBe('2026-11-05')
+  })
+})

@@ -1,19 +1,19 @@
 import { useState } from 'react'
-import { Mascot, BigButton } from '../components/ui.jsx'
+import { Mascot } from '../components/ui.jsx'
 import { useStars, GUEST_PROFILE } from '../StarContext.jsx'
 import { supabase } from '../lib/supabase.js'
 import { sound } from '../sound.js'
 
-// Startskjerm: "Hvem skal spille?" – barnet velger sin profil.
-// Forelder kan logge inn (Supabase) for å få profiler som synkes mellom enheter.
+// Startskjerm: «Hvem skal spille?» – barnet velger sin profil.
+// Den voksne logger inn med e-postlenke. Registrering er stengt: bare
+// e-postadresser som finnes som brukere i Supabase, får lenke.
 
-const AVATARS = ['🦊', '🐰', '🐱', '🦄', '🐸', '🐼', '🦁', '🐙', '🦖', '🐧']
+const AVATARS = ['🦊', '🐰', '🐱', '🦄', '🐸', '🐼', '🦁', '🐙', '🦖', '🐧', '🐨', '🦉']
 
-function LoginForm({ onDone }) {
-  const [mode, setMode] = useState('inn') // inn | ny
+function LoginForm({ onCancel }) {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
+  const [sent, setSent] = useState(false)
   const [msg, setMsg] = useState(null)
 
   async function submit(e) {
@@ -21,58 +21,55 @@ function LoginForm({ onDone }) {
     if (!supabase) return
     setBusy(true)
     setMsg(null)
-    if (mode === 'inn') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setMsg('Kunne ikke logge inn: ' + error.message)
-      else onDone()
-    } else {
-      const { data, error } = await supabase.auth.signUp({ email, password })
-      if (error) setMsg('Kunne ikke lage konto: ' + error.message)
-      else if (data.session) onDone()
-      else setMsg('Konto laget! Sjekk e-posten din og klikk på bekreftelseslenken, og logg så inn her.')
-    }
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { shouldCreateUser: false, emailRedirectTo: window.location.origin },
+    })
     setBusy(false)
+    if (error) {
+      setMsg(
+        /not allowed|signups|Signups not allowed/i.test(error.message)
+          ? 'Denne e-postadressen har ikke tilgang.'
+          : 'Kunne ikke sende lenke: ' + error.message,
+      )
+    } else setSent(true)
+  }
+
+  if (sent) {
+    return (
+      <div className="bg-white/95 rounded-3xl p-5 shadow-xl max-w-md mx-auto mt-4 text-center">
+        <p className="text-5xl mb-2">📬</p>
+        <h2 className="text-xl font-extrabold text-slate-700 mb-2">Sjekk e-posten din</h2>
+        <p className="text-slate-600 font-semibold">
+          Vi har sendt en innloggingslenke til <span className="font-extrabold">{email}</span>. Åpne den på denne enheten, så er du inne.
+          Enheten forblir innlogget etterpå.
+        </p>
+        <button onClick={onCancel} className="mt-4 text-sm font-bold text-slate-400 hover:text-slate-600">
+          Lukk
+        </button>
+      </div>
+    )
   }
 
   return (
     <form onSubmit={submit} className="bg-white/95 rounded-3xl p-5 shadow-xl max-w-md mx-auto mt-4">
-      <h2 className="text-xl font-extrabold text-slate-700 text-center mb-3">
-        {mode === 'inn' ? '👨‍👩‍👧 Logg inn (for voksne)' : '👨‍👩‍👧 Lag familiekonto'}
-      </h2>
+      <h2 className="text-xl font-extrabold text-slate-700 text-center mb-1">👨‍👩‍👧 Logg inn (for voksne)</h2>
+      <p className="text-center text-sm text-slate-500 font-semibold mb-3">Du får en lenke på e-post. Ingen passord.</p>
       <input
         type="email"
         required
+        autoComplete="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="E-post"
-        className="w-full rounded-2xl border-2 border-slate-200 px-4 py-3 text-lg mb-2 focus:border-sky-400 outline-none"
-      />
-      <input
-        type="password"
-        required
-        minLength={6}
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Passord (minst 6 tegn)"
         className="w-full rounded-2xl border-2 border-slate-200 px-4 py-3 text-lg mb-3 focus:border-sky-400 outline-none"
       />
       {msg && <p className="text-sm font-bold text-rose-500 text-center mb-2">{msg}</p>}
-      <button
-        type="submit"
-        disabled={busy}
-        className="kid-btn bg-sky-500 text-white w-full py-3 text-xl font-extrabold disabled:opacity-50"
-      >
-        {busy ? '⏳ Vent litt …' : mode === 'inn' ? 'Logg inn' : 'Lag konto'}
+      <button type="submit" disabled={busy} className="kid-btn bg-sky-500 text-white w-full py-3 text-xl font-extrabold disabled:opacity-50">
+        {busy ? '⏳ Sender …' : 'Send innloggingslenke'}
       </button>
-      <button
-        type="button"
-        onClick={() => {
-          setMode(mode === 'inn' ? 'ny' : 'inn')
-          setMsg(null)
-        }}
-        className="w-full text-center text-sm font-bold text-slate-400 hover:text-slate-600 mt-3"
-      >
-        {mode === 'inn' ? 'Har du ikke konto? Lag en her' : 'Har du konto? Logg inn her'}
+      <button type="button" onClick={onCancel} className="w-full text-center text-sm font-bold text-slate-400 hover:text-slate-600 mt-3">
+        Avbryt
       </button>
     </form>
   )
@@ -85,11 +82,12 @@ function NewChildForm({ onCreate, onCancel }) {
 
   return (
     <div className="bg-white/95 rounded-3xl p-5 shadow-xl max-w-md mx-auto mt-4">
-      <h2 className="text-xl font-extrabold text-slate-700 text-center mb-3">Ny spiller 🎉</h2>
+      <h2 className="text-xl font-extrabold text-slate-700 text-center mb-1">Ny spiller 🎉</h2>
+      <p className="text-center text-sm text-slate-500 font-semibold mb-3">Bare et kallenavn og en figur. Ingenting annet lagres om barnet.</p>
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="Navn"
+        placeholder="Kallenavn"
         maxLength={20}
         className="w-full rounded-2xl border-2 border-slate-200 px-4 py-3 text-lg mb-3 focus:border-sky-400 outline-none"
       />
@@ -101,9 +99,7 @@ function NewChildForm({ onCreate, onCancel }) {
               sound.click()
               setEmoji(a)
             }}
-            className={`text-3xl md:text-4xl p-2 rounded-2xl transition-transform ${
-              emoji === a ? 'bg-amber-200 scale-110 shadow' : 'bg-slate-100 hover:scale-105'
-            }`}
+            className={`text-3xl md:text-4xl p-2 rounded-2xl transition-transform ${emoji === a ? 'bg-amber-200 scale-110 shadow' : 'bg-slate-100 hover:scale-105'}`}
           >
             {a}
           </button>
@@ -130,7 +126,7 @@ function NewChildForm({ onCreate, onCancel }) {
 }
 
 export default function Family({ onPicked }) {
-  const { session, authReady, childProfiles, selectProfile, addChild } = useStars()
+  const { session, authReady, childProfiles, selectProfile, addChild, onLine } = useStars()
   const [showLogin, setShowLogin] = useState(false)
   const [showNewChild, setShowNewChild] = useState(false)
 
@@ -144,17 +140,13 @@ export default function Family({ onPicked }) {
     <div className="animate-pop-in">
       <header className="text-center mb-6 mt-4">
         <div className="text-7xl md:text-8xl animate-bouncey mb-2">🦊</div>
-        <h1 className="text-white font-extrabold text-4xl md:text-6xl drop-shadow-lg">Selmas Skole</h1>
+        <h1 className="text-white font-extrabold text-4xl md:text-6xl drop-shadow-lg">Selmas skole</h1>
         <p className="text-white/95 font-bold text-2xl md:text-3xl mt-3">Hvem skal spille? 👇</p>
       </header>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5 max-w-2xl mx-auto">
         {childProfiles.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => pick({ id: c.id, name: c.name, emoji: c.emoji })}
-            className="kid-btn bg-white/95 text-slate-700 p-5 md:p-7 flex flex-col items-center gap-2 hover:scale-105"
-          >
+          <button key={c.id} onClick={() => pick({ id: c.id, name: c.name, emoji: c.emoji })} className="kid-btn bg-white/95 text-slate-700 p-5 md:p-7 flex flex-col items-center gap-2 hover:scale-105">
             <span className="text-6xl md:text-7xl">{c.emoji}</span>
             <span className="text-xl md:text-2xl font-extrabold">{c.name}</span>
           </button>
@@ -173,13 +165,13 @@ export default function Family({ onPicked }) {
           </button>
         )}
 
-        <button
-          onClick={() => pick(GUEST_PROFILE)}
-          className="kid-btn bg-amber-400 text-white p-5 md:p-7 flex flex-col items-center gap-2 hover:scale-105"
-        >
-          <span className="text-6xl md:text-7xl">{GUEST_PROFILE.emoji}</span>
-          <span className="text-xl md:text-2xl font-extrabold">Bare spill!</span>
-        </button>
+        {(!session || childProfiles.length === 0) && (
+          <button onClick={() => pick(GUEST_PROFILE)} className="kid-btn bg-amber-400 text-white p-5 md:p-7 flex flex-col items-center gap-2 hover:scale-105">
+            <span className="text-6xl md:text-7xl">{GUEST_PROFILE.emoji}</span>
+            <span className="text-xl md:text-2xl font-extrabold">Bare spill!</span>
+            <span className="text-sm font-bold opacity-90">lagres bare her</span>
+          </button>
+        )}
       </div>
 
       {showNewChild && (
@@ -196,7 +188,7 @@ export default function Family({ onPicked }) {
       {supabase && authReady && !session && (
         <div className="mt-6 text-center">
           {showLogin ? (
-            <LoginForm onDone={() => setShowLogin(false)} />
+            <LoginForm onCancel={() => setShowLogin(false)} />
           ) : (
             <button
               onClick={() => {
@@ -205,7 +197,7 @@ export default function Family({ onPicked }) {
               }}
               className="text-white/90 font-bold underline text-lg"
             >
-              👨‍👩‍👧 For voksne: Logg inn for å lagre på flere enheter
+              👨‍👩‍👧 For voksne: logg inn for å bruke appen på flere enheter
             </button>
           )}
         </div>
@@ -214,6 +206,7 @@ export default function Family({ onPicked }) {
       {session && (
         <p className="text-center text-white/80 font-semibold mt-6 text-sm">
           Innlogget som {session.user.email}
+          {!onLine && ' · 📴 uten nett – fremgangen synkes når nettet er tilbake'}
         </p>
       )}
 

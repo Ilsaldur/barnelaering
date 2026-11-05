@@ -8,6 +8,7 @@ const AUTO_KEY = 'barnelaering_tale_auto_v1'
 
 let voices = []
 let provider = null
+const listeners = new Set()
 
 function refreshVoices() {
   if (typeof window === 'undefined' || !window.speechSynthesis) return
@@ -61,12 +62,20 @@ export const speech = {
   },
 
   setAuto(on) {
+    const before = this.autoEnabled()
     try {
       localStorage.setItem(AUTO_KEY, on ? 'på' : 'av')
     } catch {
       /* ignorer */
     }
     if (!on) this.stop()
+    if (before !== !!on) for (const fn of listeners) fn(!!on)
+  },
+
+  // Få beskjed når automatisk opplesing slås av eller på (lagres i profilen).
+  onAutoChange(fn) {
+    listeners.add(fn)
+    return () => listeners.delete(fn)
   },
 
   // Les opp tekst. Den eneste veien til stemmen for hele appen.

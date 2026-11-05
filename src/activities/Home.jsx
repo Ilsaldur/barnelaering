@@ -5,7 +5,7 @@ import { sound } from '../sound.js'
 
 // Startskjerm: velg tema. Hvert tema har sin egen nivåstige.
 export default function Home({ topics, onPick, onRewards, onGarden, onParents, onSwitchProfile, onEventyr }) {
-  const { stars, unlocked, profile, log, best } = useStars()
+  const { stars, unlocked, profile, log, best, onLine, session } = useStars()
 
   // Adaptivt: foreslå å fortsette der man slapp, på anbefalt nivå.
   const suggestion = continueSuggestion(log, best)
@@ -23,7 +23,14 @@ export default function Home({ topics, onPick, onRewards, onGarden, onParents, o
           <span className="text-2xl">{profile?.emoji || '🦊'}</span>
           {profile?.name || 'Spiller'}
         </button>
-        <StarCounter />
+        <div className="flex items-center gap-2">
+          {session && !onLine && (
+            <span className="bg-white/90 rounded-full px-3 py-2 text-sm font-bold text-slate-500 shadow" title="Uten nett – fremgangen lagres her og synkes senere">
+              📴
+            </span>
+          )}
+          <StarCounter />
+        </div>
       </div>
 
       <header className="text-center mb-6">

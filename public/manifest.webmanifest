@@ -1,0 +1,17 @@
+{
+  "name": "Selmas skole",
+  "short_name": "Selmas skole",
+  "description": "Lær og lek med reven: matte, lesing, klokke og geografi.",
+  "lang": "nb",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#38bdf8",
+  "theme_color": "#38bdf8",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
