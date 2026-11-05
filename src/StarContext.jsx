@@ -26,7 +26,7 @@ export const STICKERS = [
   { id: 'dragon', emoji: '🐉', name: 'Dragen', need: 55 },
 ]
 
-const EMPTY_DATA = { stars: 0, spent: 0, best: {}, garden: [], log: [] }
+const EMPTY_DATA = { stars: 0, spent: 0, best: {}, garden: [], log: [], eventyr: {} }
 
 function dataKey(profileId) {
   return `barnelaering_data_${profileId}_v1`
@@ -77,6 +77,7 @@ function loadData(profileId) {
   data.best = data.best || {}
   data.garden = data.garden || []
   data.log = data.log || []
+  data.eventyr = data.eventyr || {}
   if (profileId === GUEST_PROFILE.id) migrateLegacyInto(data)
   return data
 }
@@ -112,6 +113,10 @@ function mergeData(a, b) {
     })
     .sort((x, y) => x.t - y.t)
     .slice(-500)
+  out.eventyr = {}
+  for (const src of [a.eventyr || {}, b.eventyr || {}]) {
+    for (const [id, val] of Object.entries(src)) out.eventyr[id] = Math.max(out.eventyr[id] || 0, val)
+  }
   return out
 }
 
@@ -271,8 +276,9 @@ export function StarProvider({ children }) {
     activeLevelRef.current = meta
   }, [])
 
-  // n = stjerner tjent. extra = { correct, total } fra runden (for statistikk).
-  const addStars = useCallback((n = 1, extra = null) => {
+  // n = stjerner tjent (kan være 0). extra = { correct, total } fra runden.
+  // Runden logges alltid, også uten stjerner, så statistikken blir riktig.
+  const addStars = useCallback((n = 0, extra = null) => {
     const meta = activeLevelRef.current
     setData((d) => {
       const nd = { ...d, stars: d.stars + n }
@@ -290,6 +296,24 @@ export function StarProvider({ children }) {
       }
       nd.log = [...d.log, entry].slice(-500)
       return nd
+    })
+    if (n > 0) {
+      setJustEarned(n)
+      sound.star()
+      setTimeout(() => setJustEarned(0), 1200)
+    }
+  }, [])
+
+  // Eventyrkartet: et sted gir stjerner bare én gang, og huskes i profilen.
+  const completeEventyr = useCallback((placeId, n) => {
+    setData((d) => {
+      if (d.eventyr?.[placeId]) return d
+      return {
+        ...d,
+        stars: d.stars + n,
+        eventyr: { ...(d.eventyr || {}), [placeId]: n },
+        log: [...d.log, { t: Date.now(), stars: n, eventyr: placeId }].slice(-500),
+      }
     })
     setJustEarned(n)
     sound.star()
@@ -336,6 +360,9 @@ export function StarProvider({ children }) {
         best: data.best,
         log: data.log,
         setActiveLevel,
+        // Eventyrkartet
+        eventyr: data.eventyr || {},
+        completeEventyr,
         // Hagen
         garden: data.garden,
         balance: data.stars - data.spent,

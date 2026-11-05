@@ -18,63 +18,65 @@ npm run build
 npm run preview
 ```
 
-## Nivåer
+## Slik er appen bygd
 
-Startskjermen er en **nivåvelger** – ett barn velger sin egen alder/klasse, og får
-en meny med aktiviteter tilpasset det nivået. Hele læreplanen ligger som data i
-`src/data/levels.js` (legg til/endre aktiviteter der – ingen ny kode trengs).
+Forsiden er «Hvem skal spille?» (profiler), deretter velger barnet et **tema**
+med en **nivåstige** (`src/data/topics.js`). Alt innhold er data:
 
-| Nivå | Innhold (utvalg) |
-|------|------------------|
-| 🧸 **Barnehage** (4 år) | Telling 1–5, farger, former, første bokstav, stor/liten, ord og bilder |
-| ✏️ **1. klasse** (6 år) | Telling til 10, pluss/minus til 20, bokstaver og lyder, mønster, hele klokketimer |
-| 📐 **2. klasse** (7 år) | Pluss/minus til 100, gangetabell (2, 5, 10), hele/halve timer, motsetninger, Norden |
-| 🔬 **3. klasse** (8 år) | Gangetabell 1–10, deling, klokka til 5 min, Europa, mønster og logikk |
-| 🎓 **4. klasse** (9 år) | Gange og deling, brøk/halvparten, hele verden, klokka, lesing |
+- `src/data/topics.js` – temaer og nivåer (telling, pluss/minus, gange, klokke, ord …)
+- `src/data/levels.js` – quiz-banker (farger, former, bokstaver, motsetninger, brøk)
+- `src/data/ord.js` – ordlista til «Ord og bilder»
+- `src/data/eventyr.js` – stedene på Eventyrkartet
+- `src/data/countries.js` – land, flagg og hovedsteder
+
+### Regler som gjelder overalt
+
+- En runde er åtte oppgaver, uten gjentakelser (`src/lib/round.js`).
+- Stjerner etter resultat: 0–3 riktige gir ingen, 4–5 gir én, 6–7 gir to, 8 gir tre
+  (`src/lib/scoring.js`). Konfetti bare fra to stjerner.
+- Feilsvar ligner ekte feil: ti for mye/lite, nabotabellen i gange, én for mye/lite
+  i telling (`src/lib/distractors.js`). Aldri negative tall.
+- Tallinja og tellebildene ligger bak en «Hjelp»-knapp og viser aldri fasit.
+- Opplesing går gjennom én funksjon, `speech.speak()` i `src/speech.js`. Egne
+  lydopptak kan kobles på med `speech.setProvider(fn)`.
+- Voksensiden og nullstilling ligger bak en voksensperre (hold inne tre sekunder
+  og skriv årstallet), `src/components/AdultGate.jsx`.
 
 ### Aktivitetsmotorer
 
 Aktivitetene deler noen få gjenbrukbare «motorer» (`src/activities/engines.js`),
 som hver tilpasses per nivå via en `config`:
 
-- **`quiz`** – generisk flervalgsquiz drevet av data (telling, farger, former, bokstaver, brøk …).
-- **`math`** – regnestykker (`ops`, `max`, `mulFactors`, `divMax`), med tallinje og emoji-mengder.
+- **`quiz`** – flervalgsquiz drevet av data (telling, farger, former, bokstaver, brøk …).
+  Svar kan vises som bilder (`pictureOptions`, `optionPictures`) og leses opp (`readOptions`).
+- **`math`** – regnestykker (`ops`, `max`, `mulFactors`, `divMax`), med hjelp bak knapp.
 - **`clock`** – analog klokke; `minutes` velger hele/halve/kvarter/5-min.
 - **`geography`** – land og flagg, låst til `region` (Norden/Europa/verden).
 - **`words`** / **`patterns`** – ord-bilde-kobling og mønster/sortering.
 
-### 🗺️ Eventyrkart (bonus)
+### 🗺️ Eventyrkart
 
-En egen lekesone (`src/activities/AdventureMap.jsx`): barnet **drar opptjente stempler**
-(klistremerker) ut på et kart – eller trykker på et sted – for å låse opp små quiz.
-Hvert sted krever et visst antall stjerner, så kartet vokser etter hvert som man samler.
+Fem steder (`src/activities/AdventureMap.jsx`). Et sted gir stjerner én gang, og
+bare når alle svarene er riktige. Fullførte steder huskes i profilen.
 
-### 🏆 Mine stjerner
+### Tester
 
-Belønningssystem: samle stjerner og lås opp klistremerker på tvers av alle nivåer.
-Lagres i nettleseren (localStorage).
+```bash
+npm test
+```
+
+Enhetstester for oppgavegeneratorer, feilsvar, stjerneregler og klokkespråk, pluss
+en røyktest som rendrer alle skjermer og nivåer (`src/**/__tests__/`).
 
 ## Teknisk
 
-- **Lyd** lages i nettleseren med Web Audio API (`src/sound.js`) – ingen lydfiler, fungerer uten internett.
-- **Belønning** håndteres med React Context + localStorage (`src/StarContext.jsx`).
-- **Navigasjon** (hjem → nivå → aktivitet, + kart/stjerner) er enkel state i `src/App.jsx` (ingen ekstra router).
-- Alt er på norsk, med store, lesbare fonter og en positiv, oppmuntrende tone.
+- **Lyd** lages i nettleseren med Web Audio API (`src/sound.js`) – ingen lydfiler.
+- **Opplesing** med Web Speech API (`src/speech.js`), norsk stemme når den finnes.
+- **Profiler og fremgang** håndteres med React Context + localStorage, og synkes til
+  Supabase når en voksen er logget inn (`src/StarContext.jsx`).
+- **Navigasjon** er enkel state i `src/App.jsx` (ingen ekstra router).
 
-### Geografi-kart
-
-Geografi-seksjonen bruker et klikkbart rutenett med flagg for å være 100 % offline-vennlig.
-Ønsker du et ekte geografisk kart kan du bytte inn `react-simple-maps`
-i `src/activities/Geography.jsx`.
-
-### Utvide
-
-- Nye aktiviteter eller nivåer: rediger `src/data/levels.js` (mest er ren data).
-- Nye quiz-temaer: lag en `bank` i `levels.js` og bruk `engine: 'quiz'`.
-- Flere steder/oppgaver på kartet: `NODES` i `src/activities/AdventureMap.jsx`.
-- Flere land: legg til i `src/data/countries.js`.
-- Flere ord: legg til i `WORDS`-lista i `src/activities/Words.jsx`.
-- Flere klistremerker: legg til i `STICKERS` i `src/StarContext.jsx`.
+Planen for videre arbeid ligger i `docs/plan.md`.
 
 ## Veikart: lagring og kontoer
 

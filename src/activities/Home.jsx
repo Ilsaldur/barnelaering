@@ -68,7 +68,7 @@ export default function Home({ topics, onPick, onRewards, onGarden, onParents, o
         ))}
       </div>
 
-      {/* Eventyret (samlekategori) – kan skjules via flagg i App.jsx */}
+      {/* Eventyrkartet */}
       {onEventyr && (
         <div className="mt-4">
           <button
@@ -80,8 +80,8 @@ export default function Home({ topics, onPick, onRewards, onGarden, onParents, o
           >
             <span className="text-5xl md:text-6xl">🗺️</span>
             <span className="text-left">
-              <span className="block text-2xl md:text-3xl font-extrabold">Eventyret</span>
-              <span className="block text-base md:text-lg font-semibold opacity-95">Reis gjennom alle kategoriene!</span>
+              <span className="block text-2xl md:text-3xl font-extrabold">Eventyrkartet</span>
+              <span className="block text-base md:text-lg font-semibold opacity-95">Bruk stjernene og reis fra sted til sted!</span>
             </span>
           </button>
         </div>

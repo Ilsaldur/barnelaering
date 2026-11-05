@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import { StarProvider, useStars } from './StarContext.jsx'
 import { TOPICS, topicById } from './data/topics.js'
-import { stageByKey, resolveActivity } from './data/campaign.js'
 import { ENGINES } from './activities/engines.js'
 import Home from './activities/Home.jsx'
 import TopicLadder from './activities/TopicLadder.jsx'
-import Campaign from './activities/Campaign.jsx'
+import AdventureMap from './activities/AdventureMap.jsx'
 import Rewards from './activities/Rewards.jsx'
 import Garden from './activities/Garden.jsx'
 import Parents from './activities/Parents.jsx'
@@ -19,10 +18,6 @@ const GARDEN_BG = 'from-sky-400 via-emerald-300 to-green-400'
 const PARENTS_BG = 'from-slate-500 via-slate-400 to-sky-400'
 const EVENTYR_BG = 'from-cyan-400 via-sky-400 to-emerald-300'
 
-// Eventyrkartet er satt på vent: koden beholdes, men skjules fra forsiden.
-// Sett til true for å vise det igjen.
-const SHOW_EVENTYR = false
-
 function AppInner() {
   // Enkel navigasjon uten router.
   const [nav, setNav] = useState({ view: 'home' })
@@ -32,10 +27,6 @@ function AppInner() {
   const openTopic = (topicId) => setNav({ view: 'topic', topicId })
   const openLevel = (topicId, levelIndex) => setNav({ view: 'level', topicId, levelIndex })
   const backToTopic = () => setNav({ view: 'topic', topicId: nav.topicId })
-
-  // Eventyr-baner (skjult): åpne aktivitet, "tilbake" går til eventyrkartet.
-  const openStage = (key) => setNav({ view: 'stage', stageKey: key })
-  const backToEventyr = () => setNav({ view: 'eventyr' })
 
   // Fortell profilen hvilket nivå som spilles nå (for logg, mestring og
   // adaptivitet). Nullstilles når man går ut av nivået.
@@ -83,17 +74,7 @@ function AppInner() {
     )
   } else if (nav.view === 'eventyr') {
     bg = EVENTYR_BG
-    content = <Campaign go={goHome} onOpenStage={openStage} />
-  } else if (nav.view === 'stage') {
-    bg = EVENTYR_BG
-    const stage = stageByKey(nav.stageKey)
-    const stageActivity = stage ? resolveActivity(stage.stage) : null
-    const Engine = stageActivity ? ENGINES[stageActivity.engine] : null
-    content = Engine ? (
-      <Engine go={backToEventyr} config={stageActivity.config} />
-    ) : (
-      <div className="text-white font-bold p-8 text-center">Ukjent bane 🤔</div>
-    )
+    content = <AdventureMap go={goHome} />
   } else if (nav.view === 'rewards') {
     bg = REWARDS_BG
     content = <Rewards go={goHome} />
@@ -112,7 +93,7 @@ function AppInner() {
         onGarden={() => setNav({ view: 'garden' })}
         onParents={() => setNav({ view: 'parents' })}
         onSwitchProfile={signOutProfile}
-        onEventyr={SHOW_EVENTYR ? () => setNav({ view: 'eventyr' }) : undefined}
+        onEventyr={() => setNav({ view: 'eventyr' })}
       />
     )
   }

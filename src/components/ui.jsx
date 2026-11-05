@@ -115,32 +115,53 @@ export function Confetti({ show }) {
   )
 }
 
-// En enkel tallinje som hjelpemiddel i matte.
-export function NumberLine({ from = 0, to = 10, highlight = [], marker = null }) {
+// Tallinje som hjelpemiddel i matte. Markerer ALDRI fasit: haren står på
+// startpunktet, og barnet trykker på tall for å hoppe selv. Antall hopp vises.
+export function NumberLine({ from = 0, to = 20, start = null }) {
+  const [pos, setPos] = useState(start)
+  useEffect(() => setPos(start), [start, from, to])
   const nums = []
   for (let n = from; n <= to; n++) nums.push(n)
+  const hops = pos != null && start != null ? pos - start : null
+  const lo = Math.min(pos ?? start ?? from, start ?? from)
+  const hi = Math.max(pos ?? start ?? from, start ?? from)
   return (
-    <div className="w-full overflow-x-auto py-3">
-      <div className="flex items-end gap-1 min-w-max px-2">
-        {nums.map((n) => {
-          const isHi = highlight.includes(n)
-          const isMarker = marker === n
-          return (
-            <div key={n} className="flex flex-col items-center w-9 md:w-11">
-              {isMarker && <div className="text-2xl animate-bouncey">🐰</div>}
-              <div
-                className={`w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center font-bold text-lg md:text-xl transition-all ${
-                  isHi
-                    ? 'bg-amber-400 text-white scale-110 shadow-lg'
-                    : 'bg-white text-slate-600'
-                }`}
-              >
-                {n}
+    <div className="w-full py-2">
+      <div className="w-full overflow-x-auto">
+        <div className="flex items-end gap-1 min-w-max px-2 py-1">
+          {nums.map((n) => {
+            const isPos = pos === n
+            const isStart = start === n
+            const onPath = start != null && pos != null && n > lo && n < hi
+            return (
+              <div key={n} className="flex flex-col items-center w-9 md:w-11">
+                <div className="h-8 text-2xl leading-none">{isPos ? <span className="animate-bouncey inline-block">🐰</span> : ''}</div>
+                <button
+                  type="button"
+                  onClick={() => setPos(n)}
+                  className={`w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center font-bold text-lg md:text-xl transition-all ${
+                    isPos
+                      ? 'bg-sky-500 text-white scale-110 shadow-lg'
+                      : isStart
+                        ? 'bg-sky-200 text-sky-800'
+                        : onPath
+                          ? 'bg-sky-100 text-slate-600'
+                          : 'bg-white text-slate-600'
+                  }`}
+                >
+                  {n}
+                </button>
               </div>
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
+      {hops != null && hops !== 0 && (
+        <p className="text-center text-sky-700 font-bold mt-1">
+          {Math.abs(hops)} hopp {hops > 0 ? 'fram' : 'tilbake'} fra {start}
+        </p>
+      )}
+      {hops === 0 && <p className="text-center text-slate-400 font-bold mt-1">Trykk på et tall for å hoppe!</p>}
     </div>
   )
 }

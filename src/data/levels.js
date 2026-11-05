@@ -1,14 +1,18 @@
-// Læreplan: barnehage + 1.–4. klasse (norsk barneskole).
-// Hver "level" har en liste aktiviteter. Hver aktivitet peker på en motor
-// (engine) i src/activities/engines.js, med en `config` som tilpasser innholdet.
+// Quiz-banker (data) som nivåstigene i src/data/topics.js bruker.
+// Hver bank kjøres av motoren 'quiz' (src/activities/QuizEngine.jsx).
 //
-// Motorer:
+// Motorer i appen:
 //  - 'quiz'      generisk flervalgsquiz (config.bank eller config.options per spørsmål)
 //  - 'math'      regnestykker (config: ops, max, mulMax, mulFactors, divMax)
 //  - 'clock'     analog klokke (config: minutes = 'whole'|'half'|'quarter'|'five')
 //  - 'words'     ord og bilder (config: maxLen for å begrense til korte ord)
 //  - 'patterns'  mønster og sortering
 //  - 'geography' land og flagg (config: region = 'norden'|'europa'|'verden')
+
+// Valg for de som ikke leser ennå:
+//  - pictureOptions: true   svaralternativene vises som bildet til svaret
+//  - optionPictures: {...}  oppslag svar → emoji på knappen
+//  - readOptions: true      alternativene leses opp sammen med spørsmålet
 
 // ---- Gjenbrukbare quiz-banker ----------------------------------------------
 
@@ -17,7 +21,8 @@ export const COUNTING_TO_5 = {
   emoji: '🍎',
   color: 'bg-rose-500',
   prompt: 'Hvor mange er det?',
-  rounds: 6,
+  rounds: 8,
+  readOptions: true,
   bank: [
     { show: '🍎', count: 1, answer: '1' },
     { show: '🎈', count: 2, answer: '2' },
@@ -37,7 +42,8 @@ export const COUNTING_TO_10 = {
   emoji: '🔟',
   color: 'bg-rose-500',
   prompt: 'Hvor mange er det?',
-  rounds: 7,
+  rounds: 8,
+  readOptions: true,
   bank: [
     { show: '🍎', count: 4, answer: '4' },
     { show: '🎈', count: 6, answer: '6' },
@@ -56,7 +62,9 @@ export const COLORS = {
   emoji: '🎨',
   color: 'bg-fuchsia-500',
   prompt: 'Hvilken farge er dette?',
-  rounds: 6,
+  rounds: 8,
+  pictureOptions: true,
+  readOptions: true,
   bank: [
     { show: '🟥', answer: 'Rød' },
     { show: '🟦', answer: 'Blå' },
@@ -78,7 +86,9 @@ export const SHAPES = {
   emoji: '🔷',
   color: 'bg-amber-500',
   prompt: 'Hvilken form er dette?',
-  rounds: 6,
+  rounds: 8,
+  pictureOptions: true,
+  readOptions: true,
   bank: [
     { show: '⚫', answer: 'Sirkel' },
     { show: '🔺', answer: 'Trekant' },
@@ -86,6 +96,8 @@ export const SHAPES = {
     { show: '⭐', answer: 'Stjerne' },
     { show: '❤️', answer: 'Hjerte' },
     { show: '🔶', answer: 'Rombe' },
+    { show: '🌙', answer: 'Halvmåne' },
+    { show: '🥚', answer: 'Oval' },
   ],
 }
 
@@ -94,7 +106,8 @@ export const FIRST_LETTER = {
   emoji: '🔤',
   color: 'bg-emerald-500',
   prompt: 'Hvilken bokstav begynner ordet på?',
-  rounds: 6,
+  rounds: 8,
+  readOptions: true,
   bank: [
     { show: '🐶', caption: 'HUND', answer: 'H' },
     { show: '🐱', caption: 'KATT', answer: 'K' },
@@ -122,7 +135,12 @@ export const LETTER_SOUNDS = {
   emoji: '🅰️',
   color: 'bg-emerald-500',
   prompt: 'Hvilket ord begynner med denne bokstaven?',
-  rounds: 6,
+  rounds: 8,
+  readOptions: true,
+  optionPictures: {
+    SOL: '🌞', MÅNE: '🌙', TRE: '🌳', BIL: '🚗', HUND: '🐶', KATT: '🐱', FISK: '🐟', EPLE: '🍎',
+    HUS: '🏠', BALL: '⚽', KU: '🐮',
+  },
   bank: [
     { show: 'S', options: ['SOL', 'MÅNE', 'TRE', 'BIL'], answer: 'SOL' },
     { show: 'H', options: ['HUND', 'KATT', 'FISK', 'EPLE'], answer: 'HUND' },
@@ -140,7 +158,7 @@ export const OPPOSITES = {
   emoji: '↔️',
   color: 'bg-cyan-500',
   prompt: 'Hva er det motsatte?',
-  rounds: 6,
+  rounds: 8,
   bank: [
     { show: '☀️', caption: 'DAG', options: ['Natt', 'Sommer', 'Varm', 'Stor'], answer: 'Natt' },
     { show: '🔥', caption: 'VARM', options: ['Kald', 'Våt', 'Liten', 'Mørk'], answer: 'Kald' },
@@ -164,7 +182,7 @@ export const FRACTIONS = {
   emoji: '🍕',
   color: 'bg-orange-500',
   prompt: 'Tenk litt!',
-  rounds: 6,
+  rounds: 8,
   bank: [
     { prompt: 'Hva er halvparten av 10?', options: ['5', '2', '20', '8'], answer: '5' },
     { prompt: 'Hva er halvparten av 8?', options: ['4', '2', '6', '16'], answer: '4' },
@@ -182,92 +200,3 @@ export const FRACTIONS = {
     { prompt: 'Hva er ½ av 14?', options: ['7', '6', '28', '9'], answer: '7' },
   ],
 }
-
-// ---- Selve nivåene ----------------------------------------------------------
-
-export const LEVELS = [
-  {
-    id: 'barnehage',
-    title: 'Barnehage',
-    age: '4 år',
-    emoji: '🧸',
-    color: 'bg-pink-500',
-    gradient: 'from-pink-300 via-rose-300 to-orange-200',
-    intro: 'Lek og lær med farger, tall og former!',
-    activities: [
-      { id: 'tell', title: 'Tell tingene', emoji: '🍎', color: 'bg-rose-500', engine: 'quiz', config: COUNTING_TO_5 },
-      { id: 'farger', title: 'Farger', emoji: '🎨', color: 'bg-fuchsia-500', engine: 'quiz', config: COLORS },
-      { id: 'former', title: 'Former', emoji: '🔷', color: 'bg-amber-500', engine: 'quiz', config: SHAPES },
-      { id: 'bokstav', title: 'Første bokstav', emoji: '🔤', color: 'bg-emerald-500', engine: 'quiz', config: FIRST_LETTER },
-      { id: 'storliten', title: 'Stor og liten', emoji: '🔵', color: 'bg-orange-500', engine: 'patterns' },
-      { id: 'ord', title: 'Ord og bilder', emoji: '🐶', color: 'bg-violet-500', engine: 'words', config: { title: 'Ord og bilder', emoji: '🐶', maxLen: 5 } },
-    ],
-  },
-  {
-    id: 'klasse1',
-    title: '1. klasse',
-    age: '6 år',
-    emoji: '✏️',
-    color: 'bg-sky-500',
-    gradient: 'from-sky-300 via-cyan-300 to-emerald-200',
-    intro: 'Tall, bokstaver og de første regnestykkene.',
-    activities: [
-      { id: 'telling', title: 'Tell til 10', emoji: '🔟', color: 'bg-rose-500', engine: 'quiz', config: COUNTING_TO_10 },
-      { id: 'plussminus', title: 'Pluss og minus', emoji: '➕', color: 'bg-pink-500', engine: 'math', config: { title: 'Pluss og minus', emoji: '➕', color: 'bg-pink-500', ops: ['add', 'sub'], max: 20 } },
-      { id: 'bokstaver', title: 'Bokstaver og lyder', emoji: '🅰️', color: 'bg-emerald-500', engine: 'quiz', config: LETTER_SOUNDS },
-      { id: 'ord', title: 'Ord og bilder', emoji: '🔤', color: 'bg-violet-500', engine: 'words', config: { title: 'Ord og bilder', emoji: '🔤', maxLen: 6 } },
-      { id: 'monster', title: 'Mønster og former', emoji: '🔺', color: 'bg-orange-500', engine: 'patterns' },
-      { id: 'klokke', title: 'Hele klokketimer', emoji: '🕐', color: 'bg-indigo-500', engine: 'clock', config: { title: 'Hele timer', minutes: 'whole' } },
-    ],
-  },
-  {
-    id: 'klasse2',
-    title: '2. klasse',
-    age: '7 år',
-    emoji: '📐',
-    color: 'bg-emerald-500',
-    gradient: 'from-emerald-300 via-teal-300 to-sky-200',
-    intro: 'Større tall, gangetabell og klokka.',
-    activities: [
-      { id: 'plussminus', title: 'Pluss og minus til 100', emoji: '➕', color: 'bg-pink-500', engine: 'math', config: { title: 'Pluss og minus', emoji: '➕', color: 'bg-pink-500', ops: ['add', 'sub'], max: 100 } },
-      { id: 'gange', title: 'Gangetabell (2, 5, 10)', emoji: '✖️', color: 'bg-rose-500', engine: 'math', config: { title: 'Gangetabell', emoji: '✖️', color: 'bg-rose-500', ops: ['mul'], mulFactors: [2, 5, 10] } },
-      { id: 'klokke', title: 'Hele og halve timer', emoji: '🕜', color: 'bg-indigo-500', engine: 'clock', config: { title: 'Hele og halve timer', minutes: 'half' } },
-      { id: 'ord', title: 'Ord og lesing', emoji: '📖', color: 'bg-violet-500', engine: 'words', config: { title: 'Ord og lesing', emoji: '📖' } },
-      { id: 'motsatt', title: 'Motsatt', emoji: '↔️', color: 'bg-cyan-500', engine: 'quiz', config: OPPOSITES },
-      { id: 'norden', title: 'Land i Norden', emoji: '❄️', color: 'bg-teal-500', engine: 'geography', config: { region: 'norden' } },
-    ],
-  },
-  {
-    id: 'klasse3',
-    title: '3. klasse',
-    age: '8 år',
-    emoji: '🔬',
-    color: 'bg-indigo-500',
-    gradient: 'from-indigo-300 via-violet-300 to-purple-200',
-    intro: 'Gangetabell, deling og Europa.',
-    activities: [
-      { id: 'gange', title: 'Gangetabell 1–10', emoji: '✖️', color: 'bg-rose-500', engine: 'math', config: { title: 'Gangetabell', emoji: '✖️', color: 'bg-rose-500', ops: ['mul'], mulMax: 10 } },
-      { id: 'deling', title: 'Deling', emoji: '➗', color: 'bg-pink-500', engine: 'math', config: { title: 'Deling', emoji: '➗', color: 'bg-pink-500', ops: ['div'], divMax: 10 } },
-      { id: 'klokke', title: 'Klokka til 5 minutter', emoji: '🕔', color: 'bg-indigo-500', engine: 'clock', config: { title: 'Klokka til 5 minutter', minutes: 'five' } },
-      { id: 'europa', title: 'Land i Europa', emoji: '🏰', color: 'bg-teal-500', engine: 'geography', config: { region: 'europa' } },
-      { id: 'monster', title: 'Mønster og logikk', emoji: '🧩', color: 'bg-orange-500', engine: 'patterns' },
-      { id: 'ord', title: 'Ord og lesing', emoji: '📖', color: 'bg-violet-500', engine: 'words', config: { title: 'Ord og lesing', emoji: '📖' } },
-    ],
-  },
-  {
-    id: 'klasse4',
-    title: '4. klasse',
-    age: '9 år',
-    emoji: '🎓',
-    color: 'bg-rose-600',
-    gradient: 'from-rose-300 via-fuchsia-300 to-purple-200',
-    intro: 'Gange og deling, brøk og hele verden.',
-    activities: [
-      { id: 'gangedeling', title: 'Gange og deling', emoji: '✖️', color: 'bg-rose-500', engine: 'math', config: { title: 'Gange og deling', emoji: '✖️', color: 'bg-rose-500', ops: ['mul', 'div'], mulMax: 10, divMax: 10 } },
-      { id: 'brok', title: 'Brøk og halvparten', emoji: '🍕', color: 'bg-orange-500', engine: 'quiz', config: FRACTIONS },
-      { id: 'verden', title: 'Hele verden', emoji: '🌍', color: 'bg-teal-500', engine: 'geography', config: { region: 'verden' } },
-      { id: 'klokke', title: 'Klokka', emoji: '🕔', color: 'bg-indigo-500', engine: 'clock', config: { title: 'Klokka', minutes: 'five' } },
-      { id: 'ord', title: 'Ord og lesing', emoji: '📖', color: 'bg-violet-500', engine: 'words', config: { title: 'Ord og lesing', emoji: '📖' } },
-    ],
-  },
-]

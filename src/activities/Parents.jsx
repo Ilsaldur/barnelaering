@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { TopBar } from '../components/ui.jsx'
+import { TopBar, BigButton } from '../components/ui.jsx'
+import AdultGate from '../components/AdultGate.jsx'
 import { useStars } from '../StarContext.jsx'
 import { supabase } from '../lib/supabase.js'
 import { speech } from '../speech.js'
@@ -13,51 +14,8 @@ import {
 } from '../progress.js'
 import { topicById } from '../data/topics.js'
 
-// Foreldresiden: fremgang, styrker og kontoadministrasjon.
-// Bak en enkel voksengate (gangestykke) så barna ikke havner her ved et uhell.
-
-function makeGate() {
-  const a = 6 + Math.floor(Math.random() * 4)
-  const b = 6 + Math.floor(Math.random() * 4)
-  return { a, b, answer: a * b }
-}
-
-function Gate({ onPass }) {
-  const [gate] = useState(makeGate)
-  const [value, setValue] = useState('')
-  const [wrong, setWrong] = useState(false)
-
-  function check(e) {
-    e.preventDefault()
-    if (Number(value) === gate.answer) onPass()
-    else {
-      setWrong(true)
-      setValue('')
-    }
-  }
-
-  return (
-    <form onSubmit={check} className="bg-white/95 rounded-3xl p-6 shadow-xl max-w-sm mx-auto mt-8 text-center">
-      <p className="text-5xl mb-3">🔒</p>
-      <h2 className="text-xl font-extrabold text-slate-700 mb-1">Kun for voksne</h2>
-      <p className="text-slate-500 font-semibold mb-4">
-        Hva er {gate.a} × {gate.b}?
-      </p>
-      <input
-        type="number"
-        inputMode="numeric"
-        autoFocus
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        className="w-32 text-center rounded-2xl border-2 border-slate-200 px-4 py-3 text-2xl font-extrabold focus:border-sky-400 outline-none"
-      />
-      {wrong && <p className="text-rose-500 font-bold text-sm mt-2">Prøv igjen! 😊</p>}
-      <button type="submit" className="kid-btn bg-sky-500 text-white w-full py-3 text-xl font-extrabold mt-4">
-        Åpne
-      </button>
-    </form>
-  )
-}
+// Foreldresiden: fremgang, styrker, nullstilling og kontoadministrasjon.
+// Bak voksensperren (hold inne tre sekunder og skriv årstall).
 
 function Bar({ value, max, color = 'bg-emerald-400' }) {
   const pct = max > 0 ? Math.round((100 * value) / max) : 0
@@ -78,16 +36,17 @@ function Section({ title, children }) {
 }
 
 export default function Parents({ go, onSwitchProfile }) {
-  const { profile, data, log, best, session, childProfiles, removeChild, signOutProfile } = useStars()
+  const { profile, data, log, best, session, childProfiles, removeChild, signOutProfile, reset } = useStars()
   const [open, setOpen] = useState(false)
-  const [talking, setTalking] = useState(speech.enabled())
+  const [talking, setTalking] = useState(speech.autoEnabled())
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [confirmReset, setConfirmReset] = useState(false)
 
   if (!open) {
     return (
       <div className="animate-pop-in">
         <TopBar title="For voksne 👨‍👩‍👧" onHome={go} />
-        <Gate onPass={() => setOpen(true)} />
+        <AdultGate onPass={() => setOpen(true)} />
       </div>
     )
   }
@@ -192,7 +151,7 @@ export default function Parents({ go, onSwitchProfile }) {
               return (
                 <div key={i} className="flex justify-between gap-2 text-sm md:text-base font-semibold text-slate-600 border-b border-slate-100 py-1">
                   <span className="truncate">
-                    {t ? `${t.emoji} ${t.title}` : '🎮 Aktivitet'}
+                    {t ? `${t.emoji} ${t.title}` : e.eventyr ? '🗺️ Eventyrkartet' : '🎮 Aktivitet'}
                     {e.level != null && ` · nivå ${e.level + 1}`}
                   </span>
                   <span className="shrink-0 text-slate-400">
@@ -211,12 +170,12 @@ export default function Parents({ go, onSwitchProfile }) {
           {speech.supported() && (
             <button
               onClick={() => {
-                speech.setEnabled(!talking)
+                speech.setAuto(!talking)
                 setTalking(!talking)
               }}
               className="kid-btn bg-violet-500 text-white px-5 py-3 text-lg font-extrabold"
             >
-              {talking ? '🔊 Opplesing: på' : '🔇 Opplesing: av'}
+              {talking ? '🔊 Automatisk opplesing: på' : '🔇 Automatisk opplesing: av'}
             </button>
           )}
           <button
@@ -226,6 +185,34 @@ export default function Parents({ go, onSwitchProfile }) {
             👤 Bytt spiller
           </button>
         </div>
+      </Section>
+
+      <Section title={`🧹 Nullstill ${profile?.name || 'spilleren'}`}>
+        <p className="text-slate-500 font-semibold mb-3">
+          Sletter stjerner, mestring, hagen og eventyrkartet for denne spilleren. Kan ikke angres.
+        </p>
+        {!confirmReset ? (
+          <button onClick={() => setConfirmReset(true)} className="kid-btn bg-rose-100 text-rose-600 px-5 py-3 text-lg font-extrabold">
+            Nullstill stjerner og fremgang …
+          </button>
+        ) : (
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="font-bold text-slate-600">Helt sikker?</span>
+            <BigButton
+              color="bg-rose-500"
+              className="!text-lg !py-2 !px-4"
+              onClick={() => {
+                reset()
+                setConfirmReset(false)
+              }}
+            >
+              Ja, nullstill
+            </BigButton>
+            <BigButton color="bg-slate-400" className="!text-lg !py-2 !px-4" onClick={() => setConfirmReset(false)}>
+              Nei
+            </BigButton>
+          </div>
+        )}
       </Section>
 
       <Section title="👨‍👩‍👧 Familiekonto">

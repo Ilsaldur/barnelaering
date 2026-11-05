@@ -4,8 +4,8 @@
 
 | Etappe | Status | Sist oppdatert |
 |--------|--------|----------------|
-| 0 – Les og planlegg | Oppsummering, datamodell og spørsmål levert i `docs/etappe0.md`. Venter på svar. | 2026-11-05 |
-| 1 – Rett opp det som er galt i dag | Ikke startet | |
+| 0 – Les og planlegg | Ferdig. Svar fått: bygg på lokal `main`, Supabase-prosjektet `selmas-skole` er riktig, Vitest er greit, startverden i stedet for alder, nytt trinn som nivåer i stigene, stjerneregel for alle motorer, gammel framgang kan nullstilles. Se `docs/etappe0.md`. | 2026-11-05 |
+| 1 – Rett opp det som er galt i dag | Kode ferdig, bygg og tester grønne. Venter på OK fra Jon. Endringslogg og prøveliste i `docs/etappe1.md`. | 2026-11-05 |
 | 2 – Innlogging, profiler og synkronisering | Ikke startet | |
 | 3 – Mattestigen | Ikke startet | |
 | 4 – Dagens økt, kart og belønning | Ikke startet | |
@@ -15,8 +15,10 @@
 Arbeidsgren: `adaptiv-laering` (ikke push til `main` uten OK).
 
 Viktige funn for en ny økt:
+- Kjør `npm test` (Vitest) og `npm run build` før hver etappe avsluttes. Delt logikk ligger i `src/lib/` (rng, scoring, distractors, round, matte, klokke, quiz).
 - Det finnes to utgaver av appen. Produksjon på Vercel kjører commit `2d5b097` (klassetrinn + Eventyrkart). Lokal `main` har en upushet commit `da2fcc1` (profiler, Supabase, temastiger, voksenside, opplesing, hage) som slettet Eventyrkartet. Se `docs/etappe0.md`.
 - Supabase-prosjektet `selmas-skole` (eu-north-1) finnes med tabellene `children` og `progress`, RLS på, ingen rader.
+- Vercel-prosjektet `selmasskole` har ingen miljøvariabler. `VITE_SUPABASE_URL` og `VITE_SUPABASE_ANON_KEY` må legges inn der før etappe 2 rulles ut (Jon gjør det i Vercel-dashbordet, nøkler skal ikke i repoet).
 
 ---
 

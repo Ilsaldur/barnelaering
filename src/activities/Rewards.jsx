@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { TopBar, Mascot, Confetti, BigButton } from '../components/ui.jsx'
+import { TopBar, Mascot, Confetti } from '../components/ui.jsx'
 import { useStars, STICKERS } from '../StarContext.jsx'
 import { sound } from '../sound.js'
 
 export default function Rewards({ go }) {
-  const { stars, unlocked, nextSticker, reset } = useStars()
+  const { stars, unlocked, nextSticker } = useStars()
   const [confetti, setConfetti] = useState(false)
-  const [confirmReset, setConfirmReset] = useState(false)
 
   function celebrate() {
     sound.fanfare()
@@ -39,7 +38,10 @@ export default function Rewards({ go }) {
               />
             </div>
             <p className="text-base text-slate-500 mt-1">
-              Bare {Math.max(0, nextSticker.need - stars)} stjerner igjen!
+              {(() => {
+                const left = Math.max(0, nextSticker.need - stars)
+                return `Bare ${left} ${left === 1 ? 'stjerne' : 'stjerner'} igjen!`
+              })()}
             </p>
           </div>
         ) : (
@@ -71,39 +73,6 @@ export default function Rewards({ go }) {
         })}
       </div>
 
-      {/* Liten nullstill-knapp for foreldre */}
-      <div className="mt-8 text-center">
-        {!confirmReset ? (
-          <button
-            onClick={() => setConfirmReset(true)}
-            className="text-white/70 text-sm underline"
-          >
-            (Nullstill stjerner – for voksne)
-          </button>
-        ) : (
-          <div className="flex gap-2 justify-center items-center">
-            <span className="text-white font-bold">Sikker?</span>
-            <BigButton
-              color="bg-rose-500"
-              className="!text-lg !py-2 !px-4"
-              onClick={() => {
-                reset()
-                setConfirmReset(false)
-                sound.click()
-              }}
-            >
-              Ja, nullstill
-            </BigButton>
-            <BigButton
-              color="bg-slate-400"
-              className="!text-lg !py-2 !px-4"
-              onClick={() => setConfirmReset(false)}
-            >
-              Nei
-            </BigButton>
-          </div>
-        )}
-      </div>
     </div>
   )
 }
