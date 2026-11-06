@@ -55,7 +55,27 @@ export default function Kart({ matte, onStart, onReplay, nivaer = NIVAER_MATTE, 
                 {passed ? '✅ ferdig' : here ? 'du er her' : `åpner etter nivå ${v.fra - 1}`}
               </span>
             </div>
-            <div className="grid grid-cols-4 gap-3 md:gap-4">
+            <div className="relative">
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                <polyline
+                  fill="none"
+                  stroke="#ffffff"
+                  strokeWidth="2.5"
+                  strokeDasharray="4 3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                  points={levels
+                    .map((_, i) => {
+                      const rader = Math.ceil(levels.length / 4)
+                      const row = Math.floor(i / 4)
+                      const col = row % 2 === 0 ? i % 4 : 3 - (i % 4)
+                      return `${((col + 0.5) / 4) * 100},${((row + 0.5) / rader) * 100}`
+                    })
+                    .join(' ')}
+                />
+              </svg>
+            <div className="grid grid-cols-4 gap-3 md:gap-4 relative">
               {levels.map((n, i) => {
                 const stars = matte.beste?.[n.id] || 0
                 const isHere = n.id === cur
@@ -81,6 +101,7 @@ export default function Kart({ matte, onStart, onReplay, nivaer = NIVAER_MATTE, 
                   </button>
                 )
               })}
+            </div>
             </div>
           </section>
         )

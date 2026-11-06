@@ -19,7 +19,7 @@ const T = (type, param = {}, vekt = 1, ikkePlassering = false) => ({ type, param
 export const NIVAER = [
   // Trylleskogen – trykk på svaret, alt leses opp
   N(1, 'skog', 'Telle 1–5 og terningbilder', [T('tell', { min: 1, max: 5 }, 2), T('terning', { max: 6 }, 1)], { trinn: 'Før skolestart' }),
-  N(2, 'skog', 'Telle 6–10', [T('tell', { min: 5, max: 10 }, 1)], { trinn: 'Før skolestart' }),
+  N(2, 'skog', 'Telle 6–10', [T('tell', { min: 5, max: 10 }, 3), T('terning', { max: 6 }, 1), T('fingre', { min: 4, max: 10 }, 2), T('mer_mindre_mengder', { max: 10 }, 1)], { trinn: 'Før skolestart' }),
   N(3, 'skog', 'Tallrekka til 20: før, etter og mangler', [T('tallrekke_etter', { max: 20 }), T('tallrekke_for', { max: 20 }), T('tallrekke_mangler', { max: 20 }), T('tallinje_plasser', { from: 0, to: 20, step: 1, labelEvery: 5 })], { trinn: 'Før skolestart' }),
   N(4, 'skog', 'Mer, mindre og like mange', [T('mer_mindre_mengder', { max: 10 }), T('storst_minst', { max: 20 }), T('sammenlign', { max: 20 }), T('sorter_tall', { max: 20, n: 4 })], { trinn: 'Før skolestart' }),
   N(5, 'skog', 'Dele opp tall til 5, pluss og minus innenfor 5', [T('dele_opp', { max: 5 }), T('pluss_valg', { max: 5 }), T('minus_valg', { max: 5 })], { trinn: 'Før skolestart' }),

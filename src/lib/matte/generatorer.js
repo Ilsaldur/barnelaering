@@ -23,6 +23,7 @@ export function gen(type, param = {}, rng = Math.random) {
 export const TYPE_LABELS = {
   tell: 'Telle ting',
   terning: 'Terningbilder',
+  fingre: 'Telle fingre',
   tallrekke_etter: 'Tallet etter',
   tallrekke_for: 'Tallet før',
   tallrekke_mangler: 'Tall som mangler i rekka',

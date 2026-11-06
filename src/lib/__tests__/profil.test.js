@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { emptyData, normalize, mergeData, weakestTypes, minutesLastWeek, todayKey, effectiveAutoSpeak } from '../profil.js'
+import { emptyData, normalize, mergeData, weakestTypes, minutesLastWeek, todayKey, effectiveAutoSpeak, nullstiltData } from '../profil.js'
 
 describe('normalize', () => {
   it('fyller ut en gammel profil uten å miste stjerner', () => {
@@ -117,5 +117,28 @@ describe('opplesing (etappe B)', () => {
     const d = normalize({ settings: { autoSpeak: false } })
     expect(d.settings.autoSpeakSet).toBe(false)
     expect(effectiveAutoSpeak(d)).toBe(true)
+  })
+})
+
+describe('nullstilling og synk (etappe E)', () => {
+  it('nullstill på enhet A, flett med gamle data fra B: fortsatt nullstilt', () => {
+    const gammel = normalize({ stars: 40, kort: ['dyr-elg'], fag: { matte: { nivaa: 20, plassert: true, updatedAt: 500 } } })
+    const a = nullstiltData(gammel, 1000)
+    expect(a.stars).toBe(0)
+    expect(a.nullstiltT).toBe(1000)
+    const m = mergeData(a, gammel)
+    expect(m.stars).toBe(0)
+    expect(m.kort).toEqual([])
+    expect(m.fag.matte.nivaa).toBe(null)
+    expect(m.nullstiltT).toBe(1000)
+    expect(mergeData(gammel, a).stars).toBe(0)
+  })
+  it('samme nullstillingstidspunkt: flettes som før', () => {
+    const a = normalize({ stars: 5 })
+    const b = normalize({ stars: 9 })
+    expect(mergeData(a, b).stars).toBe(9)
+    const c = nullstiltData(a, 7)
+    const d = { ...nullstiltData(b, 7), stars: 3 }
+    expect(mergeData(c, d).stars).toBe(3)
   })
 })

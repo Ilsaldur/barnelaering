@@ -49,6 +49,7 @@ export function emptyData() {
     kostymeT: 0,
     historier: [], // historiebiter barnet har sett
     laerkort: [], // «Lær først»-kort barnet har sett
+    nullstiltT: 0, // når profilen sist ble nullstilt (nyeste vinner ved synk)
   }
 }
 
@@ -161,7 +162,11 @@ function mergeFag(a, b) {
 export function mergeData(rawA, rawB) {
   const a = normalize(rawA)
   const b = normalize(rawB)
+  // Er den ene siden nullstilt etter den andre, vinner den for alt. Ellers
+  // (samme tidspunkt, vanligvis 0) flettes som før.
+  if ((a.nullstiltT || 0) !== (b.nullstiltT || 0)) return (a.nullstiltT || 0) > (b.nullstiltT || 0) ? a : b
   const out = emptyData()
+  out.nullstiltT = a.nullstiltT || 0
   out.stars = Math.max(a.stars, b.stars)
   out.spent = Math.max(a.spent, b.spent)
 
@@ -211,6 +216,16 @@ export function effectiveAutoSpeak(data) {
   const lesing = data?.fag?.lesing
   if (!lesing || !lesing.plassert || !lesing.nivaa) return true
   return lesing.nivaa < 8
+}
+
+// En nullstilt profil: alt borte, innstillingene beholdt, og tidspunktet satt så
+// gamle data fra en annen enhet ikke kommer tilbake ved synk.
+export function nullstiltData(gammel, now = Date.now()) {
+  const fresh = emptyData()
+  fresh.settings = { ...(gammel?.settings || fresh.settings), updatedAt: now }
+  for (const f of Object.keys(fresh.fag)) fresh.fag[f].updatedAt = now
+  fresh.nullstiltT = now
+  return fresh
 }
 
 // ---- Statistikk brukt på voksensiden -----------------------------------------

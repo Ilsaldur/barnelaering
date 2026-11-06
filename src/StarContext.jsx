@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, useCallback } f
 import { sound } from './sound.js'
 import { speech } from './speech.js'
 import { supabase } from './lib/supabase.js'
-import { emptyData, normalize, mergeData, todayKey, effectiveAutoSpeak } from './lib/profil.js'
+import { emptyData, normalize, mergeData, todayKey, effectiveAutoSpeak, nullstiltData } from './lib/profil.js'
 
 // Profil- og fremgangssystem for hele appen.
 //  - En voksen logger inn (e-postlenke). Barna er profiler under den voksne.
@@ -271,20 +271,6 @@ export function StarProvider({ children }) {
     [scheduleFlush],
   )
 
-  // Når nettet eller fanen kommer tilbake: send det som ligger i kø.
-  useEffect(() => {
-    if (onLine) scheduleFlush(300)
-    else setSyncState(session ? 'frakoblet' : 'lokal')
-  }, [onLine, session, scheduleFlush])
-
-  useEffect(() => {
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') scheduleFlush(300)
-    }
-    document.addEventListener('visibilitychange', onVisible)
-    return () => document.removeEventListener('visibilitychange', onVisible)
-  }, [scheduleFlush])
-
   // Hent sky-utgaven av en profil og flett den med den lokale.
   const pullAndMerge = useCallback(async (profileId) => {
     const local = loadLocalData(profileId)
@@ -295,6 +281,37 @@ export function StarProvider({ children }) {
     saveJSON(dataKey(profileId), merged)
     return merged
   }, [])
+
+  // Hent og flett for den aktive profilen (når nettet eller fanen kommer tilbake).
+  const profileRef = useRef(null)
+  profileRef.current = profile
+  const refreshFromCloud = useCallback(async () => {
+    const p = profileRef.current
+    if (!p || p.local || !supabase || !sessionRef.current) return
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return
+    const merged = await pullAndMerge(p.id)
+    setData((cur) => {
+      if (profileRef.current?.id !== p.id) return cur
+      const m = mergeData(cur, merged)
+      saveJSON(dataKey(p.id), m)
+      return m
+    })
+  }, [pullAndMerge])
+
+  // Når nettet eller fanen kommer tilbake: hent fra skyen og send det som ligger i kø.
+  useEffect(() => {
+    if (onLine) {
+      refreshFromCloud().finally(() => scheduleFlush(300))
+    } else setSyncState(session ? 'frakoblet' : 'lokal')
+  }, [onLine, session, scheduleFlush, refreshFromCloud])
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshFromCloud().finally(() => scheduleFlush(300))
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [scheduleFlush, refreshFromCloud])
 
   const selectProfile = useCallback(
     async (p) => {
@@ -496,12 +513,7 @@ export function StarProvider({ children }) {
   }, [])
 
   const reset = useCallback(() => {
-    setData((d) => {
-      const fresh = emptyData()
-      fresh.settings = { ...d.settings, updatedAt: Date.now() }
-      for (const f of Object.keys(fresh.fag)) fresh.fag[f].updatedAt = Date.now()
-      return fresh
-    })
+    setData((d) => nullstiltData(d))
   }, [])
 
   // ---- Andre barn (voksensiden) ---------------------------------------------

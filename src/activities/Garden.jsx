@@ -146,7 +146,7 @@ export default function Garden({ go }) {
           })}
         </div>
         <p className="text-center text-sm text-slate-400 font-semibold mt-3">
-          Tjen flere stjerner ved å spille – klistremerkene dine påvirkes ikke av det du kjøper!
+          Tjen flere stjerner ved å gjøre oppdrag. Samlekortene dine påvirkes ikke av det du kjøper.
         </p>
       </div>
     </div>

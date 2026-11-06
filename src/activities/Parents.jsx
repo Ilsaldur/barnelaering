@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase.js'
 import { speech } from '../speech.js'
 import { TOPICS, recommendedIndex, topicProgress } from '../progress.js'
 import { topicById } from '../data/topics.js'
-import { emptyData, recentRounds, minutesLastWeek, weakestTypes, FAG, todayKey, effectiveAutoSpeak } from '../lib/profil.js'
+import { emptyData, recentRounds, minutesLastWeek, weakestTypes, FAG, todayKey, effectiveAutoSpeak, nullstiltData } from '../lib/profil.js'
 import { ukestripe } from '../lib/dagen.js'
 import { FAG_LABELS, typeLabel } from '../lib/labels.js'
 import { MAKS_NIVAA, nivaaNavn } from '../data/stiger.js'
@@ -337,12 +337,7 @@ function ChildPanel({ child, data, update, isActive }) {
               color="bg-rose-500"
               className="!text-lg !py-2 !px-4"
               onClick={() => {
-                update((cur) => {
-                  const fresh = emptyData()
-                  fresh.settings = { ...cur.settings, updatedAt: Date.now() }
-                  for (const f of Object.keys(fresh.fag)) fresh.fag[f].updatedAt = Date.now()
-                  return fresh
-                })
+                update((cur) => nullstiltData(cur))
                 setConfirmReset(false)
               }}
             >

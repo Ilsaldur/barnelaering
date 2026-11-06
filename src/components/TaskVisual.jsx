@@ -240,6 +240,12 @@ function Grid({ grid, cols, boxes = false }) {
 export function Visual({ visual }) {
   if (!visual) return null
   switch (visual.kind) {
+    case 'fingre': {
+      const n = visual.n
+      const en = ['', '☝️', '✌️', '🤟', '🖖', '🖐️']
+      const hender = n <= 5 ? [en[n]] : ['🖐️', en[n - 5]]
+      return <div className="text-center text-7xl md:text-8xl tracking-widest">{hender.join(' ')}</div>
+    }
     case 'klokke':
       return <AnalogClock hour={visual.h} minute={visual.m} interactive={false} className="w-56 h-56 md:w-72 md:h-72" />
     case 'digital':

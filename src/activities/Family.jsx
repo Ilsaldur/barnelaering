@@ -18,7 +18,7 @@ function feilTekst(error) {
   if (/already registered|already been registered/i.test(m)) return 'Det finnes allerede en konto med denne e-posten. Logg inn, eller bruk «Glemt passord».'
   if (/rate limit|too many/i.test(m)) return 'For mange forsøk på kort tid. Vent litt og prøv igjen.'
   if (/Password should be|password/i.test(m)) return `Passordet er for svakt. Bruk minst ${MIN_PASSORD} tegn.`
-  if (/signups not allowed/i.test(m)) return 'Registrering er stengt.'
+  if (/signups? not allowed|signup is disabled/i.test(m)) return 'Registrering er stengt for nye. Har du konto, logg inn. Ellers kan du spørre den som ga deg lenken om å åpne for deg.'
   return 'Noe gikk galt: ' + m
 }
 

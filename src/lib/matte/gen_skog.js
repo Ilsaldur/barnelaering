@@ -24,6 +24,24 @@ export const GEN_SKOG = {
     )
   },
 
+  // Tell fingre (1–10).
+  fingre: ({ min = 1, max = 10 }, rng) => {
+    const n = randInt(min, max, rng)
+    return valg(
+      {
+        type: 'fingre',
+        prompt: 'Hvor mange fingre?',
+        spoken: 'Hvor mange fingre ser du?',
+        visual: { kind: 'fingre', n },
+        explain: `Det er ${n} fingre.`,
+        readOptions: true,
+      },
+      n,
+      naer(n, { min: 1, max: 10, rng }),
+      rng,
+    )
+  },
+
   // Kjenne igjen terningbilder uten å telle.
   terning: ({ max = 6 }, rng) => {
     const n = randInt(1, max, rng)
