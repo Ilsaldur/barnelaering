@@ -7,6 +7,7 @@ import TopicLadder from './activities/TopicLadder.jsx'
 import MatteStige from './activities/MatteStige.jsx'
 import Noettehula from './activities/Noettehula.jsx'
 import LeseStige from './activities/LeseStige.jsx'
+import Personvern from './activities/Personvern.jsx'
 import Samling from './activities/Samling.jsx'
 import Clock from './activities/Clock.jsx'
 import Geography from './activities/Geography.jsx'
@@ -44,12 +45,23 @@ function AppInner() {
     else setActiveLevel(null)
   }, [nav, setActiveLevel])
 
+  // Personvernsiden kan åpnes både før og etter profilvalg.
+  if (nav.view === 'personvern') {
+    return (
+      <div className={`min-h-screen w-full bg-gradient-to-br ${PARENTS_BG} transition-colors duration-500`}>
+        <div className="max-w-3xl mx-auto p-3 md:p-6">
+          <Personvern go={() => setNav({ view: nav.from || 'home' })} />
+        </div>
+      </div>
+    )
+  }
+
   // Ingen aktiv profil → velg hvem som skal spille.
   if (!profile) {
     return (
       <div className={`min-h-screen w-full bg-gradient-to-br ${HOME_BG} transition-colors duration-500`}>
         <div className="max-w-5xl mx-auto p-3 md:p-6">
-          <Family onPicked={goHome} />
+          <Family onPicked={goHome} onPrivacy={() => setNav({ view: 'personvern', from: 'home' })} />
         </div>
       </div>
     )
@@ -111,7 +123,7 @@ function AppInner() {
     content = <Garden go={goHome} />
   } else if (nav.view === 'parents') {
     bg = PARENTS_BG
-    content = <Parents go={goHome} onSwitchProfile={signOutProfile} />
+    content = <Parents go={goHome} onSwitchProfile={signOutProfile} onPrivacy={() => setNav({ view: 'personvern', from: 'parents' })} />
   } else {
     content = (
       <Home

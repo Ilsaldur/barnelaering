@@ -276,10 +276,12 @@ function ChildPanel({ child, data, update, isActive }) {
   )
 }
 
-export default function Parents({ go, onSwitchProfile }) {
-  const { profile, data, session, childProfiles, removeChild, signOutProfile, childrenData, loadChildData, updateChildData, syncState, onLine } = useStars()
+export default function Parents({ go, onSwitchProfile, onPrivacy }) {
+  const { profile, data, session, childProfiles, removeChild, signOutProfile, childrenData, loadChildData, updateChildData, syncState, onLine, deleteAccount } = useStars()
   const [open, setOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [confirmAccount, setConfirmAccount] = useState(false)
+  const [accountMsg, setAccountMsg] = useState(null)
   const [selected, setSelected] = useState(profile?.id || null)
 
   const kids = session && childProfiles.length ? childProfiles : profile ? [{ ...profile }] : [GUEST_PROFILE]
@@ -375,16 +377,48 @@ export default function Parents({ go, onSwitchProfile }) {
                 Logg ut av familiekontoen på denne enheten
               </button>
             </div>
+            <div className="mt-5 pt-4 border-t border-slate-100">
+              <p className="text-sm text-slate-500 font-semibold mb-2">Vil du slutte helt? Da slettes kontoen, alle barneprofilene og all fremgang med en gang. Kan ikke angres.</p>
+              {accountMsg && <p className="text-sm font-bold text-rose-500 mb-2">{accountMsg}</p>}
+              {!confirmAccount ? (
+                <button onClick={() => setConfirmAccount(true)} className="text-sm font-bold text-rose-400 underline hover:text-rose-600">
+                  Slett familiekontoen og alt innhold
+                </button>
+              ) : (
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="font-bold text-slate-600">Helt sikker?</span>
+                  <BigButton
+                    color="bg-rose-500"
+                    className="!text-lg !py-2 !px-4"
+                    onClick={async () => {
+                      const { error } = await deleteAccount()
+                      if (error) setAccountMsg(/delete_my_account|function|not find/i.test(error.message) ? 'Slettefunksjonen er ikke satt opp i Supabase ennå (se supabase/migrations/20261106_delete_my_account.sql).' : 'Kunne ikke slette: ' + error.message)
+                      else go()
+                    }}
+                  >
+                    Ja, slett alt
+                  </BigButton>
+                  <BigButton color="bg-slate-400" className="!text-lg !py-2 !px-4" onClick={() => setConfirmAccount(false)}>
+                    Nei
+                  </BigButton>
+                </div>
+              )}
+            </div>
           </>
         ) : (
           <>
-            <p className="text-slate-500 font-semibold mb-3">Logg inn fra startskjermen («Bytt spiller») med e-postlenke for å lagre fremgang i skyen og bruke appen på flere enheter.</p>
+            <p className="text-slate-500 font-semibold mb-3">Logg inn eller lag familiekonto fra startskjermen («Bytt spiller») for å lagre fremgang i skyen og bruke appen på flere enheter.</p>
             <button onClick={onSwitchProfile} className="kid-btn bg-sky-500 text-white px-5 py-3 text-lg font-extrabold">
               👤 Bytt spiller / logg inn
             </button>
           </>
         )}
       </Section>
+      <p className="text-center mb-4">
+        <button onClick={onPrivacy} className="text-white/80 text-sm font-bold underline hover:text-white">
+          🔒 Personvern: hva lagres, og hvordan slettes det
+        </button>
+      </p>
     </div>
   )
 }

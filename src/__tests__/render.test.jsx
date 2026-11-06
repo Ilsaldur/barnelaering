@@ -13,6 +13,7 @@ import { VERDENER } from '../data/matte/nivaer.js'
 import Parents from '../activities/Parents.jsx'
 import Garden from '../activities/Garden.jsx'
 import Family from '../activities/Family.jsx'
+import Personvern from '../activities/Personvern.jsx'
 import TopicLadder from '../activities/TopicLadder.jsx'
 import RoundDone from '../components/RoundDone.jsx'
 import AdultGate from '../components/AdultGate.jsx'
@@ -40,7 +41,8 @@ describe('alle skjermer rendrer uten feil', () => {
     expect(renderToString(<Historie historie={HISTORIER[0]} verden={VERDENER[0]} onDone={noop} />)).toContain('Trylleskogen')
     expect(wrap(<Parents go={noop} onSwitchProfile={noop} />)).toContain('Hold inne')
     expect(wrap(<Garden go={noop} />)).toContain('Hagebutikken')
-    expect(wrap(<Family onPicked={noop} />)).toContain('Hvem skal spille')
+    expect(wrap(<Family onPicked={noop} onPrivacy={noop} />)).toContain('Hvem skal spille')
+    expect(wrap(<Personvern go={noop} />)).toContain('Sletting')
     expect(wrap(<TopicLadder topic={TOPICS[0]} go={noop} onOpenLevel={noop} />)).toContain('Hele timer')
     expect(renderToString(<AdultGate onPass={noop} />)).toContain('tre sekunder')
   })

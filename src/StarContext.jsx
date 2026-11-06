@@ -90,6 +90,7 @@ export function StarProvider({ children }) {
   const [authReady, setAuthReady] = useState(!supabase)
   const [childProfiles, setChildProfiles] = useState(() => loadJSON(CHILDREN_KEY, []))
   const [onLine, setOnLine] = useState(typeof navigator === 'undefined' ? true : navigator.onLine)
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
   const [syncState, setSyncState] = useState('lokal') // lokal | synket | venter | frakoblet
 
   // Aktiv profil (hvem som spiller nå) og dataene deres.
@@ -127,9 +128,10 @@ export function StarProvider({ children }) {
       setSession(session)
       setAuthReady(true)
     })
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
       setAuthReady(true)
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true)
     })
     return () => sub.subscription.unsubscribe()
   }, [])
@@ -185,6 +187,27 @@ export function StarProvider({ children }) {
     },
     [session, refreshChildren],
   )
+
+  // Slett hele familiekontoen: alle barn, all fremgang og brukeren selv.
+  const deleteAccount = useCallback(async () => {
+    if (!supabase || !session) return { error: new Error('Ikke innlogget') }
+    const ids = childProfiles.map((c) => c.id)
+    const { error } = await supabase.rpc('delete_my_account')
+    if (error) return { error }
+    try {
+      for (const id of ids) localStorage.removeItem(dataKey(id))
+      localStorage.removeItem(ACTIVE_KEY)
+      localStorage.removeItem(CHILDREN_KEY)
+      localStorage.removeItem(DIRTY_KEY)
+    } catch {
+      /* ignorer */
+    }
+    await supabase.auth.signOut()
+    setChildProfiles([])
+    setProfile(null)
+    setData(emptyData())
+    return { error: null }
+  }, [session, childProfiles])
 
   // ---- Synk ----------------------------------------------------------------
   // Alt lagres lokalt med én gang. Profiler med usendte endringer står i en
@@ -565,6 +588,9 @@ export function StarProvider({ children }) {
         refreshChildren,
         addChild,
         removeChild,
+        deleteAccount,
+        passwordRecovery,
+        clearPasswordRecovery: () => setPasswordRecovery(false),
         childrenData,
         loadChildData,
         updateChildData,

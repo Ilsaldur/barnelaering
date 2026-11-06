@@ -6,7 +6,7 @@
 |--------|--------|----------------|
 | 0 – Les og planlegg | Ferdig. Svar fått: bygg på lokal `main`, Supabase-prosjektet `selmas-skole` er riktig, Vitest er greit, startverden i stedet for alder, nytt trinn som nivåer i stigene, stjerneregel for alle motorer, gammel framgang kan nullstilles. Se `docs/etappe0.md`. | 2026-11-05 |
 | 1 – Rett opp det som er galt i dag | Ferdig og pushet. Endringslogg og prøveliste i `docs/etappe1.md`. | 2026-11-05 |
-| 2 – Innlogging, profiler og synkronisering | Kode ferdig. Jon må sette Vercel-nøkler, stenge registrering og legge inn e-poster i Supabase (se `docs/etappe2.md`). | 2026-11-05 |
+| 2 – Innlogging, profiler og synkronisering | Ferdig. Endret til e-post og passord med åpen registrering og e-postbekreftelse, slett-konto og personvernside. Jon må kjøre `supabase/migrations/20261106_delete_my_account.sql` og sette passordregler (se `docs/etappe2.md`). | 2026-11-06 |
 | 3 – Mattestigen | Kode ferdig og pushet. Se `docs/etappe3.md`. | 2026-11-06 |
 | 4 – Dagens økt, kart og belønning | Kode ferdig og pushet. Se `docs/etappe4.md`. | 2026-11-06 |
 | 5 – Lesestigen | Kode ferdig og pushet. Innholdet i `src/data/lesing/innhold.js` er UTKAST og må leses gjennom. Se `docs/etappe5.md`. | 2026-11-06 |
@@ -19,7 +19,7 @@ Viktige funn for en ny økt:
 - Stigene er data: `src/data/matte/nivaer.js` (38 nivåer) og `src/data/lesing/nivaer.js` (16 nivåer). Oppdragsbygger og nivåregler er felles (`src/lib/matte/oppdrag.js`, `src/lib/matte/stige.js`) og tar en `stige` ({ nivaer, gen }).
 - Det finnes to utgaver av appen. Produksjon på Vercel kjører commit `2d5b097` (klassetrinn + Eventyrkart). Lokal `main` har en upushet commit `da2fcc1` (profiler, Supabase, temastiger, voksenside, opplesing, hage) som slettet Eventyrkartet. Se `docs/etappe0.md`.
 - Supabase-prosjektet `selmas-skole` (eu-north-1) finnes med tabellene `children` og `progress`, RLS på, ingen rader.
-- Vercel-prosjektet `selmasskole` har ingen miljøvariabler. `VITE_SUPABASE_URL` og `VITE_SUPABASE_ANON_KEY` må legges inn der før etappe 2 rulles ut (Jon gjør det i Vercel-dashbordet, nøkler skal ikke i repoet).
+- Vercel-prosjektet `selmasskole` har nå `VITE_SUPABASE_URL` og `VITE_SUPABASE_ANON_KEY` (lagt inn av Jon 2026-11-06). Registrering er åpen med e-postbekreftelse; appen bruker e-post og passord.
 
 ---
 

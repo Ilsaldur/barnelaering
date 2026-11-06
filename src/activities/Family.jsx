@@ -5,56 +5,83 @@ import { supabase } from '../lib/supabase.js'
 import { sound } from '../sound.js'
 
 // Startskjerm: «Hvem skal spille?» – barnet velger sin profil.
-// Den voksne logger inn med e-postlenke. Registrering er stengt: bare
-// e-postadresser som finnes som brukere i Supabase, får lenke.
+// Den voksne lager en familiekonto med e-post og passord (bekreftes på e-post
+// første gang). Alle kan lage konto; en konto ser bare sine egne barn.
 
 const AVATARS = ['🦊', '🐰', '🐱', '🦄', '🐸', '🐼', '🦁', '🐙', '🦖', '🐧', '🐨', '🦉']
+const MIN_PASSORD = 8
 
-function LoginForm({ onCancel }) {
+function feilTekst(error) {
+  const m = error?.message || ''
+  if (/Invalid login credentials/i.test(m)) return 'Feil e-post eller passord.'
+  if (/Email not confirmed/i.test(m)) return 'E-posten er ikke bekreftet ennå. Sjekk innboksen (og søppelpost) for lenken.'
+  if (/already registered|already been registered/i.test(m)) return 'Det finnes allerede en konto med denne e-posten. Logg inn, eller bruk «Glemt passord».'
+  if (/rate limit|too many/i.test(m)) return 'For mange forsøk på kort tid. Vent litt og prøv igjen.'
+  if (/Password should be|password/i.test(m)) return `Passordet er for svakt. Bruk minst ${MIN_PASSORD} tegn.`
+  if (/signups not allowed/i.test(m)) return 'Registrering er stengt.'
+  return 'Noe gikk galt: ' + m
+}
+
+function LoginForm({ onCancel, onPrivacy }) {
+  const [mode, setMode] = useState('inn') // inn | ny | glemt
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
-  const [sent, setSent] = useState(false)
   const [msg, setMsg] = useState(null)
+  const [done, setDone] = useState(null)
 
   async function submit(e) {
     e.preventDefault()
     if (!supabase) return
     setBusy(true)
     setMsg(null)
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { shouldCreateUser: false, emailRedirectTo: window.location.origin },
-    })
+    const mail = email.trim()
+    if (mode === 'inn') {
+      const { error } = await supabase.auth.signInWithPassword({ email: mail, password })
+      if (error) setMsg(feilTekst(error))
+      else onCancel()
+    } else if (mode === 'ny') {
+      if (password.length < MIN_PASSORD) setMsg(`Passordet må ha minst ${MIN_PASSORD} tegn.`)
+      else {
+        const { data, error } = await supabase.auth.signUp({ email: mail, password, options: { emailRedirectTo: window.location.origin } })
+        if (error) setMsg(feilTekst(error))
+        else if (data.session) onCancel()
+        else setDone({ tittel: 'Nesten ferdig!', tekst: `Vi har sendt en bekreftelseslenke til ${mail}. Trykk på den, og logg så inn her med passordet ditt.` })
+      }
+    } else {
+      const { error } = await supabase.auth.resetPasswordForEmail(mail, { redirectTo: window.location.origin })
+      if (error) setMsg(feilTekst(error))
+      else setDone({ tittel: 'Sjekk e-posten din', tekst: `Vi har sendt en lenke til ${mail}. Åpne den på denne enheten, så får du sette nytt passord.` })
+    }
     setBusy(false)
-    if (error) {
-      setMsg(
-        /not allowed|signups|Signups not allowed/i.test(error.message)
-          ? 'Denne e-postadressen har ikke tilgang.'
-          : 'Kunne ikke sende lenke: ' + error.message,
-      )
-    } else setSent(true)
   }
 
-  if (sent) {
+  if (done) {
     return (
       <div className="bg-white/95 rounded-3xl p-5 shadow-xl max-w-md mx-auto mt-4 text-center">
         <p className="text-5xl mb-2">📬</p>
-        <h2 className="text-xl font-extrabold text-slate-700 mb-2">Sjekk e-posten din</h2>
-        <p className="text-slate-600 font-semibold">
-          Vi har sendt en innloggingslenke til <span className="font-extrabold">{email}</span>. Åpne den på denne enheten, så er du inne.
-          Enheten forblir innlogget etterpå.
-        </p>
-        <button onClick={onCancel} className="mt-4 text-sm font-bold text-slate-400 hover:text-slate-600">
-          Lukk
+        <h2 className="text-xl font-extrabold text-slate-700 mb-2">{done.tittel}</h2>
+        <p className="text-slate-600 font-semibold">{done.tekst}</p>
+        <button
+          onClick={() => {
+            setDone(null)
+            setMode('inn')
+          }}
+          className="kid-btn bg-sky-500 text-white px-6 py-3 text-lg font-extrabold mt-4"
+        >
+          Til innlogging
         </button>
       </div>
     )
   }
 
+  const titler = { inn: '👨‍👩‍👧 Logg inn (for voksne)', ny: '👨‍👩‍👧 Lag familiekonto', glemt: '🔑 Glemt passord' }
   return (
     <form onSubmit={submit} className="bg-white/95 rounded-3xl p-5 shadow-xl max-w-md mx-auto mt-4">
-      <h2 className="text-xl font-extrabold text-slate-700 text-center mb-1">👨‍👩‍👧 Logg inn (for voksne)</h2>
-      <p className="text-center text-sm text-slate-500 font-semibold mb-3">Du får en lenke på e-post. Ingen passord.</p>
+      <h2 className="text-xl font-extrabold text-slate-700 text-center mb-1">{titler[mode]}</h2>
+      <p className="text-center text-sm text-slate-500 font-semibold mb-3">
+        {mode === 'ny' ? 'Én konto per familie. Barna får profiler under kontoen og logger aldri inn selv.' : mode === 'glemt' ? 'Vi sender en lenke der du kan sette nytt passord.' : 'Fremgangen følger barna mellom enhetene dine.'}
+      </p>
       <input
         type="email"
         required
@@ -62,14 +89,74 @@ function LoginForm({ onCancel }) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="E-post"
-        className="w-full rounded-2xl border-2 border-slate-200 px-4 py-3 text-lg mb-3 focus:border-sky-400 outline-none"
+        className="w-full rounded-2xl border-2 border-slate-200 px-4 py-3 text-lg mb-2 focus:border-sky-400 outline-none"
       />
+      {mode !== 'glemt' && (
+        <input
+          type="password"
+          required
+          minLength={mode === 'ny' ? MIN_PASSORD : 1}
+          autoComplete={mode === 'ny' ? 'new-password' : 'current-password'}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder={mode === 'ny' ? `Passord (minst ${MIN_PASSORD} tegn)` : 'Passord'}
+          className="w-full rounded-2xl border-2 border-slate-200 px-4 py-3 text-lg mb-3 focus:border-sky-400 outline-none"
+        />
+      )}
       {msg && <p className="text-sm font-bold text-rose-500 text-center mb-2">{msg}</p>}
       <button type="submit" disabled={busy} className="kid-btn bg-sky-500 text-white w-full py-3 text-xl font-extrabold disabled:opacity-50">
-        {busy ? '⏳ Sender …' : 'Send innloggingslenke'}
+        {busy ? '⏳ Vent litt …' : mode === 'inn' ? 'Logg inn' : mode === 'ny' ? 'Lag konto' : 'Send lenke'}
       </button>
-      <button type="button" onClick={onCancel} className="w-full text-center text-sm font-bold text-slate-400 hover:text-slate-600 mt-3">
-        Avbryt
+      <div className="flex flex-wrap justify-between gap-2 mt-3 text-sm font-bold text-slate-400">
+        {mode !== 'ny' && (
+          <button type="button" onClick={() => setMode('ny')} className="hover:text-slate-600">
+            Ny her? Lag konto
+          </button>
+        )}
+        {mode !== 'inn' && (
+          <button type="button" onClick={() => setMode('inn')} className="hover:text-slate-600">
+            Har konto? Logg inn
+          </button>
+        )}
+        {mode === 'inn' && (
+          <button type="button" onClick={() => setMode('glemt')} className="hover:text-slate-600">
+            Glemt passord?
+          </button>
+        )}
+      </div>
+      <div className="flex justify-between mt-4 text-xs font-bold text-slate-400">
+        <button type="button" onClick={onPrivacy} className="underline hover:text-slate-600">
+          Personvern
+        </button>
+        <button type="button" onClick={onCancel} className="hover:text-slate-600">
+          Avbryt
+        </button>
+      </div>
+    </form>
+  )
+}
+
+// Vises når brukeren kommer fra «glemt passord»-lenken.
+function NewPasswordForm({ onDone }) {
+  const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState(null)
+  async function submit(e) {
+    e.preventDefault()
+    if (password.length < MIN_PASSORD) return setMsg(`Passordet må ha minst ${MIN_PASSORD} tegn.`)
+    setBusy(true)
+    const { error } = await supabase.auth.updateUser({ password })
+    setBusy(false)
+    if (error) setMsg(feilTekst(error))
+    else onDone()
+  }
+  return (
+    <form onSubmit={submit} className="bg-white/95 rounded-3xl p-5 shadow-xl max-w-md mx-auto mt-4">
+      <h2 className="text-xl font-extrabold text-slate-700 text-center mb-3">🔑 Sett nytt passord</h2>
+      <input type="password" required minLength={MIN_PASSORD} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={`Nytt passord (minst ${MIN_PASSORD} tegn)`} className="w-full rounded-2xl border-2 border-slate-200 px-4 py-3 text-lg mb-3 focus:border-sky-400 outline-none" />
+      {msg && <p className="text-sm font-bold text-rose-500 text-center mb-2">{msg}</p>}
+      <button type="submit" disabled={busy} className="kid-btn bg-sky-500 text-white w-full py-3 text-xl font-extrabold disabled:opacity-50">
+        {busy ? '⏳' : 'Lagre passord'}
       </button>
     </form>
   )
@@ -84,13 +171,7 @@ function NewChildForm({ onCreate, onCancel }) {
     <div className="bg-white/95 rounded-3xl p-5 shadow-xl max-w-md mx-auto mt-4">
       <h2 className="text-xl font-extrabold text-slate-700 text-center mb-1">Ny spiller 🎉</h2>
       <p className="text-center text-sm text-slate-500 font-semibold mb-3">Bare et kallenavn og en figur. Ingenting annet lagres om barnet.</p>
-      <input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Kallenavn"
-        maxLength={20}
-        className="w-full rounded-2xl border-2 border-slate-200 px-4 py-3 text-lg mb-3 focus:border-sky-400 outline-none"
-      />
+      <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Kallenavn" maxLength={20} className="w-full rounded-2xl border-2 border-slate-200 px-4 py-3 text-lg mb-3 focus:border-sky-400 outline-none" />
       <div className="flex flex-wrap gap-2 justify-center mb-4">
         {AVATARS.map((a) => (
           <button
@@ -125,8 +206,8 @@ function NewChildForm({ onCreate, onCancel }) {
   )
 }
 
-export default function Family({ onPicked }) {
-  const { session, authReady, childProfiles, selectProfile, addChild, onLine } = useStars()
+export default function Family({ onPicked, onPrivacy }) {
+  const { session, authReady, childProfiles, selectProfile, addChild, onLine, passwordRecovery, clearPasswordRecovery } = useStars()
   const [showLogin, setShowLogin] = useState(false)
   const [showNewChild, setShowNewChild] = useState(false)
 
@@ -143,6 +224,8 @@ export default function Family({ onPicked }) {
         <h1 className="text-white font-extrabold text-4xl md:text-6xl drop-shadow-lg">Selmas skole</h1>
         <p className="text-white/95 font-bold text-2xl md:text-3xl mt-3">Hvem skal spille? 👇</p>
       </header>
+
+      {passwordRecovery && session && <NewPasswordForm onDone={clearPasswordRecovery} />}
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5 max-w-2xl mx-auto">
         {childProfiles.map((c) => (
@@ -188,7 +271,7 @@ export default function Family({ onPicked }) {
       {supabase && authReady && !session && (
         <div className="mt-6 text-center">
           {showLogin ? (
-            <LoginForm onCancel={() => setShowLogin(false)} />
+            <LoginForm onCancel={() => setShowLogin(false)} onPrivacy={onPrivacy} />
           ) : (
             <button
               onClick={() => {
@@ -197,7 +280,7 @@ export default function Family({ onPicked }) {
               }}
               className="text-white/90 font-bold underline text-lg"
             >
-              👨‍👩‍👧 For voksne: logg inn for å bruke appen på flere enheter
+              👨‍👩‍👧 For voksne: logg inn eller lag familiekonto
             </button>
           )}
         </div>
@@ -215,6 +298,12 @@ export default function Family({ onPicked }) {
           <Mascot mood="think" message="Laster …" />
         </div>
       )}
+
+      <p className="text-center mt-8">
+        <button onClick={onPrivacy} className="text-white/60 text-xs font-bold underline hover:text-white">
+          Personvern
+        </button>
+      </p>
     </div>
   )
 }
