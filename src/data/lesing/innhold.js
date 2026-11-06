@@ -130,7 +130,7 @@ export const TEKSTER = [
     sporsmaal: [
       { q: 'Hvilken farge har sykkelen?', alternativer: ['Blå med hvite striper', 'Rød', 'Grønn', 'Gul med svarte prikker'], svar: 'Blå med hvite striper', type: 'fakta' },
       { q: 'Hva gjør Ida etter at hun velter?', alternativer: ['Sykler igjen', 'Gråter', 'Går hjem', 'Ringer mamma'], svar: 'Sykler igjen', type: 'fakta' },
-      { q: 'Hvorfor tror du Ida ler?', alternativer: ['Hun er glad for å klare det selv', 'Hun synes pappa er dum', 'Hun fryser', 'Hun er sulten'], svar: 'Hun er glad for å klare det selv', type: 'mening' },
+      { q: 'Hvem holder i setet først?', alternativer: ['Pappa', 'Mamma', 'Ida selv', 'En nabo'], svar: 'Pappa', type: 'fakta' },
     ],
   },
   {
@@ -150,7 +150,7 @@ export const TEKSTER = [
     sporsmaal: [
       { q: 'Hva har Noah i matpakken?', alternativer: ['Brødskiver med ost og et eple', 'Pizza', 'Pølse og brus', 'Banan og yoghurt'], svar: 'Brødskiver med ost og et eple', type: 'fakta' },
       { q: 'Hvorfor er Sara lei seg?', alternativer: ['Hun har glemt matpakken', 'Hun har slått seg', 'Hun har mistet lua', 'Hun er syk'], svar: 'Hun har glemt matpakken', type: 'fakta' },
-      { q: 'Hva synes du om det Noah gjør?', alternativer: ['Det er snilt', 'Det er dumt', 'Det er skummelt', 'Det er kjedelig'], svar: 'Det er snilt', type: 'mening' },
+      { q: 'Hva gjør de etter maten?', alternativer: ['Leker sisten', 'Leser bok', 'Spiller fotball', 'Går hjem'], svar: 'Leker sisten', type: 'fakta' },
     ],
   },
   {
@@ -180,7 +180,7 @@ export const TEKSTER = [
     sporsmaal: [
       { q: 'Hvordan finner mauren veien hjem?', alternativer: ['Den følger lukt', 'Den ser på sola', 'Den spør en venn', 'Den husker veien'], svar: 'Den følger lukt', type: 'fakta' },
       { q: 'Hvem legger eggene?', alternativer: ['Dronningen', 'Vaktene', 'Alle maurene', 'Ingen'], svar: 'Dronningen', type: 'fakta' },
-      { q: 'Hva ville du helst gjort hvis du var en maur?', alternativer: ['Hentet mat', 'Passet eggene', 'Voktet inngangen', 'Alle svar er like gode'], svar: 'Alle svar er like gode', type: 'mening' },
+      { q: 'Hvor bor maurene?', alternativer: ['I en tue', 'I et tre', 'Under vann', 'I et hus'], svar: 'I en tue', type: 'fakta' },
     ],
   },
   {
@@ -190,6 +190,7 @@ export const TEKSTER = [
     sporsmaal: [
       { q: 'Hva skjer når Mia spiser eplet?', alternativer: ['Tannen løsner', 'Hun blir mett', 'Eplet er surt', 'Hun får vondt i magen'], svar: 'Tannen løsner', type: 'fakta' },
       { q: 'Hva ligger under puta neste morgen?', alternativer: ['En mynt', 'Tannen', 'Et eple', 'En lapp'], svar: 'En mynt', type: 'fakta' },
+      { q: 'Hva sier mamma om den løse tannen?', alternativer: ['La den være', 'Dra den ut', 'Spis et eple', 'Gå til tannlegen'], svar: 'La den være', type: 'fakta' },
     ],
   },
 ]

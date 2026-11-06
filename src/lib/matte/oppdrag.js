@@ -58,12 +58,25 @@ function unike(tasks, lagNy, rng) {
   return out
 }
 
+// Tekstoppdrag: to ulike tekster, tre spørsmål til den ene og to til den andre.
+function byggTekstOppdrag(nivaaId, stige, rng, tag = 'eget') {
+  const def = nivaaDef(nivaaId, stige)
+  const t = def.typer[0]
+  const a = stige.tekstOppgaver(t.type, t.param, 3, rng, [])
+  const b = stige.tekstOppgaver(t.type, t.param, 2, rng, a.map((x) => x.tekstId))
+  return [...a, ...b].map((task) => ({ ...task, nivaa: nivaaId, svarform: def.svar, hjelpAlltid: false, tag }))
+}
+
 export function buildMission(fag, { rng = Math.random, stige = MATTE_STIGE, lengde } = {}) {
   const MAKS = stige.nivaer.length
   const nivaa = Math.min(MAKS, Math.max(1, fag.nivaa || 1))
   const def = nivaaDef(nivaa, stige)
   const L = lengde || def.lengde || OPPDRAG_LENGDE
   const hjelp = !!fag.hjelpNeste
+  if (def.tekstOppdrag && stige.tekstOppgaver) {
+    // Ingen repetisjon eller smakebit på tekstnivåene.
+    return { nivaa, hjelp, tasks: byggTekstOppdrag(nivaa, stige, rng), kortIds: [] }
+  }
   const under = Math.max(1, nivaa - 1)
   const neste = Math.min(MAKS, nivaa + 1)
   const plan = [] // { nivaa, type?, param?, tag }
@@ -137,6 +150,17 @@ export function buildMission(fag, { rng = Math.random, stige = MATTE_STIGE, leng
 export function buildBoss(nivaa, target, { rng = Math.random, stige = MATTE_STIGE } = {}) {
   const MAKS = stige.nivaer.length
   const maal = Math.min(MAKS, target)
+  const maalDef = nivaaDef(maal, stige)
+  if (maalDef.tekstOppdrag && stige.tekstOppgaver) {
+    // Samme mønster: tre spørsmål fra en tekst på nivået over, to fra en tekst på målnivået.
+    const forste = Math.min(maal, nivaa + 1)
+    const d1 = nivaaDef(forste, stige)
+    const t1 = d1.tekstOppdrag ? d1.typer[0] : maalDef.typer[0]
+    const a = stige.tekstOppgaver(t1.type, t1.param, 3, rng, []).map((x) => ({ ...x, nivaa: d1.tekstOppdrag ? forste : maal, svarform: 'valg', hjelpAlltid: false, tag: 'sjef' }))
+    const t2 = maalDef.typer[0]
+    const b = stige.tekstOppgaver(t2.type, t2.param, 2, rng, a.map((x) => x.tekstId)).map((x) => ({ ...x, nivaa: maal, svarform: 'valg', hjelpAlltid: false, tag: 'sjef' }))
+    return { target: maal, tasks: [...a, ...b] }
+  }
   const nivaaer = []
   for (let n = nivaa + 1; n <= maal; n++) nivaaer.push(n)
   let fordeling

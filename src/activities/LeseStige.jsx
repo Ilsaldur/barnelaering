@@ -5,7 +5,7 @@ import { SpeakButton } from '../components/Speak.jsx'
 import { useStars } from '../StarContext.jsx'
 import { sound } from '../sound.js'
 import { SPOR, LESE_TAK, AAPNER_VED } from '../data/lesing/nivaer.js'
-import { genLesing } from '../lib/lesing/generatorer.js'
+import { genLesing, lagTekstOppgaver } from '../lib/lesing/generatorer.js'
 
 // Lesing er tre spor: Lese, Skrive riktig og Språk. Barnet velger spor selv,
 // og reven foreslår det sporet det er lengst siden barnet spilte.
@@ -48,6 +48,7 @@ function SporStige({ def, go }) {
     nivaer: def.nivaer,
     verdener: def.verdener,
     gen: genLesing,
+    tekstOppgaver: lagTekstOppgaver,
     omraadeFor: def.omraadeFor,
     start: def.id === 'lesing' ? START_LESE : [],
     ikoner: (n) => def.omraadeFor(n.id).emoji,

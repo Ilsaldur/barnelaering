@@ -50,8 +50,9 @@ export function applyResult(fag, { correct, total = OPPDRAG_LENGDE, nivaa, perTa
   next.beste[nivaa] = Math.max(next.beste[nivaa] || 0, events.stars)
   next.svake = oppdaterSvake(fag.svake, perTask, nivaa)
 
-  const oppGrense = Math.ceil((total * 7) / 8)
-  const sammeGrense = Math.ceil((total * 5) / 8)
+  // 8 oppgaver: 7–8 godt, 5–6 nøytralt, 0–4 svakt. 5 oppgaver: 4–5 godt, 3 nøytralt, 0–2 svakt.
+  const oppGrense = total === 5 ? 4 : Math.ceil((total * 7) / 8)
+  const sammeGrense = total === 5 ? 3 : Math.ceil((total * 5) / 8)
   if (hjelpModus && correct >= sammeGrense) {
     // Et oppdrag i hjelpemodus gir aldri paaRad + 1 og aldri sjefsoppgave.
     // Går det bra, slås hjelpemodus av.

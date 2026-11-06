@@ -25,7 +25,7 @@ import LaerKort from '../components/LaerKort.jsx'
 export default function Stige({ cfg, go }) {
   const { fag, updateFag, addStars, updateSettings, profile, data, giKort, markHistorie, markLaerkort } = useStars()
   const state = fag[cfg.id]
-  const STIGE = { nivaer: cfg.nivaer, gen: cfg.gen }
+  const STIGE = { nivaer: cfg.nivaer, gen: cfg.gen, tekstOppgaver: cfg.tekstOppgaver }
   const MAKS = cfg.nivaer.length
   const [view, setView] = useState('hub')
   const [mission, setMission] = useState(null)
@@ -227,7 +227,7 @@ export default function Stige({ cfg, go }) {
           </BigButton>
           {cfg.ekstra}
         </div>
-        <p className="text-center text-sm font-bold text-slate-500 mt-3">{def.lengde === 5 ? 'Fem oppgaver.' : 'Åtte oppgaver, to forsøk på hver.'} Alle åtte riktige gir tilbud om sjefsoppgave. Trykk på et nivå du har passert for å øve mer.</p>
+        <p className="text-center text-sm font-bold text-slate-500 mt-3">{def.lengde === 5 ? 'Fem oppgaver, to forsøk på hver. Alle fem riktige gir tilbud om sjefsoppgave.' : 'Åtte oppgaver, to forsøk på hver. Alle åtte riktige gir tilbud om sjefsoppgave.'} Trykk på et nivå du har passert for å øve mer.</p>
       </div>
       {cfg.hubEkstra}
       <Kart matte={state} onStart={startOppdrag} onReplay={startReplay} nivaer={cfg.nivaer} verdener={cfg.verdener} ikoner={cfg.ikoner} />

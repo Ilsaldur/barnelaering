@@ -65,7 +65,9 @@ export const speech = {
     }
   },
 
-  setAuto(on) {
+  // `stille`: appen selv setter verdien (fra profilen); da varsles ingen, så
+  // innstillingen ikke blir regnet som «rørt» av en voksen.
+  setAuto(on, { stille = false } = {}) {
     const before = this.autoEnabled()
     try {
       localStorage.setItem(AUTO_KEY, on ? 'på' : 'av')
@@ -73,7 +75,7 @@ export const speech = {
       /* ignorer */
     }
     if (!on) this.stop()
-    if (before !== !!on) for (const fn of listeners) fn(!!on)
+    if (!stille && before !== !!on) for (const fn of listeners) fn(!!on)
   },
 
   // Få beskjed når automatisk opplesing slås av eller på (lagres i profilen).

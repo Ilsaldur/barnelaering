@@ -370,7 +370,7 @@ export function StarProvider({ children }) {
   const autoNow = effectiveAutoSpeak(data)
   useEffect(() => {
     if (!profile) return
-    speech.setAuto(autoNow)
+    speech.setAuto(autoNow, { stille: true })
   }, [profile?.id, autoNow])
 
   useEffect(() => {

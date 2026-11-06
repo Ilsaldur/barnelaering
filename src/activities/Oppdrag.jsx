@@ -173,6 +173,22 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
         </div>
       )}
 
+      {task.lesTekst && !placement && !done && (
+        <div className="text-center my-2">
+          <button
+            type="button"
+            onClick={() => {
+              sound.click()
+              setUsedHelp(true)
+              speech.speak(task.lesTekst, { lang })
+            }}
+            className="kid-btn bg-violet-100 text-violet-700 text-base px-4 py-2"
+          >
+            📖 Les teksten for meg
+          </button>
+        </div>
+      )}
+
       {task.hørOrd && task.form !== 'skriv' && !done && (
         <div className="text-center my-2">
           <button type="button" onClick={() => speech.speak(`${task.hørOrd}. ${task.hørOrd}.`, { lang })} className="kid-btn bg-violet-500 text-white px-5 py-3 text-lg font-extrabold">

@@ -1,15 +1,15 @@
 import { describe, it, expect } from 'vitest'
 import { seeded } from '../../rng.js'
-import { genLesing, GEN_LESING } from '../generatorer.js'
+import { genLesing, GEN_LESING, lagTekstOppgaver } from '../generatorer.js'
 import { NIVAER_LESING, NIVAER_SKRIVE, NIVAER_SPRAK, SPOR } from '../../../data/lesing/nivaer.js'
 import { TEKSTER2 } from '../../../data/lesing/tekster2.js'
 import { normalize, migrerLesingSpor, emptyData } from '../../profil.js'
 import { TEKSTER, BOKSTAVER, RETTSKRIVING, SETNINGER, BOYING } from '../../../data/lesing/innhold.js'
-import { buildMission, oppgaveFraNivaa } from '../../matte/oppdrag.js'
+import { buildMission, buildBoss, oppgaveFraNivaa } from '../../matte/oppdrag.js'
 import { emptyFag } from '../../profil.js'
 import { applyResult } from '../../matte/stige.js'
 
-const STIGE = { nivaer: NIVAER_LESING, gen: genLesing }
+const STIGE = { nivaer: NIVAER_LESING, gen: genLesing, tekstOppgaver: lagTekstOppgaver }
 
 describe('innhold (UTKAST)', () => {
   it('bokstavene kommer i riktig rekkefølge', () => {
@@ -135,10 +135,48 @@ describe('oppdrag i lesestigen', () => {
     expect(m5.tasks.filter((t) => t.nivaa === 8).length).toBeGreaterThanOrEqual(3)
     expect(oppgaveFraNivaa(99, rng, STIGE).nivaa).toBe(12)
   })
-  it('nivåreglene skalerer til fem oppgaver', () => {
-    const f = { ...emptyFag(), nivaa: 8, plassert: true, paaRad: 1 }
-    expect(applyResult(f, { correct: 5, total: 5, nivaa: 8 }, 12).events.levelUp).toBe(true)
-    expect(applyResult(f, { correct: 4, total: 5, nivaa: 8 }, 12).fag.hjelpNeste).toBe(false)
-    expect(applyResult(f, { correct: 3, total: 5, nivaa: 8 }, 12).fag.hjelpNeste).toBe(true)
+  it('H2.3: fem oppgaver – 4 av 5 to ganger gir nivå opp, 3 av 5 to ganger gir ingen nedflytting', () => {
+    let f = { ...emptyFag(), nivaa: 9, plassert: true }
+    let r = applyResult(f, { correct: 4, total: 5, nivaa: 9 }, 12)
+    expect(r.fag.paaRad).toBe(1)
+    r = applyResult(r.fag, { correct: 4, total: 5, nivaa: 9 }, 12)
+    expect(r.events.levelUp).toBe(true)
+    expect(r.fag.nivaa).toBe(10)
+    f = { ...emptyFag(), nivaa: 9, plassert: true }
+    r = applyResult(f, { correct: 3, total: 5, nivaa: 9 }, 12)
+    expect(r.fag.hjelpNeste).toBe(false)
+    r = applyResult(r.fag, { correct: 3, total: 5, nivaa: 9 }, 12)
+    expect(r.fag.nivaa).toBe(9)
+    expect(r.events.levelDown).toBe(false)
+    expect(applyResult(f, { correct: 2, total: 5, nivaa: 9 }, 12).fag.hjelpNeste).toBe(true)
+    expect(applyResult(f, { correct: 5, total: 5, nivaa: 9 }, 12).events.boss).toBe(12)
+    expect(applyResult(f, { correct: 4, total: 5, nivaa: 9 }, 12).events.boss).toBe(null)
+  })
+  it('H2.4: et oppdrag på Lese 10 har nøyaktig to ulike tekster (3 + 2), ingen repetisjon', () => {
+    const rng = seeded(10)
+    for (let i = 0; i < 20; i++) {
+      const m = buildMission({ ...emptyFag(), nivaa: 10, plassert: true }, { rng, stige: STIGE })
+      expect(m.tasks).toHaveLength(5)
+      const ids = m.tasks.map((t) => t.tekstId)
+      expect(new Set(ids).size).toBe(2)
+      expect(ids.slice(0, 3).every((x) => x === ids[0])).toBe(true)
+      expect(ids.slice(3).every((x) => x === ids[3])).toBe(true)
+      for (const t of m.tasks) {
+        expect(t.nivaa).toBe(10)
+        expect(t.tag).toBe('eget')
+        expect(t.spoken).not.toContain(t.visual.tekst.slice(0, 30))
+        expect(t.lesTekst).toContain(t.visual.tekst.slice(0, 30))
+      }
+    }
+    for (const nivaa of [8, 9, 11, 12]) {
+      const m = buildMission({ ...emptyFag(), nivaa, plassert: true }, { rng, stige: STIGE })
+      expect(new Set(m.tasks.map((t) => t.tekstId)).size, `nivå ${nivaa}`).toBe(2)
+    }
+    const b = buildBoss(9, 12, { rng, stige: STIGE })
+    expect(b.tasks).toHaveLength(5)
+    expect(new Set(b.tasks.map((t) => t.tekstId)).size).toBe(2)
+  })
+  it('ingen meningsspørsmål i tekstene', () => {
+    for (const t of TEKSTER) for (const q of t.sporsmaal) expect(q.type, `${t.id}: ${q.q}`).not.toBe('mening')
   })
 })

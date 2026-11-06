@@ -26,11 +26,11 @@ export const NIVAER_LESING = [
   N(5, 'lydering', 'Lese lydrette ord med små bokstaver', [T('les_ord_bilde', { maks: 5 }, 2), T('lydering_bilde', { maks: 5 }, 1), T('bilde_ord', { maks: 5 }, 1)], { trinn: '1. trinn' }),
   N(6, 'ord', 'Vanlige ord: jeg, er, og, det, de, som', [T('vanlig_ord', {}, 2), T('les_ord_bilde', { maks: 5 }, 1)], { trinn: '1.–2. trinn' }),
   N(7, 'ord', 'Korte setninger: hvilket bilde passer?', [T('setning_bilde', {}, 2), T('vanlig_ord', {}, 1)], { trinn: '1.–2. trinn' }),
-  N(8, 'forstaa', 'Tekster på 40–80 ord med spørsmål', [T('tekst_sporsmaal', { maksOrd: 80 })], { trinn: '2. trinn', lengde: 5 }),
-  N(9, 'forstaa', 'Lengre tekster: fakta eller mening?', [T('tekst_sporsmaal', { maksOrd: 130 })], { trinn: '2.–3. trinn', lengde: 5 }),
-  N(10, 'dypere', 'Lese mellom linjene: hva skjer egentlig?', [T('tekst2', { type: 'slutning' })], { trinn: '3. trinn', lengde: 5 }),
-  N(11, 'dypere', 'Ordforråd: hva betyr ordet her?', [T('tekst2', { type: 'ordforraad' })], { trinn: '3.–4. trinn', lengde: 5 }),
-  N(12, 'dypere', 'Hovedtanken: hva handler teksten om?', [T('tekst2', { type: 'hovedtanke' })], { trinn: '4. trinn', lengde: 5 }),
+  N(8, 'forstaa', 'Tekster på 40–80 ord med spørsmål', [T('tekst_sporsmaal', { maksOrd: 80 })], { trinn: '2. trinn', lengde: 5, tekstOppdrag: true }),
+  N(9, 'forstaa', 'Lengre tekster: fakta eller mening?', [T('tekst_sporsmaal', { maksOrd: 130 })], { trinn: '2.–3. trinn', lengde: 5, tekstOppdrag: true }),
+  N(10, 'dypere', 'Lese mellom linjene: hva skjer egentlig?', [T('tekst2', { type: 'slutning' })], { trinn: '3. trinn', lengde: 5, tekstOppdrag: true }),
+  N(11, 'dypere', 'Ordforråd: hva betyr ordet her?', [T('tekst2', { type: 'ordforraad' })], { trinn: '3.–4. trinn', lengde: 5, tekstOppdrag: true }),
+  N(12, 'dypere', 'Hovedtanken: hva handler teksten om?', [T('tekst2', { type: 'hovedtanke' })], { trinn: '4. trinn', lengde: 5, tekstOppdrag: true }),
 ]
 
 // ---------------------------------------------------------------- Skrive riktig
