@@ -84,7 +84,8 @@ export default function Stige({ cfg, go }) {
   }
 
   // ---- Plassering ----
-  if (!state.plassert || !state.nivaa) {
+  // «Du starter på nivå …» vises etter testen, også etter at nivået er lagret.
+  if ((view === 'plassert' && plassert) || !state.plassert || !state.nivaa) {
     if (view === 'plassert' && plassert) {
       const d = cfg.nivaer[plassert.nivaa - 1]
       const o = cfg.omraadeFor(plassert.nivaa)

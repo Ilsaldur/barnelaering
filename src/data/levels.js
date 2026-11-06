@@ -33,9 +33,7 @@ export const COLORS = {
     { show: '⬛', answer: 'Svart' },
     { show: '🟫', answer: 'Brun' },
     { show: '⬜', answer: 'Hvit' },
-    { show: '🩷', answer: 'Rosa' },
-    { show: '🩵', answer: 'Lyseblå' },
-    { show: '🩶', answer: 'Grå' },
+    { show: '💗', answer: 'Rosa' },
   ],
 }
 

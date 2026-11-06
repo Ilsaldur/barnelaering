@@ -32,10 +32,10 @@ export const GEN_GEO = {
       form: 'valg',
       prompt: 'Hvilket land har dette flagget?',
       spoken: 'Hvilket land har dette flagget?',
-      visual: { kind: 'ikon', emoji: l.flagg },
+      visual: { kind: 'flagg', kode: l.kode, navn: l.navn },
       answer: l.navn,
       options: shuffle([l.navn, ...feil.map((x) => x.navn)], rng),
-      explain: `${l.flagg} er flagget til ${l.navn}.`,
+      explain: `Dette er flagget til ${l.navn}.`,
       readOptions: true,
     }
   },
@@ -49,10 +49,10 @@ export const GEN_GEO = {
       form: 'valg',
       prompt: `Hvilket flagg er ${l.navn} sitt?`,
       spoken: `Hvilket flagg er ${l.navn} sitt?`,
-      answer: l.flagg,
-      options: shuffle([l.flagg, ...feil.map((x) => x.flagg)], rng),
-      explain: `${l.navn} har flagget ${l.flagg}.`,
-      stor: true,
+      answer: l.kode,
+      options: shuffle([l.kode, ...feil.map((x) => x.kode)], rng),
+      optionFlagg: Object.fromEntries([l, ...feil].map((x) => [x.kode, x.navn])),
+      explain: `Nå vet du hvordan flagget til ${l.navn} ser ut.`,
     }
   },
   // Hovedstad.
@@ -66,7 +66,7 @@ export const GEN_GEO = {
         form: 'valg',
         prompt: `Hva er hovedstaden i ${l.navn}?`,
         spoken: `Hva er hovedstaden i ${l.navn}?`,
-        visual: { kind: 'ikon', emoji: l.flagg },
+        visual: { kind: 'flagg', kode: l.kode, navn: l.navn },
         answer: l.hovedstad,
         options: shuffle([l.hovedstad, ...feil.map((x) => x.hovedstad)], rng),
         explain: `Hovedstaden i ${l.navn} er ${l.hovedstad}.`,
@@ -95,7 +95,7 @@ export const GEN_GEO = {
       spoken: `Trykk på ${l.navn} på kartet.`,
       region,
       answer: l.id,
-      explain: `${l.navn} ${l.flagg} er markert med grønt.`,
+      explain: `${l.navn} er markert med grønt.`,
     }
   },
   // Hvilket land er markert?
@@ -111,7 +111,7 @@ export const GEN_GEO = {
       visual: { kind: 'kart', region, highlight: l.id },
       answer: l.navn,
       options: shuffle([l.navn, ...feil.map((x) => x.navn)], rng),
-      explain: `Det rosa landet er ${l.navn} ${l.flagg}.`,
+      explain: `Det rosa landet er ${l.navn}.`,
       readOptions: true,
     }
   },

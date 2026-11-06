@@ -11,7 +11,7 @@ export const BOKSTAVER = [
   { b: 's', lyd: 'sss', ord: 'sol', emoji: '☀️' },
   { b: 'o', lyd: 'o', ord: 'ost', emoji: '🧀' },
   { b: 'l', lyd: 'lll', ord: 'lam', emoji: '🐑' },
-  { b: 'e', lyd: 'e', ord: 'elg', emoji: '🫎' },
+  { b: 'e', lyd: 'e', ord: 'elg', emoji: '🦌' },
   { b: 'v', lyd: 'vvv', ord: 'vann', emoji: '💧' },
   { b: 'a', lyd: 'a', ord: 'ape', emoji: '🐒' },
   { b: 't', lyd: 't', ord: 'tog', emoji: '🚂' },
@@ -23,7 +23,7 @@ export const BOKSTAVER = [
   { b: 'r', lyd: 'rrr', ord: 'rev', emoji: '🦊' },
   { b: 'd', lyd: 'd', ord: 'due', emoji: '🕊️' },
   { b: 'u', lyd: 'u', ord: 'ugle', emoji: '🦉' },
-  { b: 'g', lyd: 'g', ord: 'gås', emoji: '🪿' },
+  { b: 'g', lyd: 'g', ord: 'gul', emoji: '🟡' },
   { b: 'n', lyd: 'nnn', ord: 'nese', emoji: '👃' },
   { b: 'p', lyd: 'p', ord: 'pil', emoji: '🏹' },
   { b: 'y', lyd: 'y', ord: 'yr', emoji: '🌧️' },
@@ -53,15 +53,12 @@ export const LYDRETTE_ORD = [
   { ord: 'tog', emoji: '🚂' },
   { ord: 'rev', emoji: '🦊' },
   { ord: 'fly', emoji: '✈️' },
-  { ord: 'hund', emoji: '🐶' },
   { ord: 'fisk', emoji: '🐟' },
   { ord: 'kake', emoji: '🍰' },
   { ord: 'pil', emoji: '🏹' },
-  { ord: 'sky', emoji: '☁️' },
   { ord: 'måne', emoji: '🌙' },
   { ord: 'due', emoji: '🕊️' },
   { ord: 'ugle', emoji: '🦉' },
-  { ord: 'gås', emoji: '🪿' },
   { ord: 'ulv', emoji: '🐺' },
   { ord: 'nese', emoji: '👃' },
   { ord: 'hest', emoji: '🐴' },
@@ -69,15 +66,12 @@ export const LYDRETTE_ORD = [
   { ord: 'bie', emoji: '🐝' },
   { ord: 'mat', emoji: '🍲' },
   { ord: 'bad', emoji: '🛁' },
-  { ord: 'ski', emoji: '🎿' },
   { ord: 'gul', emoji: '🟡' },
-  { ord: 'rød', emoji: '🔴' },
   { ord: 'blå', emoji: '🔵' },
   { ord: 'rose', emoji: '🌹' },
   { ord: 'kanin', emoji: '🐰' },
   { ord: 'banan', emoji: '🍌' },
   { ord: 'sko', emoji: '👟' },
-  { ord: 'kopp', emoji: '☕' },
   { ord: 'melon', emoji: '🍉' },
 ]
 
@@ -193,6 +187,86 @@ export const TEKSTER = [
       { q: 'Hva sier mamma om den løse tannen?', alternativer: ['La den være', 'Dra den ut', 'Spis et eple', 'Gå til tannlegen'], svar: 'La den være', type: 'fakta' },
     ],
   },
+  {
+    id: 'kattungen',
+    tittel: 'Kattungen',
+    tekst: 'Mille har fått en kattunge. Den er grå med hvite poter og heter Lykke. Lykke liker å sove i en skoeske ved ovnen. Når Mille kommer hjem fra skolen, løper Lykke mot henne og maler. Om kvelden leker de med et garnnøste. Lykke hopper etter nøstet til hun blir trøtt. Da krøller hun seg sammen i esken og sover.',
+    sporsmaal: [
+      { q: 'Hva heter kattungen?', alternativer: ['Lykke', 'Mille', 'Nøste', 'Grå'], svar: 'Lykke', type: 'fakta' },
+      { q: 'Hvor liker Lykke å sove?', alternativer: ['I en skoeske', 'I senga', 'På taket', 'I en kurv'], svar: 'I en skoeske', type: 'fakta' },
+      { q: 'Hva leker de med om kvelden?', alternativer: ['Et garnnøste', 'En ball', 'En fjær', 'En bil'], svar: 'Et garnnøste', type: 'fakta' },
+    ],
+  },
+  {
+    id: 'skolevei',
+    tittel: 'Veien til skolen',
+    tekst: 'Hver morgen går Jon til skolen sammen med naboen Lea. De går forbi en bakeri som lukter boller. Så krysser de veien ved lysene. De venter alltid på grønn mann. Ved skolen står læreren og vinker. Jon og Lea liker best fredagene, for da har de gym.',
+    sporsmaal: [
+      { q: 'Hvem går Jon til skolen med?', alternativer: ['Naboen Lea', 'Mamma', 'Læreren', 'Broren sin'], svar: 'Naboen Lea', type: 'fakta' },
+      { q: 'Hva venter de på ved lysene?', alternativer: ['Grønn mann', 'Bussen', 'Læreren', 'En bil'], svar: 'Grønn mann', type: 'fakta' },
+      { q: 'Hvilken dag liker de best?', alternativer: ['Fredag', 'Mandag', 'Lørdag', 'Onsdag'], svar: 'Fredag', type: 'fakta' },
+    ],
+  },
+  {
+    id: 'snomann',
+    tittel: 'Snømannen',
+    tekst: 'Det har snødd hele natten. Emil og Sara løper ut i hagen. De ruller tre store snøballer og setter dem oppå hverandre. Sara finner en gulrot til nese og to steiner til øyne. Emil setter pappas gamle lue på toppen. Snømannen smiler. De kaller ham Bjarne.',
+    sporsmaal: [
+      { q: 'Hvor mange snøballer ruller de?', alternativer: ['Tre', 'To', 'Fire', 'Fem'], svar: 'Tre', type: 'fakta' },
+      { q: 'Hva bruker Sara til nese?', alternativer: ['En gulrot', 'En stein', 'En pinne', 'En kongle'], svar: 'En gulrot', type: 'fakta' },
+      { q: 'Hva heter snømannen?', alternativer: ['Bjarne', 'Emil', 'Pappa', 'Sara'], svar: 'Bjarne', type: 'fakta' },
+    ],
+  },
+  {
+    id: 'busstur',
+    tittel: 'Bussturen',
+    tekst: 'Klassen skal på tur til museet. De tar bussen klokka ni. Ali får sitte ved vinduet. Han ser kuer, en traktor og en elv. På museet ser de et skjelett av en hval. Det er lengre enn hele klasserommet. Etterpå spiser de matpakke i parken. Ali tenker at hvaler må være de største dyrene i verden.',
+    sporsmaal: [
+      { q: 'Når tar de bussen?', alternativer: ['Klokka ni', 'Klokka åtte', 'Klokka ti', 'Klokka tolv'], svar: 'Klokka ni', type: 'fakta' },
+      { q: 'Hva ser de på museet?', alternativer: ['Et skjelett av en hval', 'En dinosaur', 'Et fly', 'En robot'], svar: 'Et skjelett av en hval', type: 'fakta' },
+      { q: 'Hvor spiser de matpakke?', alternativer: ['I parken', 'På bussen', 'I klasserommet', 'På museet'], svar: 'I parken', type: 'fakta' },
+    ],
+  },
+  {
+    id: 'bakedag',
+    tittel: 'Bakedag',
+    tekst: 'Bestemor og Oda skal bake boller. De måler mel, sukker og gjær. Oda knekker to egg i bollen. Deigen må hvile i en time. Mens de venter, spiller de kort. Så triller de tjue runde boller og setter dem i ovnen. Snart lukter det nydelig i hele huset. Oda får den første bollen, varm med smør.',
+    sporsmaal: [
+      { q: 'Hvor mange egg knekker Oda?', alternativer: ['To', 'Ett', 'Tre', 'Fire'], svar: 'To', type: 'fakta' },
+      { q: 'Hva gjør de mens deigen hviler?', alternativer: ['Spiller kort', 'Ser på TV', 'Går en tur', 'Vasker opp'], svar: 'Spiller kort', type: 'fakta' },
+      { q: 'Hvor mange boller lager de?', alternativer: ['Tjue', 'Ti', 'Tolv', 'Tretti'], svar: 'Tjue', type: 'fakta' },
+    ],
+  },
+  {
+    id: 'fotballkamp',
+    tittel: 'Kampen',
+    tekst: 'Det er kamp på lørdag. Noor spiller på laget med de grønne draktene. I første omgang scorer det andre laget. Noor blir lei seg, men treneren sier at kampen ikke er over. I andre omgang får Noor ballen. Hun løper forbi to spillere og skyter. Mål! Kampen ender uavgjort, én mot én. Hele laget jubler likevel.',
+    sporsmaal: [
+      { q: 'Hvilken farge har draktene til Noor?', alternativer: ['Grønne', 'Røde', 'Blå', 'Gule'], svar: 'Grønne', type: 'fakta' },
+      { q: 'Hvem scorer først?', alternativer: ['Det andre laget', 'Noor', 'Treneren', 'Ingen'], svar: 'Det andre laget', type: 'fakta' },
+      { q: 'Hvordan ender kampen?', alternativer: ['Uavgjort, én mot én', 'Noor sitt lag vinner', 'Det andre laget vinner', 'Kampen blir avlyst'], svar: 'Uavgjort, én mot én', type: 'fakta' },
+    ],
+  },
+  {
+    id: 'fuglebrett',
+    tittel: 'Fuglebrettet',
+    tekst: 'Om vinteren henger pappa opp et fuglebrett utenfor kjøkkenvinduet. Theo fyller det med frø hver morgen. Først kommer kjøttmeisene. De er små og gule på magen. Så kommer en skjære som jager de små vekk. Theo banker på ruta, og skjæra flyr. Da kommer meisene tilbake. Theo teller sju av dem.',
+    sporsmaal: [
+      { q: 'Hvem fyller brettet med frø?', alternativer: ['Theo', 'Pappa', 'Mamma', 'Skjæra'], svar: 'Theo', type: 'fakta' },
+      { q: 'Hvilken farge har kjøttmeisene på magen?', alternativer: ['Gul', 'Rød', 'Blå', 'Svart'], svar: 'Gul', type: 'fakta' },
+      { q: 'Hvor mange meiser teller Theo?', alternativer: ['Sju', 'Fem', 'Ti', 'Tre'], svar: 'Sju', type: 'fakta' },
+    ],
+  },
+  {
+    id: 'bading',
+    tittel: 'Første bad i sjøen',
+    tekst: 'Det er sommer, og familien er på hytta. Vannet er kaldt, sier mamma, men Iver vil bade. Han går sakte uti. Først til knærne, så til magen. Så tar han sats og dykker. Vannet er iskaldt, men Iver ler. Han svømmer bort til flåten og klatrer opp. Der ligger han i sola til han er tørr. Så hopper han uti igjen.',
+    sporsmaal: [
+      { q: 'Hvor er familien?', alternativer: ['På hytta', 'Hjemme', 'På skolen', 'I byen'], svar: 'På hytta', type: 'fakta' },
+      { q: 'Hvordan er vannet?', alternativer: ['Iskaldt', 'Varmt', 'Skittent', 'Dypt og mørkt'], svar: 'Iskaldt', type: 'fakta' },
+      { q: 'Hvor svømmer Iver?', alternativer: ['Til flåten', 'Til stranda', 'Til båten', 'Rundt holmen'], svar: 'Til flåten', type: 'fakta' },
+    ],
+  },
 ]
 
 // Rettskriving: ord gruppert etter det som er vanskelig. `feil` er vanlige
@@ -203,8 +277,8 @@ export const RETTSKRIVING = {
     { ord: 'øy', emoji: '🏝️', feil: ['øi', 'øj', 'oy'] },
     { ord: 'hai', emoji: '🦈', feil: ['hæi', 'haj', 'hay'] },
     { ord: 'hei', emoji: '👋', feil: ['hæi', 'hej', 'hai'] },
-    { ord: 'stein', emoji: '🪨', feil: ['stæin', 'sten', 'stejn'] },
-    { ord: 'rein', emoji: '🦌', feil: ['ræin', 'ren', 'rejn'] },
+    { ord: 'stein', emoji: '🪨', feil: ['stæin', 'stain', 'stejn'] },
+    { ord: 'rein', emoji: '🦌', feil: ['ræin', 'rain', 'rejn'] },
     { ord: 'tau', emoji: '🪢', feil: ['tav', 'tæu', 'taw'] },
     { ord: 'mai', emoji: '🌷', feil: ['mæi', 'maj', 'may'] },
     { ord: 'høy', emoji: '🌾', feil: ['høi', 'høj', 'hoy'] },
@@ -244,7 +318,7 @@ export const RETTSKRIVING = {
     { ord: 'hjelm', emoji: '⛑️', feil: ['jelm', 'hjælm', 'helm'] },
     { ord: 'hjem', emoji: '🏠', feil: ['jem', 'hjæm', 'hem'] },
     { ord: 'gjest', emoji: '🙋', feil: ['jest', 'gest', 'gjæst'] },
-    { ord: 'gjerde', emoji: '🪵', feil: ['jerde', 'gerde', 'gjære'] },
+    { ord: 'gjerde', emoji: '🚧', feil: ['jerde', 'gerde', 'gjære'] },
     { ord: 'deig', emoji: '🍞', feil: ['dei', 'deik', 'dæig'] },
     { ord: 'gjøre', emoji: '🔨', feil: ['jøre', 'gøre', 'gjore'] },
   ],
@@ -265,7 +339,7 @@ export const RETTSKRIVING = {
 // Språk: ordklasser, bøying, motsetninger og tegnsetting.
 export const ORDKLASSER = {
   substantiv: ['hund', 'bil', 'hus', 'eple', 'jente', 'skole', 'sol', 'bok', 'katt', 'stol'],
-  verb: ['løper', 'spiser', 'sover', 'leser', 'hopper', 'synger', 'ler', 'svømmer', 'tegner', 'går'],
+  verb: ['løpe', 'spise', 'sove', 'lese', 'hoppe', 'synge', 'le', 'svømme', 'tegne', 'gå'],
   adjektiv: ['rød', 'stor', 'glad', 'liten', 'varm', 'myk', 'rask', 'sulten', 'gul', 'kald'],
 }
 export const ORDKLASSE_NAVN = { substantiv: 'substantiv (navn på ting)', verb: 'verb (noe man gjør)', adjektiv: 'adjektiv (hvordan noe er)' }
@@ -306,13 +380,17 @@ export const MOTSETNINGER = [
 
 export const TEGNSETTING = [
   { setning: 'Hva heter du', svar: '?', feil: ['.', '!'] },
-  { setning: 'Jeg liker is', svar: '.', feil: ['?', '!'] },
-  { setning: 'Se opp', svar: '!', feil: ['.', '?'] },
   { setning: 'Hvor bor du', svar: '?', feil: ['.', '!'] },
+  { setning: 'Hvor mange år er du', svar: '?', feil: ['.', '!'] },
+  { setning: 'Hvilken dag er det i dag', svar: '?', feil: ['.', '!'] },
   { setning: 'Katten sover på senga', svar: '.', feil: ['?', '!'] },
-  { setning: 'Hurra, vi vant', svar: '!', feil: ['.', '?'] },
-  { setning: 'Kan du hjelpe meg', svar: '?', feil: ['.', '!'] },
   { setning: 'Toget går klokka ni', svar: '.', feil: ['?', '!'] },
+  { setning: 'Vi spiser middag klokka fem', svar: '.', feil: ['?', '!'] },
+  { setning: 'Ida har en rød sykkel', svar: '.', feil: ['?', '!'] },
+  { setning: 'Hurra, vi vant', svar: '!', feil: ['.', '?'] },
+  { setning: 'Au, det gjør vondt', svar: '!', feil: ['.', '?'] },
+  { setning: 'Gratulerer med dagen', svar: '!', feil: ['.', '?'] },
+  { setning: 'Pass deg for bilen', svar: '!', feil: ['.', '?'] },
 ]
 
 export const STOR_BOKSTAV = [

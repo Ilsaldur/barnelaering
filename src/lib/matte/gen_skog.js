@@ -1,6 +1,6 @@
 // Trylleskogen (nivå 1–6): telling, tallrekke, mer/mindre, dele opp tall,
 // pluss og minus innenfor 5 og 10. Alt er flervalg med nære feilsvar.
-import { EMOJIS, valg, santUsant, naer, randInt, pick, shuffle } from './felles.js'
+import { EMOJIS, valg, santUsant, naer, randInt, pick, shuffle, antall } from './felles.js'
 
 const TERNING = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
 
@@ -15,7 +15,7 @@ export const GEN_SKOG = {
         prompt: 'Hvor mange er det?',
         spoken: `Hvor mange ${em.navn} er det?`,
         visual: { kind: 'mengde', emoji: em.e, n },
-        explain: `Tell én og én: det er ${n} ${em.navn}.`,
+        explain: `Tell én og én: det er ${antall(n, em)}.`,
         readOptions: true,
       },
       n,
@@ -132,7 +132,7 @@ export const GEN_SKOG = {
           prompt,
           spoken: `Er det like mange ${A.navn} som ${B.navn}?`,
           visual: { kind: 'mengder', groups: [{ emoji: A.e, n: a }, { emoji: B.e, n: b }] },
-          explain: a === b ? `Ja, det er ${a} av hver.` : `Nei, det er ${a} ${A.navn} og ${b} ${B.navn}.`,
+          explain: a === b ? `Ja, det er ${a} av hver.` : `Nei, det er ${antall(a, A)} og ${antall(b, B)}.`,
         },
         a === b,
       )
@@ -147,7 +147,7 @@ export const GEN_SKOG = {
       prompt,
       spoken: `${prompt} ${A.navn} eller ${B.navn}?`,
       visual: { kind: 'mengder', groups: [{ emoji: A.e, n: a }, { emoji: B.e, n: b }] },
-      explain: `Det er ${a} ${A.navn} og ${b} ${B.navn}. ${variant === 'flest' ? 'Flest' : 'Færrest'} er ${winner.navn}.`,
+      explain: `Det er ${antall(a, A)} og ${antall(b, B)}. ${variant === 'flest' ? 'Flest' : 'Færrest'} er ${winner.navn}.`,
       answer,
       options,
     }
@@ -204,8 +204,9 @@ export const GEN_SKOG = {
         prompt: `${total} = ${a} + ?`,
         spoken: `${total} er ${a} pluss hva?`,
         visual: { kind: 'deling', total, a, emoji: em.e },
-        explain: `${a} + ${answer} = ${total}.`,
+        explain: a === 0 || answer === 0 ? `Alle ${total} ligger i én haug, og den andre er tom: ${a} + ${answer} = ${total}.` : `${a} + ${answer} = ${total}.`,
         readOptions: true,
+        harNull: a === 0 || answer === 0,
       },
       answer,
       naer(answer, { min: 0, max: max, rng }),
@@ -224,8 +225,9 @@ export const GEN_SKOG = {
         prompt: `${a} + ${b} = ?`,
         spoken: `${a} pluss ${b}?`,
         hjelp: { kind: 'pluss', a, b, emoji: em.e },
-        explain: `${a} + ${b} = ${a + b}. Tell videre fra ${a}: ${b} til.`,
+        explain: a === 0 || b === 0 ? `Pluss null er det samme tallet: ${a} + ${b} = ${a + b}. Null er ingenting.` : `${a} + ${b} = ${a + b}. Tell videre fra ${a}: ${b} til.`,
         readOptions: true,
+        harNull: a === 0 || b === 0,
       },
       a + b,
       naer(a + b, { min: 0, max: max + 2, rng }),
@@ -242,8 +244,9 @@ export const GEN_SKOG = {
         prompt: `${a} − ${b} = ?`,
         spoken: `${a} minus ${b}?`,
         hjelp: { kind: 'minus', a, b, emoji: em.e },
-        explain: `${a} − ${b} = ${a - b}. Ta bort ${b} fra ${a}.`,
+        explain: b === 0 ? `Tar vi bort null, er alt igjen: ${a} − 0 = ${a}.` : a === b ? `Tar vi bort alle, er det ingenting igjen: ${a} − ${b} = 0.` : `${a} − ${b} = ${a - b}. Ta bort ${b} fra ${a}.`,
         readOptions: true,
+        harNull: b === 0 || a === b,
       },
       a - b,
       naer(a - b, { min: 0, max: max + 2, rng }),

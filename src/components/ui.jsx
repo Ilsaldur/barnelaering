@@ -70,7 +70,7 @@ export function TopBar({ title, onHome }) {
         🏠 <span className="hidden sm:inline">Hjem</span>
       </button>
       {title && (
-        <h1 className="text-white font-extrabold text-2xl md:text-4xl drop-shadow text-center flex-1">
+        <h1 className="text-white font-extrabold text-lg sm:text-2xl md:text-4xl drop-shadow text-center flex-1 min-w-0 break-words leading-tight">
           {title}
         </h1>
       )}

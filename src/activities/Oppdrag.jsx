@@ -5,6 +5,7 @@ import Keypad, { parseAnswer } from '../components/Keypad.jsx'
 import { Visual, Help } from '../components/TaskVisual.jsx'
 import AnalogClock from '../components/AnalogClock.jsx'
 import VerdensKart from '../components/VerdensKart.jsx'
+import Flagg from '../components/Flagg.jsx'
 import { landById } from '../data/geo/land.js'
 import { laerkortForType, stegForType } from '../data/laerkort.js'
 import { Visual as KortVisual, Help as KortHelp } from '../components/TaskVisual.jsx'
@@ -257,7 +258,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
                 onClick={() => submit(opt)}
                 className={`kid-btn ${color} text-white py-5 md:py-6 relative ${big ? 'text-4xl md:text-5xl' : 'text-2xl md:text-3xl'} ${done && isAnswer ? 'animate-bouncey' : ''} ${feedback === 'retry' && isPicked ? 'animate-shake' : ''}`}
               >
-                {label}
+                {task.optionFlagg ? <Flagg kode={String(opt)} navn={task.optionFlagg[opt]} className="w-24 md:w-32 mx-auto" /> : label}
                 {task.optionsLang && (
                   <span
                     role="button"

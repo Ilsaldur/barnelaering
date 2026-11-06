@@ -1,7 +1,7 @@
 // Det gylne slottet (23–30) og Verdensrommet (31–38): gange og deling,
 // tall til 1000 og 10 000, tekstoppgaver, negative tall, brøk, desimaltall,
 // areal og omkrets, koordinater, likninger og parenteser.
-import { EMOJIS, valg, tast, santUsant, regneFeil, randInt, pick, shuffle, fmt } from './felles.js'
+import { EMOJIS, valg, tast, santUsant, regneFeil, randInt, pick, shuffle, fmt, antall, tall } from './felles.js'
 
 function gangeTask(type, a, b, rng, extra = {}) {
   return tast({ type, prompt: `${a} × ${b} = ?`, spoken: `${a} ganger ${b}?`, kortId: `gange:${a}x${b}`, hjelp: { kind: 'rutenett', rader: a, kolonner: b }, explain: extra.explain || `${a} × ${b} = ${a * b}. Det er ${a} rader med ${b} i hver.`, ...extra }, a * b)
@@ -13,7 +13,7 @@ export const GEN_SLOTT_ROM = {
     const b = pick(tabeller, rng)
     const a = randInt(1, 6, rng)
     const em = pick(EMOJIS, rng)
-    return tast({ type: 'gange_grupper', prompt: `${a} grupper med ${b} i hver. Hvor mange til sammen?`, spoken: `${a} grupper med ${b} i hver. Hvor mange er det til sammen?`, visual: { kind: 'grupper', grupper: a, per: b, emoji: em.e }, explain: `${a} grupper med ${b} er ${a} × ${b} = ${a * b}.` }, a * b)
+    return tast({ type: 'gange_grupper', prompt: `${tall(a, 'gruppe', 'grupper')} med ${b} i hver. Hvor mange til sammen?`, spoken: `${tall(a, 'gruppe', 'grupper')} med ${b} i hver. Hvor mange er det til sammen?`, visual: { kind: 'grupper', grupper: a, per: b, emoji: em.e }, explain: `${tall(a, 'gruppe', 'grupper')} med ${b} er ${a} × ${b} = ${a * b}.` }, a * b)
   },
   gange_rutenett: ({ max = 6 }, rng) => {
     const a = randInt(2, max, rng)
@@ -63,10 +63,10 @@ export const GEN_SLOTT_ROM = {
     const t = randInt(0, 9, rng)
     const e = randInt(0, 9, rng)
     const n = h * 100 + t * 10 + e
-    if (rng() < 0.5) return tast({ type: 'tall_1000', prompt: `${h} hundrere, ${t} tiere og ${e} enere = ?`, spoken: `${h} hundrere, ${t} tiere og ${e} enere. Hvilket tall er det?`, explain: `${h * 100} + ${t * 10} + ${e} = ${n}.` }, n)
+    if (rng() < 0.5) return tast({ type: 'tall_1000', prompt: `${tall(h, 'hundrer', 'hundrere')}, ${tall(t, 'tier', 'tiere')} og ${tall(e, 'ener', 'enere')} = ?`, spoken: `${tall(h, 'hundrer', 'hundrere')}, ${tall(t, 'tier', 'tiere')} og ${tall(e, 'ener', 'enere')}. Hvilket tall er det?`, explain: `${h * 100} + ${t * 10} + ${e} = ${n}.` }, n)
     const plass = pick(['hundrere', 'tiere', 'enere'], rng)
     const svar = { hundrere: h, tiere: t, enere: e }[plass]
-    return tast({ type: 'tall_1000', prompt: `Hvor mange ${plass} er det i ${n}?`, spoken: `Hvor mange ${plass} er det i ${n}?`, visual: { kind: 'stor', text: String(n) }, explain: `${n} er ${h} hundrere, ${t} tiere og ${e} enere.` }, svar)
+    return tast({ type: 'tall_1000', prompt: `Hvor mange ${plass} er det i ${n}?`, spoken: `Hvor mange ${plass} er det i ${n}?`, visual: { kind: 'stor', text: String(n) }, explain: `${n} er ${tall(h, 'hundrer', 'hundrere')}, ${tall(t, 'tier', 'tiere')} og ${tall(e, 'ener', 'enere')}.` }, svar)
   },
   tresifret_pluss_minus: (_, rng) => {
     const op = rng() < 0.5 ? 'add' : 'sub'
@@ -127,7 +127,7 @@ export const GEN_SLOTT_ROM = {
     const b = randInt(11, 30, rng)
     const t = Math.floor(b / 10) * 10
     const e = b % 10
-    if (rng() < 0.4) return tast({ type: 'tosifret_ganger_ensifret', prompt: `${a} × ${b} = ${a * t} + ?`, spoken: `${a} ganger ${b} er ${a * t} pluss hva?`, explain: `${b} er ${t} + ${e}. ${a} × ${e} = ${a * e}.` }, a * e)
+    if (e > 0 && rng() < 0.4) return tast({ type: 'tosifret_ganger_ensifret', prompt: `${a} × ${b} = ${a * t} + ?`, spoken: `${a} ganger ${b} er ${a * t} pluss hva?`, explain: `${b} er ${t} + ${e}. ${a} × ${e} = ${a * e}.` }, a * e)
     return tast({ type: 'tosifret_ganger_ensifret', prompt: `${a} × ${b} = ?`, spoken: `${a} ganger ${b}?`, explain: `Del opp ${b}: ${a} × ${t} = ${a * t} og ${a} × ${e} = ${a * e}. ${a * t} + ${a * e} = ${a * b}.` }, a * b)
   },
   // Nivå 33: tosifret delt på ensifret.
@@ -174,7 +174,7 @@ export const GEN_SLOTT_ROM = {
       const t = randInt(1, n - 1, rng)
       const total = n * randInt(2, 6, rng)
       const em = pick(EMOJIS, rng)
-      return tast({ type: 'brok', prompt: `Hva er ${t}/${n} av ${total}?`, spoken: `Hva er ${t} ${n === 2 ? 'halvdeler' : n === 3 ? 'tredeler' : 'firedeler'} av ${total}?`, visual: { kind: 'mengde', emoji: em.e, n: total }, brok: true, explain: `1/${n} av ${total} er ${total / n}. ${t}/${n} er ${t} × ${total / n} = ${(t * total) / n}.` }, (t * total) / n)
+      return tast({ type: 'brok', prompt: `Hva er ${t}/${n} av ${total}?`, spoken: `Hva er ${t === 1 ? (n === 2 ? 'en halv' : n === 3 ? 'en tredel' : 'en firedel') : `${t} ${n === 2 ? 'halvdeler' : n === 3 ? 'tredeler' : 'firedeler'}`} av ${total}?`, visual: { kind: 'mengde', emoji: em.e, n: total }, brok: true, explain: t === 1 ? `1/${n} av ${total} er ${total} ÷ ${n} = ${total / n}.` : `1/${n} av ${total} er ${total / n}. ${t}/${n} er ${t} × ${total / n} = ${(t * total) / n}.` }, (t * total) / n)
     }
     const paret = pick(
       [

@@ -9,7 +9,7 @@
 | H – Lesing | Ferdig og pushet. Se `docs/etappeH.md`. | 2026-11-06 |
 | I – Kort, klokke og kart | Ferdig og pushet. Se `docs/etappeI.md`. | 2026-11-06 |
 | J – Under panseret | Ferdig og pushet. Se `docs/etappeJ.md`. | 2026-11-06 |
-| K – Innhold | Ikke startet (resten av prompten mottatt). | |
+| K – Innhold | Ferdig og pushet. Se `docs/etappeK.md`. Innholdsfilene er fortsatt UTKAST til Jon har lest korrektur. | 2026-11-06 |
 
 ---
 

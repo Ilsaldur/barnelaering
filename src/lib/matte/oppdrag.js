@@ -158,6 +158,15 @@ export function buildMission(fag, { rng = Math.random, stige = MATTE_STIGE, leng
 
   let tasks = plan.map((p) => ({ ...(p.svak ? lagOppgaveAvType(p.nivaa, p.type, rng, stige) : lagOppgave(p.nivaa, rng, p, stige)), tag: p.tag, kortId: p.kortId || undefined }))
   tasks = unike(tasks, (n, r) => lagOppgave(n, r, {}, stige), rng, stige)
+  // Høyst én oppgave med 0 som ledd i et oppdrag (nivå 5–6).
+  let medNull = 0
+  tasks = tasks.map((t) => {
+    if (!t.harNull) return t
+    if (medNull++ === 0) return t
+    let ny = t
+    for (let i = 0; i < 30 && ny.harNull; i++) ny = { ...lagOppgaveAvType(t.nivaa, t.type, rng, stige), tag: t.tag, kortId: t.kortId }
+    return ny
+  })
   tasks.sort((a, b) => a.nivaa - b.nivaa)
   return { nivaa, hjelp, tasks: tasks.slice(0, L), kortIds }
 }

@@ -1,7 +1,7 @@
 // Det blå havet (7–14) og Det høye fjellet (15–22): pluss og minus med
 // talltastatur, tiervenner, tierovergang, tall til 100, åpne oppgaver,
 // dobling og halvering, penger og enkle tekstoppgaver.
-import { EMOJIS, valg, tast, santUsant, naer, regneFeil, apen, randInt, pick, shuffle, fmt } from './felles.js'
+import { EMOJIS, valg, tast, santUsant, naer, regneFeil, apen, randInt, pick, shuffle, fmt, antall, tall } from './felles.js'
 
 function plussTask(type, a, b, rng, extra = {}) {
   const em = pick(EMOJIS, rng)
@@ -108,9 +108,9 @@ export const GEN_HAV_FJELL = {
   tiere_enere_20: (_, rng) => {
     const e = randInt(1, 9, rng)
     const v = pick(['pluss', 'minus', 'navn'], rng)
-    if (v === 'pluss') return tast({ type: 'tiere_enere_20', prompt: `10 + ${e} = ?`, spoken: `10 pluss ${e}?`, hjelp: { kind: 'tiere', a: 10, b: e, op: 'add' }, explain: `10 og ${e} enere er ${10 + e}.` }, 10 + e)
+    if (v === 'pluss') return tast({ type: 'tiere_enere_20', prompt: `10 + ${e} = ?`, spoken: `10 pluss ${e}?`, hjelp: { kind: 'tiere', a: 10, b: e, op: 'add' }, explain: `10 og ${tall(e, 'ener', 'enere')} er ${10 + e}.` }, 10 + e)
     if (v === 'minus') return tast({ type: 'tiere_enere_20', prompt: `${10 + e} − ${e} = ?`, spoken: `${10 + e} minus ${e}?`, hjelp: { kind: 'tiere', a: 10 + e, b: e, op: 'sub' }, explain: `${10 + e} er 10 og ${e}. Tar vi bort ${e}, står 10 igjen.` }, 10)
-    return tast({ type: 'tiere_enere_20', prompt: `1 tier og ${e} enere = ?`, spoken: `Én tier og ${e} enere. Hvilket tall er det?`, hjelp: { kind: 'tiere', a: 10, b: e, op: 'add' }, explain: `1 tier er 10, og ${e} enere er ${e}: ${10 + e}.` }, 10 + e)
+    return tast({ type: 'tiere_enere_20', prompt: `1 tier og ${tall(e, 'ener', 'enere')} = ?`, spoken: `Én tier og ${tall(e, 'ener', 'enere')}. Hvilket tall er det?`, hjelp: { kind: 'tiere', a: 10, b: e, op: 'add' }, explain: `1 tier er 10, og ${tall(e, 'ener', 'enere')} er ${e}: ${10 + e}.` }, 10 + e)
   },
 
   // Nivå 11–13: innenfor 20.
@@ -180,9 +180,9 @@ export const GEN_HAV_FJELL = {
     const t = randInt(1, 9, rng)
     const e = randInt(0, 9, rng)
     const n = t * 10 + e
-    if (rng() < 0.5) return tast({ type: 'tiere_enere_100', prompt: `${t} tiere og ${e} enere = ?`, spoken: `${t} tiere og ${e} enere. Hvilket tall er det?`, hjelp: { kind: 'tiere', a: t * 10, b: e, op: 'add' }, explain: `${t} tiere er ${t * 10}, pluss ${e} enere: ${n}.` }, n)
+    if (rng() < 0.5) return tast({ type: 'tiere_enere_100', prompt: `${tall(t, 'tier', 'tiere')} og ${tall(e, 'ener', 'enere')} = ?`, spoken: `${tall(t, 'tier', 'tiere')} og ${tall(e, 'ener', 'enere')}. Hvilket tall er det?`, hjelp: { kind: 'tiere', a: t * 10, b: e, op: 'add' }, explain: `${tall(t, 'tier', 'tiere')} er ${t * 10}, pluss ${tall(e, 'ener', 'enere')}: ${n}.` }, n)
     const spørTiere = rng() < 0.5
-    return tast({ type: 'tiere_enere_100', prompt: `Hvor mange ${spørTiere ? 'tiere' : 'enere'} er det i ${n}?`, spoken: `Hvor mange ${spørTiere ? 'tiere' : 'enere'} er det i ${n}?`, visual: { kind: 'stor', text: String(n) }, explain: `${n} er ${t} tiere og ${e} enere.` }, spørTiere ? t : e)
+    return tast({ type: 'tiere_enere_100', prompt: `Hvor mange ${spørTiere ? 'tiere' : 'enere'} er det i ${n}?`, spoken: `Hvor mange ${spørTiere ? 'tiere' : 'enere'} er det i ${n}?`, visual: { kind: 'stor', text: String(n) }, explain: `${n} er ${tall(t, 'tier', 'tiere')} og ${tall(e, 'ener', 'enere')}.` }, spørTiere ? t : e)
   },
   tallinje_100: (_, rng) => {
     const n = randInt(1, 99, rng)
@@ -211,11 +211,11 @@ export const GEN_HAV_FJELL = {
     if (op === 'add') {
       const a = 10 * randInt(1, 8, rng)
       const b = 10 * randInt(1, (100 - a) / 10, rng)
-      return plussTask('hele_tiere', a, b, rng, { explain: `${a / 10} tiere + ${b / 10} tiere = ${(a + b) / 10} tiere = ${a + b}.` })
+      return plussTask('hele_tiere', a, b, rng, { explain: `${tall(a / 10, 'tier', 'tiere')} + ${tall(b / 10, 'tier', 'tiere')} = ${tall((a + b) / 10, 'tier', 'tiere')} = ${a + b}.` })
     }
     const a = 10 * randInt(2, 10, rng)
     const b = 10 * randInt(1, a / 10 - 1, rng)
-    return minusTask('hele_tiere', a, b, rng, { explain: `${a / 10} tiere − ${b / 10} tiere = ${(a - b) / 10} tiere = ${a - b}.` })
+    return minusTask('hele_tiere', a, b, rng, { explain: `${tall(a / 10, 'tier', 'tiere')} − ${tall(b / 10, 'tier', 'tiere')} = ${tall((a - b) / 10, 'tier', 'tiere')} = ${a - b}.` })
   },
   ti_mer_mindre: (_, rng) => {
     const n = randInt(11, 89, rng)
@@ -314,13 +314,13 @@ export const GEN_HAV_FJELL = {
     const a = randInt(3, 40, rng)
     const b = randInt(2, 30, rng)
     const v = pick(['faar', 'mister', 'tilsammen'], rng)
-    if (v === 'faar') return tast({ type: 'tekst_enkel', prompt: `Du har ${a} ${em.navn} og får ${b} til. Hvor mange har du nå?`, spoken: `Du har ${a} ${em.navn} og får ${b} til. Hvor mange har du nå?`, visual: { kind: 'ikon', emoji: em.e }, explain: `${a} + ${b} = ${a + b}.` }, a + b)
+    if (v === 'faar') return tast({ type: 'tekst_enkel', prompt: `Du har ${antall(a, em)} og får ${b} til. Hvor mange har du nå?`, spoken: `Du har ${antall(a, em)} og får ${b} til. Hvor mange har du nå?`, visual: { kind: 'ikon', emoji: em.e }, explain: `${a} + ${b} = ${a + b}.` }, a + b)
     if (v === 'mister') {
       const big = Math.max(a, b)
       const small = Math.min(a, b)
-      return tast({ type: 'tekst_enkel', prompt: `Du har ${big} ${em.navn} og gir bort ${small}. Hvor mange har du igjen?`, spoken: `Du har ${big} ${em.navn} og gir bort ${small}. Hvor mange har du igjen?`, visual: { kind: 'ikon', emoji: em.e }, explain: `${big} − ${small} = ${big - small}.` }, big - small)
+      return tast({ type: 'tekst_enkel', prompt: `Du har ${antall(big, em)} og gir bort ${small}. Hvor mange har du igjen?`, spoken: `Du har ${antall(big, em)} og gir bort ${small}. Hvor mange har du igjen?`, visual: { kind: 'ikon', emoji: em.e }, explain: `${big} − ${small} = ${big - small}.` }, big - small)
     }
-    return tast({ type: 'tekst_enkel', prompt: `Ida har ${a} ${em.navn} og Noah har ${b}. Hvor mange har de til sammen?`, spoken: `Ida har ${a} ${em.navn} og Noah har ${b}. Hvor mange har de til sammen?`, visual: { kind: 'ikon', emoji: em.e }, explain: `${a} + ${b} = ${a + b}.` }, a + b)
+    return tast({ type: 'tekst_enkel', prompt: `Ida har ${antall(a, em)} og Noah har ${b}. Hvor mange har de til sammen?`, spoken: `Ida har ${antall(a, em)} og Noah har ${b}. Hvor mange har de til sammen?`, visual: { kind: 'ikon', emoji: em.e }, explain: `${a} + ${b} = ${a + b}.` }, a + b)
   },
 }
 
