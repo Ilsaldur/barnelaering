@@ -6,7 +6,8 @@ import { supabase } from '../lib/supabase.js'
 import { speech } from '../speech.js'
 import { TOPICS, recommendedIndex, topicProgress } from '../progress.js'
 import { topicById } from '../data/topics.js'
-import { emptyData, recentRounds, minutesLastWeek, weakestTypes, FAG } from '../lib/profil.js'
+import { emptyData, recentRounds, minutesLastWeek, weakestTypes, FAG, todayKey } from '../lib/profil.js'
+import { ukestripe } from '../lib/dagen.js'
 import { FAG_LABELS, typeLabel } from '../lib/labels.js'
 import { MAKS_NIVAA, nivaaNavn } from '../data/stiger.js'
 
@@ -36,6 +37,82 @@ function Chip({ active, onClick, children }) {
     <button onClick={onClick} className={`rounded-full px-4 py-2 text-base font-extrabold transition ${active ? 'bg-sky-500 text-white shadow' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
       {children}
     </button>
+  )
+}
+
+// Denne uka dag for dag, og de fire siste ukene samlet.
+function Ukeoversikt({ d }) {
+  const uke = ukestripe({ dager: d.dager, settings: d.settings })
+  const perDag = {}
+  for (const e of d.log) {
+    const k = todayKey(new Date(e.t))
+    perDag[k] = perDag[k] || { runder: 0, oppdrag: 0, ms: 0, stars: 0, fag: {} }
+    perDag[k].runder++
+    if (e.oppdrag) perDag[k].oppdrag++
+    perDag[k].ms += e.ms || 0
+    perDag[k].stars += e.stars || 0
+    if (e.fag) perDag[k].fag[e.fag] = (perDag[k].fag[e.fag] || 0) + 1
+  }
+  const uker = [0, 1, 2, 3].map((w) => {
+    const now = new Date()
+    const day = (now.getDay() + 6) % 7
+    const monday = new Date(now)
+    monday.setDate(now.getDate() - day - 7 * w)
+    let runder = 0
+    let min = 0
+    let dager = 0
+    let stars = 0
+    for (let i = 0; i < 7; i++) {
+      const dd = new Date(monday)
+      dd.setDate(monday.getDate() + i)
+      const k = todayKey(dd)
+      const p = perDag[k]
+      if (!p) continue
+      runder += p.runder
+      min += p.ms
+      stars += p.stars
+      if (p.runder) dager++
+    }
+    return { w, runder, min: Math.round(min / 60000), dager, stars }
+  })
+  return (
+    <div>
+      <div className="grid grid-cols-7 gap-1 mb-3">
+        {uke.map((dag) => {
+          const p = perDag[dag.key]
+          return (
+            <div key={dag.key} className={`rounded-xl p-1.5 text-center ${dag.ferdig ? 'bg-emerald-100' : dag.idag ? 'bg-amber-50 ring-2 ring-amber-300' : 'bg-slate-50'}`}>
+              <p className="text-xs font-extrabold text-slate-500">{dag.navn}</p>
+              <p className="text-lg leading-tight">{dag.ferdig ? '✅' : p?.runder ? '🟡' : dag.framtid ? '' : '·'}</p>
+              <p className="text-[10px] font-bold text-slate-500">{p ? `${p.runder} r · ${Math.max(1, Math.round(p.ms / 60000))} min` : ''}</p>
+              {p && Object.keys(p.fag).length > 0 && <p className="text-[10px] text-slate-400">{Object.entries(p.fag).map(([f, n]) => `${FAG_LABELS[f]?.emoji || '🎮'}${n}`).join(' ')}</p>}
+            </div>
+          )
+        })}
+      </div>
+      <table className="w-full text-sm font-semibold text-slate-600">
+        <thead>
+          <tr className="text-xs text-slate-400">
+            <th className="text-left">Uke</th>
+            <th>Dager</th>
+            <th>Runder</th>
+            <th>Minutter</th>
+            <th>Stjerner</th>
+          </tr>
+        </thead>
+        <tbody>
+          {uker.map((u) => (
+            <tr key={u.w} className="border-t border-slate-100">
+              <td className="py-1">{u.w === 0 ? 'Denne uka' : u.w === 1 ? 'Forrige uke' : `${u.w} uker siden`}</td>
+              <td className="text-center">{u.dager}</td>
+              <td className="text-center">{u.runder}</td>
+              <td className="text-center">{u.min}</td>
+              <td className="text-center">{u.stars} ⭐</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 
@@ -79,6 +156,10 @@ function ChildPanel({ child, data, update, isActive }) {
             <p className="text-xs font-bold text-slate-500">minutter siste uke</p>
           </div>
         </div>
+      </Section>
+
+      <Section title="📆 Ukeoversikt">
+        <Ukeoversikt d={d} />
       </Section>
 
       <Section title="🪜 Nivå per fag">
@@ -162,9 +243,9 @@ function ChildPanel({ child, data, update, isActive }) {
           <div>
             <p className="font-bold text-slate-600 mb-2">Fag i «Dagens økt»</p>
             <div className="flex flex-wrap gap-2">
-              {['matte', 'lesing', 'klokke', 'geografi', 'overraskelse'].map((f) => (
+              {['matte', 'lesing', 'klokke', 'geografi', 'engelsk', 'overraskelse'].map((f) => (
                 <Chip key={f} active={(s.fagblanding || []).includes(f)} onClick={() => toggleFag(f)}>
-                  {f === 'overraskelse' ? '🎁 Overraskelse' : f === 'geografi' ? '🌍 Geografi' : `${FAG_LABELS[f].emoji} ${FAG_LABELS[f].navn}`}
+                  {f === 'overraskelse' ? '🎁 Overraskelse' : `${FAG_LABELS[f].emoji} ${FAG_LABELS[f].navn}`}
                 </Chip>
               ))}
             </div>

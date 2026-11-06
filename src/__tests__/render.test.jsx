@@ -19,6 +19,16 @@ import RoundDone from '../components/RoundDone.jsx'
 import AdultGate from '../components/AdultGate.jsx'
 import MatteStige from '../activities/MatteStige.jsx'
 import LeseStige from '../activities/LeseStige.jsx'
+import KlokkeStige from '../activities/KlokkeStige.jsx'
+import GeoStige from '../activities/GeoStige.jsx'
+import EngelskStige from '../activities/EngelskStige.jsx'
+import VerdensKart from '../components/VerdensKart.jsx'
+import { NIVAER_KLOKKE } from '../data/klokke/nivaer.js'
+import { NIVAER_GEO } from '../data/geo/nivaer.js'
+import { NIVAER_ENGELSK } from '../data/engelsk/nivaer.js'
+import { genKlokke } from '../lib/klokke/generatorer.js'
+import { genGeo } from '../lib/geo/generatorer.js'
+import { genEngelsk } from '../lib/engelsk/generatorer.js'
 import { NIVAER_LESING } from '../data/lesing/nivaer.js'
 import { genLesing } from '../lib/lesing/generatorer.js'
 import Noettehula from '../activities/Noettehula.jsx'
@@ -33,7 +43,7 @@ const wrap = (el) => renderToString(<StarProvider>{el}</StarProvider>)
 
 describe('alle skjermer rendrer uten feil', () => {
   it('forside, kart, stjerner, hage, voksenside, profilvalg', () => {
-    const home = wrap(<Home topics={TOPICS} onPick={noop} onSamling={noop} onGarden={noop} onParents={noop} onSwitchProfile={noop} onMatte={noop} onLesing={noop} onNoetter={noop} onDagens={noop} />)
+    const home = wrap(<Home topics={TOPICS} onPick={noop} onSamling={noop} onGarden={noop} onParents={noop} onSwitchProfile={noop} onMatte={noop} onLesing={noop} onNoetter={noop} onDagens={noop} onFag={noop} />)
     expect(home).toContain('Dagens økt')
     expect(home).toContain('Eventyrkartet')
     expect(wrap(<Samling go={noop} onGarden={noop} />)).toContain('Familiekisten')
@@ -43,7 +53,7 @@ describe('alle skjermer rendrer uten feil', () => {
     expect(wrap(<Garden go={noop} />)).toContain('Hagebutikken')
     expect(wrap(<Family onPicked={noop} onPrivacy={noop} />)).toContain('Hvem skal spille')
     expect(wrap(<Personvern go={noop} />)).toContain('Sletting')
-    expect(wrap(<TopicLadder topic={TOPICS[0]} go={noop} onOpenLevel={noop} />)).toContain('Hele timer')
+    expect(wrap(<TopicLadder topic={TOPICS[0]} go={noop} onOpenLevel={noop} />)).toContain('Hvilken form')
     expect(renderToString(<AdultGate onPass={noop} />)).toContain('tre sekunder')
   })
 
@@ -94,6 +104,26 @@ describe('alle skjermer rendrer uten feil', () => {
     for (const grad of [1, 2, 3]) {
       const tasks = lagNoetter(grad, 4, rng)
       expect(wrap(<Oppdrag tasks={tasks} title="Nøtter" onDone={noop} onHome={noop} />)).toContain('Oppgave')
+    }
+  })
+
+  it('klokke-, geografi- og engelskstigen rendrer med alle oppgavetyper', () => {
+    expect(wrap(<KlokkeStige go={noop} />)).toContain('Hva passer best')
+    expect(wrap(<GeoStige go={noop} />)).toContain('Hva passer best')
+    expect(wrap(<EngelskStige go={noop} />)).toContain('Hva passer best')
+    expect(renderToString(<VerdensKart region="norden" highlight="578" />)).toContain('<path')
+    const rng = seeded(41)
+    for (const [nivaer, gen, fag] of [
+      [NIVAER_KLOKKE, genKlokke, 'klokke'],
+      [NIVAER_GEO, genGeo, 'geografi'],
+      [NIVAER_ENGELSK, genEngelsk, 'engelsk'],
+    ]) {
+      for (const n of nivaer) {
+        for (const t of n.typer) {
+          const task = { ...gen(t.type, t.param, rng), nivaa: n.id }
+          expect(wrap(<TaskCard task={task} onDone={noop} index={0} total={8} fag={fag} />).length, `${fag} ${n.id}/${t.type}`).toBeGreaterThan(300)
+        }
+      }
     }
   })
 })

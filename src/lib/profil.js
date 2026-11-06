@@ -2,7 +2,7 @@
 // lagringer og fletting av to utgaver (lokal og sky) uten å miste noe.
 
 export const DATA_VERSION = 2
-export const FAG = ['matte', 'lesing', 'klokke']
+export const FAG = ['matte', 'lesing', 'klokke', 'geografi', 'engelsk']
 
 export function emptyFag() {
   return {

@@ -22,9 +22,13 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
 
 // Finn beste norske stemme. Faller tilbake på dansk/svensk og til slutt
 // standardstemmen.
-function pickVoice() {
+function pickVoice(lang) {
   if (!voices.length) refreshVoices()
   const by = (pred) => voices.find(pred)
+  if (lang && !lang.toLowerCase().startsWith('nb') && !lang.toLowerCase().startsWith('no')) {
+    const base = lang.toLowerCase().split('-')[0]
+    return by((v) => v.lang?.toLowerCase() === lang.toLowerCase()) || by((v) => v.lang?.toLowerCase().startsWith(base)) || null
+  }
   return (
     by((v) => v.lang?.toLowerCase().startsWith('nb')) ||
     by((v) => v.lang?.toLowerCase().startsWith('no')) ||
@@ -35,14 +39,14 @@ function pickVoice() {
   )
 }
 
-function browserSpeak(text) {
+function browserSpeak(text, lang) {
   const synth = window.speechSynthesis
   synth.cancel()
   const u = new SpeechSynthesisUtterance(text)
-  const voice = pickVoice()
+  const voice = pickVoice(lang)
   if (voice) u.voice = voice
-  u.lang = voice?.lang || 'nb-NO'
-  u.rate = 0.95
+  u.lang = voice?.lang || lang || 'nb-NO'
+  u.rate = lang && !lang.startsWith('nb') ? 0.85 : 0.95
   u.pitch = 1.05
   synth.speak(u)
 }
@@ -79,25 +83,26 @@ export const speech = {
   },
 
   // Les opp tekst. Den eneste veien til stemmen for hele appen.
-  speak(text) {
+  // lang: 'nb-NO' (standard) eller f.eks. 'en-GB' for engelske ord.
+  speak(text, { lang = 'nb-NO' } = {}) {
     if (!text) return
     const t = String(text).trim()
     if (!t) return
-    if (provider && provider(t)) return
+    if (provider && provider(t, lang)) return
     if (typeof window === 'undefined' || !window.speechSynthesis) return
-    browserSpeak(t)
+    browserSpeak(t, lang)
   },
 
   // Les opp bare hvis automatisk opplesing er på.
-  auto(text) {
-    if (this.autoEnabled()) this.speak(text)
+  auto(text, opts) {
+    if (this.autoEnabled()) this.speak(text, opts)
   },
 
   stop() {
     if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel()
   },
 
-  // Bytt stemme (f.eks. egne opptak). fn(text) → true hvis den leste.
+  // Bytt stemme (f.eks. egne opptak). fn(text, lang) → true hvis den leste.
   setProvider(fn) {
     provider = typeof fn === 'function' ? fn : null
   },

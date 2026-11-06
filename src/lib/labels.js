@@ -4,7 +4,10 @@
 export const FAG_LABELS = {
   matte: { navn: 'Matte', emoji: '🔢' },
   lesing: { navn: 'Lesing', emoji: '📖' },
-  klokke: { navn: 'Klokke', emoji: '🕐' },
+  klokke: { navn: 'Klokka', emoji: '🕐' },
+  geografi: { navn: 'Geografi', emoji: '🌍' },
+  engelsk: { navn: 'Engelsk', emoji: '🇬🇧' },
+  nott: { navn: 'Tenkenøtt', emoji: '🌰' },
 }
 
 export const TYPE_LABELS = {}

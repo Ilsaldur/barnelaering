@@ -16,7 +16,7 @@ describe('dagens økt', () => {
   })
   it('overraskelsen er lik hele dagen og kommer fra klokke, geografi eller nøtt', () => {
     expect(overraskelseFor('2026-11-06')).toBe(overraskelseFor('2026-11-06'))
-    expect(['klokke', 'geografi', 'nott']).toContain(overraskelseFor('2026-11-06'))
+    expect(['klokke', 'geografi', 'nott', 'engelsk']).toContain(overraskelseFor('2026-11-06'))
   })
   it('fast fag merkes', () => {
     const k = dagensKort({ settings: { ...emptySettings(), fast: 'matte' }, dayKey: '2026-11-06' })

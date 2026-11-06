@@ -3,7 +3,7 @@
 // går tapt på en fridag. Ren logikk, testet.
 import { todayKey } from './profil.js'
 
-export const OVERRASKELSER = ['klokke', 'geografi', 'nott']
+export const OVERRASKELSER = ['klokke', 'geografi', 'nott', 'engelsk']
 
 // Enkel deterministisk «tilfeldighet» per dato, så overraskelsen er lik hele dagen.
 function hashDay(key) {
@@ -21,7 +21,7 @@ export function overraskelseFor(dayKey = todayKey(), tilgjengelige = OVERRASKELS
 export function dagensKort({ settings, dayKey = todayKey(), fagTilgjengelig = ['matte'] }) {
   const blanding = settings?.fagblanding?.length ? settings.fagblanding : ['matte', 'lesing', 'overraskelse']
   const kort = []
-  const faste = ['matte', 'lesing', 'klokke', 'geografi'].filter((f) => blanding.includes(f))
+  const faste = ['matte', 'lesing', 'klokke', 'geografi', 'engelsk'].filter((f) => blanding.includes(f))
   for (const f of faste) {
     if (f === 'lesing' && !fagTilgjengelig.includes('lesing')) continue
     kort.push({ id: f, fag: f, fast: settings?.fast === f })
