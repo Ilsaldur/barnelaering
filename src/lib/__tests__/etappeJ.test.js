@@ -54,7 +54,7 @@ describe('J2 bom-lista med nivå', () => {
         for (const paa of [n, Math.min(stige.nivaer.length, n + 1)]) {
           // Tekstnivåene (Lese 8–12) har ingen repetisjon (etappe H2); der kommer
           // bare nivåets egne typer. Bommer fra lavere nivåer venter til neste ikke-tekstnivå.
-          if (stige.nivaer[paa - 1].tekstOppdrag && !def.tekstOppdrag) continue
+          if (stige.nivaer[paa - 1].tekstOppdrag && paa !== n) continue
           const fag = { ...emptyFag(), nivaa: paa, plassert: true, svake }
           let funnet = false
           for (let i = 0; i < 6 && !funnet; i++) {
