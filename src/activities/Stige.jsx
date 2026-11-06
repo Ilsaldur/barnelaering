@@ -145,44 +145,55 @@ export default function Stige({ cfg, go }) {
     const nyDef = cfg.nivaer[result.nyttNivaa - 1]
     const nyO = cfg.omraadeFor(result.nyttNivaa)
     return (
-      <RoundDone correct={result.correct} total={result.total} stars={result.stars} onAgain={() => setView('hub')} againLabel={`${cfg.emoji} Til ${(cfg.kartTittel || cfg.tittel).toLowerCase()}`} onHome={go}>
-        {result.levelUp && (
-          <div className="w-full sm:w-auto bg-amber-100 text-amber-700 rounded-2xl px-5 py-3 font-extrabold text-lg flex items-center gap-2">
-            <span className="text-3xl">🎉</span>
-            <span>
-              Nivå opp! Nå er du på nivå {result.nyttNivaa}: {nyDef.tittel} {nyO.emoji}
-            </span>
-          </div>
-        )}
-        {result.levelDown && (
-          <div className="w-full sm:w-auto bg-sky-100 text-sky-700 rounded-2xl px-5 py-3 font-extrabold text-lg flex items-center gap-2">
-            <span className="text-3xl">🦊</span>
-            <span>Reven tar deg med til nivå {result.nyttNivaa} en stund, så det blir litt lettere. Det er lurt å øve der det passer!</span>
-          </div>
-        )}
-        {result.sjefPassed === true && <div className="w-full sm:w-auto bg-amber-100 text-amber-700 rounded-2xl px-5 py-3 font-extrabold text-lg">👑 Du klarte sjefsoppgaven og hoppet til nivå {result.nyttNivaa}!</div>}
-        {result.sjefPassed === false && <div className="w-full sm:w-auto bg-sky-100 text-sky-700 rounded-2xl px-5 py-3 font-extrabold text-lg">Godt forsøk! Du fortsetter der du var, og får nytt tilbud neste gang du klarer alle åtte.</div>}
-        {result.kort?.length > 0 && (
-          <div className="w-full bg-white rounded-2xl px-5 py-3 shadow flex flex-wrap items-center justify-center gap-3">
-            <span className="font-extrabold text-slate-600">{result.kort.length === 1 ? 'Nytt samlekort!' : 'Nye samlekort!'}</span>
-            {result.kort.map((k) => (
-              <span key={k.id} className="flex items-center gap-1 bg-amber-50 rounded-xl px-3 py-1 font-bold text-slate-700">
-                <span className="text-2xl">{k.emoji}</span> {k.navn}
-              </span>
-            ))}
-          </div>
-        )}
-        {result.boss && (
-          <div className="w-full sm:w-auto bg-amber-50 rounded-2xl px-5 py-3 flex flex-col items-center gap-2">
-            <p className="font-extrabold text-amber-700">Alle åtte riktige! Vil du prøve sjefsoppgaven og hoppe til nivå {result.boss}?</p>
-            <p className="text-sm font-bold text-slate-500">Fem oppgaver, ett forsøk på hver. Fire riktige gir hopp. Du mister ingenting om det ikke går.</p>
-            <BigButton color="bg-amber-500" onClick={() => startSjef(result.boss)}>
-              👑 Ja, prøv sjefsoppgaven!
-            </BigButton>
-          </div>
-        )}
+      <RoundDone
+        correct={result.correct}
+        total={result.total}
+        stars={result.stars}
+        onAgain={() => setView('hub')}
+        againLabel={`${cfg.emoji} Til ${(cfg.kartTittel || cfg.tittel).toLowerCase()}`}
+        onHome={go}
+        before={
+          <>
+            {result.levelUp && (
+              <div className="bg-amber-100 text-amber-700 rounded-2xl px-5 py-3 font-extrabold text-lg flex items-center gap-2">
+                <span className="text-3xl">🎉</span>
+                <span>
+                  Nivå opp! Nå er du på nivå {result.nyttNivaa}: {nyDef.tittel} {nyO.emoji}
+                </span>
+              </div>
+            )}
+            {result.levelDown && (
+              <div className="bg-sky-100 text-sky-700 rounded-2xl px-5 py-3 font-extrabold text-lg flex items-center gap-2">
+                <span className="text-3xl">🦊</span>
+                <span>Reven tar deg med til nivå {result.nyttNivaa} en stund, så det blir litt lettere. Det er lurt å øve der det passer!</span>
+              </div>
+            )}
+            {result.sjefPassed === true && <div className="bg-amber-100 text-amber-700 rounded-2xl px-5 py-3 font-extrabold text-lg">👑 Du klarte sjefsoppgaven og hoppet til nivå {result.nyttNivaa}!</div>}
+            {result.sjefPassed === false && <div className="bg-sky-100 text-sky-700 rounded-2xl px-5 py-3 font-extrabold text-lg">Godt forsøk! Du fortsetter der du var, og får nytt tilbud neste gang du klarer alle {result.total === 5 ? 'fem' : 'åtte'}.</div>}
+            {result.kort?.length > 0 && (
+              <div className="bg-white rounded-2xl px-5 py-3 shadow flex flex-wrap items-center justify-center gap-3">
+                <span className="font-extrabold text-slate-600">{result.kort.length === 1 ? 'Nytt samlekort!' : 'Nye samlekort!'}</span>
+                {result.kort.map((k) => (
+                  <span key={k.id} className="flex items-center gap-1 bg-amber-50 rounded-xl px-3 py-1 font-bold text-slate-700">
+                    <span className="text-2xl">{k.emoji}</span> {k.navn}
+                  </span>
+                ))}
+              </div>
+            )}
+            {result.boss && (
+              <div data-testid="sjefstilbud" className="bg-amber-50 rounded-2xl px-5 py-3 flex flex-col items-center gap-2 text-center">
+                <p className="font-extrabold text-amber-700">Alle {result.total === 5 ? 'fem' : 'åtte'} riktige! Vil du prøve sjefsoppgaven og hoppe til nivå {result.boss}?</p>
+                <p className="text-sm font-bold text-slate-500">Fem oppgaver, ett forsøk på hver. Fire riktige gir hopp. Du mister ingenting om det ikke går.</p>
+                <BigButton color="bg-amber-500" className="max-w-full" onClick={() => startSjef(result.boss)}>
+                  👑 Ja, prøv sjefsoppgaven!
+                </BigButton>
+              </div>
+            )}
+          </>
+        }
+      >
         {!result.replay && (
-          <BigButton color="bg-fuchsia-500" onClick={startOppdrag}>
+          <BigButton color="bg-fuchsia-500" className="max-w-full" onClick={startOppdrag}>
             ▶️ Nytt oppdrag
           </BigButton>
         )}

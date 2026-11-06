@@ -5,11 +5,11 @@
 | Etappe | Status | Sist oppdatert |
 |--------|--------|----------------|
 | F – Hjelpemodus (haster) | Ferdig og pushet. Se `docs/etappeF.md`. | 2026-11-06 |
-| G – Resultatskjermen på nettbrett | Ikke startet | |
+| G – Resultatskjermen på nettbrett | Ferdig og pushet. Se `docs/etappeG.md`. | 2026-11-06 |
 | H – Lesing | Ikke startet | |
 | I – Kort, klokke og kart | Ikke startet | |
 | J – Under panseret | Ikke startet | |
-| K – Innhold | Ikke startet. **Prompten var kuttet midt i K** («Tegnsetting: bruk setninger der …»); resten mangler. | |
+| K – Innhold | Ikke startet (resten av prompten mottatt). | |
 
 ---
 
@@ -104,5 +104,13 @@ Rett dette, og merk filene som fortsatt er utkast:
 - Lydrette ord: ta ut ski, sky, hund, rød og kopp.
 - Rettskriving: «sten» og «ren» er lovlige på bokmål og kan ikke stå som feilsvar.
 - Ordklasser: kortet sier «du kan si å foran», men oppgavene bruker «løper» og «spiser». Gjør dem like.
-- Tegnsetting: bruk setninger der
-[… prompten sluttet her]
+- Tegnsetting: bruk setninger der bare ett tegn er naturlig.
+- Kortet om stumme bokstaver: «Ordet begynner med gj» står etter eksempelet «deig».
+- Lese 10–12: riktig svar er det lengste alternativet i 63–88 % av spørsmålene. Gjør feilsvarene like lange.
+- Lese 8: bare fem tekster. Skriv minst åtte til på 40–80 ord.
+- Matte nivå 5–6: høyst én av åtte oppgaver med 0 som ledd, og en egen forklaring for null.
+- Forklaringer: «1 biler», «1 tiere», «1 tredeler» og «1/3 er 1 × 4 = 4».
+- Matte nivå 32: «8 × 20 = 160 + ?» med svar 0 skal ikke lages.
+- Flagg vises som bokstaver på Windows. Bruk flaggbilder (SVG) i stedet for emojier.
+- Elg, gås og rosa hjerte er så nye emojier at eldre nettbrett viser tomme ruter. «Table» har bilde av en vedkubbe.
+- Småting: skjermen «Du starter på nivå …» etter plasseringen vises aldri. «Geografistigen» klippes på mobil. «Prøv selv»-kortet er gjennomsiktig, så oppgaven bak skinner gjennom.

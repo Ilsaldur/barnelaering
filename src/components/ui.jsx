@@ -48,7 +48,7 @@ export function BigButton({ children, onClick, color = 'bg-sky-500', className =
         sound.click()
         onClick?.(e)
       }}
-      className={`kid-btn ${color} text-white text-2xl md:text-3xl px-8 py-5 ${className}`}
+      className={`kid-btn ${color} text-white text-2xl md:text-3xl px-8 py-5 max-w-full ${className}`}
       {...rest}
     >
       {children}
