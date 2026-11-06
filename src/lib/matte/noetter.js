@@ -91,6 +91,40 @@ function magiskKvadrat(grad, rng) {
   }
 }
 
+// Alle løsninger av et 4 × 4-sudoku gitt de viste tallene (null = tomt).
+export function sudokuLosninger(grid, maks = 50) {
+  const g = grid.slice()
+  const out = []
+  const ok = (i, v) => {
+    const r = Math.floor(i / 4)
+    const c = i % 4
+    for (let k = 0; k < 4; k++) {
+      if (g[r * 4 + k] === v || g[k * 4 + c] === v) return false
+    }
+    const br = Math.floor(r / 2) * 2
+    const bc = Math.floor(c / 2) * 2
+    for (let rr = br; rr < br + 2; rr++) for (let cc = bc; cc < bc + 2; cc++) if (g[rr * 4 + cc] === v) return false
+    return true
+  }
+  const gaa = (i) => {
+    if (out.length >= maks) return
+    while (i < 16 && g[i]) i++
+    if (i === 16) {
+      out.push(g.slice())
+      return
+    }
+    for (let v = 1; v <= 4; v++) {
+      if (ok(i, v)) {
+        g[i] = v
+        gaa(i + 1)
+        g[i] = null
+      }
+    }
+  }
+  gaa(0)
+  return out
+}
+
 function sudoku4(grad, rng) {
   const base = [
     [1, 2, 3, 4],
@@ -98,27 +132,38 @@ function sudoku4(grad, rng) {
     [2, 1, 4, 3],
     [4, 3, 2, 1],
   ]
-  const perm = shuffle([1, 2, 3, 4], rng)
-  let g = base.map((r) => r.map((v) => perm[v - 1]))
-  if (rng() < 0.5) g = [g[1], g[0], g[3], g[2]]
-  if (rng() < 0.5) g = g.map((r) => [r[1], r[0], r[3], r[2]])
   const hul = grad === 1 ? 4 : grad === 2 ? 7 : 9
-  const cells = shuffle(Array.from({ length: 16 }, (_, i) => i), rng)
-  const skjult = cells.slice(0, hul)
-  const spør = skjult[0]
-  const grid = g.flat().map((v, i) => (skjult.includes(i) ? (i === spør ? '?' : '·') : String(v)))
-  const r = Math.floor(spør / 4)
-  const c = spør % 4
-  return {
-    type: 'sudoku4',
-    form: 'valg',
-    prompt: 'Mini-sudoku: hvert tall 1–4 skal stå én gang i hver rad, kolonne og boks. Hva skal stå der det er ?',
-    spoken: 'Mini-sudoku. Hvert tall fra 1 til 4 skal stå én gang i hver rad, kolonne og boks. Hva skal stå i ruta med spørsmålstegn?',
-    visual: { kind: 'sudoku', grid },
-    answer: g[r][c],
-    options: [1, 2, 3, 4],
-    explain: `I rad ${r + 1} og kolonne ${c + 1} mangler ${g[r][c]}.`,
+  for (let forsok = 0; forsok < 40; forsok++) {
+    const perm = shuffle([1, 2, 3, 4], rng)
+    let g = base.map((r) => r.map((v) => perm[v - 1]))
+    if (rng() < 0.5) g = [g[1], g[0], g[3], g[2]]
+    if (rng() < 0.5) g = g.map((r) => [r[1], r[0], r[3], r[2]])
+    const flat = g.flat()
+    const cells = shuffle(Array.from({ length: 16 }, (_, i) => i), rng)
+    const skjult = cells.slice(0, hul)
+    const vist = flat.map((v, i) => (skjult.includes(i) ? null : v))
+    const losninger = sudokuLosninger(vist)
+    // Spør bare om en rute der alle løsninger har samme tall.
+    const entydige = skjult.filter((i) => losninger.every((l) => l[i] === losninger[0][i]))
+    if (!entydige.length) continue
+    const spør = pick(entydige, rng)
+    const grid = flat.map((v, i) => (skjult.includes(i) ? (i === spør ? '?' : '·') : String(v)))
+    const r = Math.floor(spør / 4)
+    const c = spør % 4
+    return {
+      type: 'sudoku4',
+      form: 'valg',
+      prompt: 'Mini-sudoku: hvert tall 1–4 skal stå én gang i hver rad, kolonne og boks. Hva skal stå der det er ?',
+      spoken: 'Mini-sudoku. Hvert tall fra 1 til 4 skal stå én gang i hver rad, kolonne og boks. Hva skal stå i ruta med spørsmålstegn?',
+      visual: { kind: 'sudoku', grid },
+      answer: flat[spør],
+      options: [1, 2, 3, 4],
+      explain: `I rad ${r + 1} og kolonne ${c + 1} mangler ${flat[spør]}.`,
+      vist,
+    }
   }
+  // Reserve: få hull, alltid entydig.
+  return sudoku4(1, rng)
 }
 
 function hvilketTall(grad, rng) {

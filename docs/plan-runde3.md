@@ -8,7 +8,7 @@
 | G – Resultatskjermen på nettbrett | Ferdig og pushet. Se `docs/etappeG.md`. | 2026-11-06 |
 | H – Lesing | Ferdig og pushet. Se `docs/etappeH.md`. | 2026-11-06 |
 | I – Kort, klokke og kart | Ferdig og pushet. Se `docs/etappeI.md`. | 2026-11-06 |
-| J – Under panseret | Ikke startet | |
+| J – Under panseret | Ferdig og pushet. Se `docs/etappeJ.md`. | 2026-11-06 |
 | K – Innhold | Ikke startet (resten av prompten mottatt). | |
 
 ---

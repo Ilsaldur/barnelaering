@@ -5,7 +5,7 @@
 import { gen as genMatte } from './generatorer.js'
 import { NIVAER as NIVAER_MATTE } from '../../data/matte/nivaer.js'
 import { kortstokk, trekkKort } from './kort.js'
-import { activeWeakTypes, OPPDRAG_LENGDE, SJEF_LENGDE } from './stige.js'
+import { weakEntries, OPPDRAG_LENGDE, SJEF_LENGDE } from './stige.js'
 import { shuffle, randInt } from '../rng.js'
 
 // Standard er mattestigen. Andre stiger sender { nivaer, gen }.
@@ -35,23 +35,43 @@ function lagOppgave(nivaaId, rng, { type, param } = {}, stige = MATTE_STIGE) {
   return { ...task, nivaa: nivaaId, svarform: def.svar, hjelpAlltid: !!def.hjelpAlltid }
 }
 
-// Finn nivået der en oppgavetype hører hjemme (til svake typer).
+// Finn nivået der en oppgavetype hører hjemme (brukes når bommen mangler nivå).
 export function nivaaForType(type, stige = MATTE_STIGE) {
   const hit = stige.nivaer.find((n) => n.typer.some((t) => t.type === type))
   return hit ? hit.id : null
 }
 
-function nøkkel(task) {
-  return `${task.type}|${task.prompt}|${JSON.stringify(task.visual || null)}`
+// Lag en oppgave av en bestemt type fra et nivå. Mange typer får et annet navn
+// når de lages (skriv_diftonger, les_analog_whole …), så vi prøver nivåets
+// generatorer til vi treffer typen; ellers en vanlig oppgave fra nivået.
+function lagOppgaveAvType(nivaaId, type, rng, stige = MATTE_STIGE) {
+  const def = nivaaDef(nivaaId, stige)
+  const direkte = def.typer.find((t) => t.type === type)
+  if (direkte) return lagOppgave(nivaaId, rng, direkte, stige)
+  for (let i = 0; i < 30; i++) {
+    const t = trekkType(def, rng)
+    const task = stige.gen(t.type, t.param, rng)
+    if (task.type === type) return { ...task, nivaa: nivaaId, svarform: def.svar, hjelpAlltid: !!def.hjelpAlltid }
+  }
+  return lagOppgave(nivaaId, rng, {}, stige)
 }
 
-function unike(tasks, lagNy, rng) {
+function nøkkel(task) {
+  return `${task.type}|${task.prompt}|${JSON.stringify(task.visual || null)}|${JSON.stringify(task.answer)}|${task.hørOrd || ''}`
+}
+
+// Ingen like oppgaver i samme oppdrag. En svak oppgave lages på nytt med samme
+// type, så bom-lista virker også når typen har mange like spørsmål.
+function unike(tasks, lagNy, rng, stige = MATTE_STIGE) {
   const seen = new Set()
   const out = []
   for (const t of tasks) {
     let cur = t
     let guard = 0
-    while (seen.has(nøkkel(cur)) && guard++ < 20) cur = { ...lagNy(cur.nivaa, rng), tag: cur.tag }
+    while (seen.has(nøkkel(cur)) && guard++ < 20) {
+      const ny = cur.tag === 'svak' ? lagOppgaveAvType(cur.nivaa, cur.type, rng, stige) : lagNy(cur.nivaa, rng)
+      cur = { ...ny, tag: cur.tag, kortId: cur.kortId }
+    }
     seen.add(nøkkel(cur))
     out.push(cur)
   }
@@ -98,23 +118,21 @@ export function buildMission(fag, { rng = Math.random, stige = MATTE_STIGE, leng
   }
 
   // Svake typer erstatter repetisjonsplassene (og under-plasser i hjelpemodus).
-  // Aldri en type som hører hjemme over barnets nivå.
+  // Nivået bommen kom fra følger med; aldri en type over barnets nivå.
   const svake = shuffle(
-    activeWeakTypes(fag).filter((t) => {
-      const n = nivaaForType(t, stige)
-      return n != null && n <= nivaa
-    }),
+    weakEntries(fag)
+      .map((e) => ({ type: e.type, nivaa: e.nivaa ?? nivaaForType(e.type, stige) }))
+      .filter((e) => e.nivaa != null && e.nivaa >= 1 && e.nivaa <= Math.min(nivaa, MAKS)),
     rng,
   )
   let svakIdx = 0
   for (const p of plan) {
     if (svakIdx >= svake.length) break
     if (p.tag === 'rep' || (hjelp && p.tag === 'under' && svakIdx < 2)) {
-      const type = svake[svakIdx++]
-      const n = nivaaForType(type, stige)
-      p.nivaa = n
-      p.type = type
-      p.param = nivaaDef(n, stige).typer.find((t) => t.type === type)?.param || {}
+      const e = svake[svakIdx++]
+      p.nivaa = e.nivaa
+      p.type = e.type
+      p.svak = true
       p.tag = 'svak'
     }
   }
@@ -138,8 +156,8 @@ export function buildMission(fag, { rng = Math.random, stige = MATTE_STIGE, leng
     kortIds = kort.map((x) => x.id)
   }
 
-  let tasks = plan.map((p) => ({ ...lagOppgave(p.nivaa, rng, p, stige), tag: p.tag, kortId: p.kortId || undefined }))
-  tasks = unike(tasks, (n, r) => lagOppgave(n, r, {}, stige), rng)
+  let tasks = plan.map((p) => ({ ...(p.svak ? lagOppgaveAvType(p.nivaa, p.type, rng, stige) : lagOppgave(p.nivaa, rng, p, stige)), tag: p.tag, kortId: p.kortId || undefined }))
+  tasks = unike(tasks, (n, r) => lagOppgave(n, r, {}, stige), rng, stige)
   tasks.sort((a, b) => a.nivaa - b.nivaa)
   return { nivaa, hjelp, tasks: tasks.slice(0, L), kortIds }
 }
@@ -172,7 +190,7 @@ export function buildBoss(nivaa, target, { rng = Math.random, stige = MATTE_STIG
     for (let k = 0; k < fordeling[i]; k++) plan.push(n)
   })
   let tasks = plan.map((n) => ({ ...lagOppgave(n, rng, {}, stige), tag: 'sjef' }))
-  tasks = unike(tasks, (n, r) => lagOppgave(n, r, {}, stige), rng)
+  tasks = unike(tasks, (n, r) => lagOppgave(n, r, {}, stige), rng, stige)
   tasks.sort((a, b) => a.nivaa - b.nivaa)
   return { target: maal, tasks: tasks.slice(0, SJEF_LENGDE) }
 }

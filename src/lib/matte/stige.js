@@ -36,7 +36,7 @@ export function oppdaterSvake(svake, perTask, nivaa) {
         else out[r.type] = { ...cur, riktig }
       }
     } else if (!r.ok) {
-      out[r.type] = { bom: (cur?.bom || 0) + 1, riktig: 0 }
+      out[r.type] = { bom: (cur?.bom || 0) + 1, riktig: 0, nivaa: r.nivaa ?? cur?.nivaa ?? nivaa }
     }
   }
   return out
@@ -108,7 +108,10 @@ export function settNivaa(fag, nivaa) {
   return { ...fag, nivaa, plassert: true, paaRad: 0, svakRad: 0, hjelpNeste: false, sjef: null, svake: {} }
 }
 
-// Hvilke svake typer gjelder nå (alle på lista).
+// Hvilke svake typer gjelder nå (alle på lista), med nivået bommen kom fra.
 export function activeWeakTypes(fag) {
   return Object.keys(fag.svake || {})
+}
+export function weakEntries(fag) {
+  return Object.entries(fag.svake || {}).map(([type, v]) => ({ type, nivaa: v?.nivaa ?? null }))
 }

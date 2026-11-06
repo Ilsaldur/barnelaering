@@ -249,7 +249,8 @@ function Plassering({ cfg, stige, onDone, onHome }) {
   function velg(v) {
     sound.click()
     setStart(v)
-    const s = startPlassering({ start: v.nivaa, tak: v.tak ?? cfg.nivaer.length, maks: cfg.nivaer.length })
+    const trapp = cfg.start.map((x) => ({ start: x.nivaa, tak: x.tak ?? cfg.nivaer.length }))
+    const s = startPlassering({ start: v.nivaa, tak: v.tak ?? cfg.nivaer.length, maks: cfg.nivaer.length, trapp })
     setPl(s)
     setTask(oppgaveTilPlassering(s.pos, Math.random, stige))
   }
