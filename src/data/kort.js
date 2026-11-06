@@ -18,7 +18,7 @@ export const KORT = [
   { id: 'dyr-ugle', sett: 'dyr', nivaa: 5, navn: 'Hubro', emoji: '🦉', fakta: 'Hubroen er Norges største ugle og kan snu hodet nesten helt rundt.' },
   { id: 'dyr-elg', sett: 'dyr', nivaa: 6, navn: 'Elg', emoji: '🦌', fakta: 'Elgen er skogens konge og kan bli over to meter høy.' },
   // Det blå havet (7–14): dyr i og ved havet
-  { id: 'dyr-sel', sett: 'dyr', nivaa: 7, navn: 'Sel', emoji: '🦭', fakta: 'Selen kan holde pusten i over 20 minutter.' },
+  { id: 'dyr-sel', sett: 'dyr', nivaa: 7, navn: 'Ulv', emoji: '🐺', fakta: 'Ulven kan høre en annen ulv ule flere kilometer unna.' },
   { id: 'dyr-torsk', sett: 'dyr', nivaa: 8, navn: 'Torsk', emoji: '🐟', fakta: 'Torsken har en skjeggtråd under haken som den kjenner med.' },
   { id: 'dyr-krabbe', sett: 'dyr', nivaa: 9, navn: 'Krabbe', emoji: '🦀', fakta: 'Krabben går sidelengs og kan miste en klo og få en ny.' },
   { id: 'dyr-lunde', sett: 'dyr', nivaa: 10, navn: 'Lundefugl', emoji: '🐧', fakta: 'Lundefuglen kan holde ti småfisk i nebbet samtidig.' },
@@ -45,7 +45,7 @@ export const KORT = [
   { id: 'dino-anky', sett: 'dino', nivaa: 29, navn: 'Ankylosaurus', emoji: '🐢', fakta: 'Ankylosaurus hadde en klubbe på halen som kunne knekke bein.' },
   { id: 'dino-spino', sett: 'dino', nivaa: 30, navn: 'Spinosaurus', emoji: '🐊', fakta: 'Spinosaurus var lengre enn T. rex og kunne svømme.' },
   // Verdensrommet (31–38): planeter
-  { id: 'planet-merkur', sett: 'planeter', nivaa: 31, navn: 'Merkur', emoji: '🪨', fakta: 'Merkur er nærmest sola, og et år der varer bare 88 dager.' },
+  { id: 'planet-merkur', sett: 'planeter', nivaa: 31, navn: 'Merkur', emoji: '🌑', fakta: 'Merkur er nærmest sola, og et år der varer bare 88 dager.' },
   { id: 'planet-venus', sett: 'planeter', nivaa: 32, navn: 'Venus', emoji: '🌕', fakta: 'Venus er den varmeste planeten, varmere enn Merkur.' },
   { id: 'planet-jorda', sett: 'planeter', nivaa: 33, navn: 'Jorda', emoji: '🌍', fakta: 'Jorda er den eneste planeten vi vet har liv.' },
   { id: 'planet-mars', sett: 'planeter', nivaa: 34, navn: 'Mars', emoji: '🔴', fakta: 'Mars har det høyeste fjellet i solsystemet, tre ganger så høyt som Mount Everest.' },

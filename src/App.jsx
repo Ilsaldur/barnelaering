@@ -48,7 +48,7 @@ function AppInner() {
   // Personvernsiden kan åpnes både før og etter profilvalg.
   if (nav.view === 'personvern') {
     return (
-      <div className={`min-h-screen w-full bg-gradient-to-br ${PARENTS_BG} transition-colors duration-500`}>
+      <div className={`min-h-screen w-full overflow-x-hidden bg-gradient-to-br ${PARENTS_BG} transition-colors duration-500`}>
         <div className="max-w-3xl mx-auto p-3 md:p-6">
           <Personvern go={() => setNav({ view: nav.from || 'home' })} />
         </div>
@@ -59,7 +59,7 @@ function AppInner() {
   // Ingen aktiv profil → velg hvem som skal spille.
   if (!profile) {
     return (
-      <div className={`min-h-screen w-full bg-gradient-to-br ${HOME_BG} transition-colors duration-500`}>
+      <div className={`min-h-screen w-full overflow-x-hidden bg-gradient-to-br ${HOME_BG} transition-colors duration-500`}>
         <div className="max-w-5xl mx-auto p-3 md:p-6">
           <Family onPicked={goHome} onPrivacy={() => setNav({ view: 'personvern', from: 'home' })} />
         </div>
@@ -142,7 +142,7 @@ function AppInner() {
   }
 
   return (
-    <div className={`min-h-screen w-full bg-gradient-to-br ${bg} transition-colors duration-500`}>
+    <div className={`min-h-screen w-full overflow-x-hidden bg-gradient-to-br ${bg} transition-colors duration-500`}>
       <div className="max-w-5xl mx-auto p-3 md:p-6">{content}</div>
     </div>
   )

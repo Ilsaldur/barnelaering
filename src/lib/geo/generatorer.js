@@ -2,17 +2,7 @@
 import { pick, shuffle } from '../rng.js'
 import { registerTypeLabels } from '../labels.js'
 import { landFor, VERDENSDELER } from '../../data/geo/land.js'
-import { storeNokPaaVerdenskart } from './topo.js'
-
-// På verdenskartet spørres det bare etter land som synes godt (minst 24 × 24
-// punkter på mobil). Små europeiske land hører til Europa-kartet.
-let storeIds = null
-function kartPool(region) {
-  const pool = landFor(region)
-  if (region !== 'verden') return pool
-  if (!storeIds) storeIds = new Set(storeNokPaaVerdenskart(pool.map((l) => l.id)))
-  return pool.filter((l) => storeIds.has(l.id))
-}
+import { kartPool, KART_NAVN } from './kart.js'
 
 function andre(pool, l, n, rng) {
   return shuffle(
@@ -29,6 +19,7 @@ export const GEN_GEO = {
     const feil = andre(pool, l, 3, rng)
     return {
       type: `flagg_${region}`,
+      emne: l.id,
       form: 'valg',
       prompt: 'Hvilket land har dette flagget?',
       spoken: 'Hvilket land har dette flagget?',
@@ -46,6 +37,7 @@ export const GEN_GEO = {
     const feil = andre(pool, l, 3, rng)
     return {
       type: `flagg_${region}`,
+      emne: l.id,
       form: 'valg',
       prompt: `Hvilket flagg er ${l.navn} sitt?`,
       spoken: `Hvilket flagg er ${l.navn} sitt?`,
@@ -63,6 +55,7 @@ export const GEN_GEO = {
     if (rng() < 0.5) {
       return {
         type: `hovedstad_${region}`,
+        emne: l.id,
         form: 'valg',
         prompt: `Hva er hovedstaden i ${l.navn}?`,
         spoken: `Hva er hovedstaden i ${l.navn}?`,
@@ -75,6 +68,7 @@ export const GEN_GEO = {
     }
     return {
       type: `hovedstad_${region}`,
+      emne: l.id,
       form: 'valg',
       prompt: `${l.hovedstad} er hovedstaden i …`,
       spoken: `${l.hovedstad} er hovedstaden i hvilket land?`,
@@ -90,8 +84,9 @@ export const GEN_GEO = {
     const l = pick(pool, rng)
     return {
       type: `kart_${region}`,
+      emne: l.id,
       form: 'kart',
-      prompt: `Trykk på ${l.navn} på kartet.`,
+      prompt: `Trykk på ${l.navn} på kartet${KART_NAVN[region] && region !== 'norden' && region !== 'europa' && region !== 'verden' ? ` over ${KART_NAVN[region]}` : ''}.`,
       spoken: `Trykk på ${l.navn} på kartet.`,
       region,
       answer: l.id,
@@ -102,9 +97,11 @@ export const GEN_GEO = {
   hvilket_land: ({ region = 'norden' }, rng) => {
     const pool = kartPool(region)
     const l = pick(pool, rng)
-    const feil = andre(landFor(region), l, 3, rng)
+    // Små kart (Oseania har tre land): feilsvar fra hele verden.
+    const feil = andre(pool.length >= 4 ? pool : landFor('verden'), l, 3, rng)
     return {
       type: `kart_${region}`,
+      emne: l.id,
       form: 'valg',
       prompt: 'Hvilket land er markert med rosa?',
       spoken: 'Hvilket land er markert med rosa på kartet?',
@@ -115,12 +112,66 @@ export const GEN_GEO = {
       readOptions: true,
     }
   },
+  // Flagg → hovedstad.
+  flagg_hovedstad: ({ region = 'norden' }, rng) => {
+    const pool = landFor(region)
+    const l = pick(pool, rng)
+    const feil = andre(pool, l, 3, rng)
+    return {
+      type: `hovedstad_${region}`,
+      emne: l.id,
+      form: 'valg',
+      prompt: 'Hva er hovedstaden i landet med dette flagget?',
+      spoken: 'Hva er hovedstaden i landet med dette flagget?',
+      visual: { kind: 'flagg', kode: l.kode, navn: l.navn },
+      answer: l.hovedstad,
+      options: shuffle([l.hovedstad, ...feil.map((x) => x.hovedstad)], rng),
+      explain: `Flagget er ${l.navn} sitt, og hovedstaden er ${l.hovedstad}.`,
+      readOptions: true,
+    }
+  },
+  // Hovedstad → flagg.
+  hovedstad_flagg: ({ region = 'norden' }, rng) => {
+    const pool = landFor(region)
+    const l = pick(pool, rng)
+    const feil = andre(pool, l, 3, rng)
+    return {
+      type: `hovedstad_${region}`,
+      emne: l.id,
+      form: 'valg',
+      prompt: `Hvilket flagg har landet med hovedstaden ${l.hovedstad}?`,
+      spoken: `Hvilket flagg har landet med hovedstaden ${l.hovedstad}?`,
+      answer: l.kode,
+      options: shuffle([l.kode, ...feil.map((x) => x.kode)], rng),
+      optionFlagg: Object.fromEntries([l, ...feil].map((x) => [x.kode, x.navn])),
+      explain: `${l.hovedstad} er hovedstaden i ${l.navn}.`,
+    }
+  },
+  // Kart → hovedstad.
+  kart_hovedstad: ({ region = 'norden' }, rng) => {
+    const pool = kartPool(region)
+    const l = pick(pool, rng)
+    const feil = andre(landFor(region), l, 3, rng)
+    return {
+      type: `kart_${region}`,
+      emne: l.id,
+      form: 'valg',
+      prompt: 'Hva er hovedstaden i landet som er markert?',
+      spoken: 'Hva er hovedstaden i landet som er markert med rosa på kartet?',
+      visual: { kind: 'kart', region, highlight: l.id },
+      answer: l.hovedstad,
+      options: shuffle([l.hovedstad, ...feil.map((x) => x.hovedstad)], rng),
+      explain: `Det rosa landet er ${l.navn}, og hovedstaden er ${l.hovedstad}.`,
+      readOptions: true,
+    }
+  },
   // Verdensdel.
   verdensdel: (_, rng) => {
     const pool = landFor('verden').filter((l) => (l.region === 'verden' || l.region === 'norden') && !l.ikkeVerdensdel)
     const l = pick(pool, rng)
     return {
       type: 'verdensdel',
+      emne: l.id,
       form: 'valg',
       prompt: `I hvilken verdensdel ligger ${l.navn}?`,
       spoken: `I hvilken verdensdel ligger ${l.navn}?`,
@@ -151,5 +202,9 @@ registerTypeLabels({
   kart_norden: 'Kartet over Norden',
   kart_europa: 'Kartet over Europa',
   kart_verden: 'Verdenskartet',
+  kart_amerika: 'Kartet over Amerika',
+  kart_afrika: 'Kartet over Afrika',
+  kart_asia: 'Kartet over Asia',
+  kart_oseania: 'Kartet over Oseania',
   verdensdel: 'Verdensdeler',
 })

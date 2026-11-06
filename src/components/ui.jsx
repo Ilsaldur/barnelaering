@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { rullTil } from '../lib/tallinje.js'
 import { useStars, useStarsOptional } from '../StarContext.jsx'
 import { kostymeById } from '../data/kostymer.js'
 import { sound } from '../sound.js'
@@ -128,7 +129,24 @@ export function Confetti({ show }) {
 // startpunktet, og barnet trykker på tall for å hoppe selv. Antall hopp vises.
 export function NumberLine({ from = 0, to = 20, start = null }) {
   const [pos, setPos] = useState(start)
+  const feltRef = useRef(null)
+  const [kanter, setKanter] = useState({ venstre: false, hoyre: false })
   useEffect(() => setPos(start), [start, from, to])
+  // Når tallinja åpnes, står starttallet til venstre i det synlige feltet.
+  useEffect(() => {
+    const el = feltRef.current
+    if (!el) return
+    const celle = el.querySelector(`[data-tall="${start ?? from}"]`)
+    el.scrollLeft = celle && celle.offsetLeft > 0 ? Math.max(0, celle.offsetLeft - 8) : rullTil(start, from)
+    oppdaterKanter()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [start, from, to])
+  function oppdaterKanter() {
+    const el = feltRef.current
+    if (!el) return
+    const maks = el.scrollWidth - el.clientWidth
+    setKanter({ venstre: el.scrollLeft > 2, hoyre: maks > 2 && el.scrollLeft < maks - 2 })
+  }
   const nums = []
   for (let n = from; n <= to; n++) nums.push(n)
   const hops = pos != null && start != null ? pos - start : null
@@ -136,14 +154,15 @@ export function NumberLine({ from = 0, to = 20, start = null }) {
   const hi = Math.max(pos ?? start ?? from, start ?? from)
   return (
     <div className="w-full py-2">
-      <div className="w-full overflow-x-auto">
-        <div className="flex items-end gap-1 min-w-max px-2 py-1">
+      <div className="relative">
+        <div ref={feltRef} data-testid="tallinje-felt" onScroll={oppdaterKanter} className="w-full overflow-x-auto scroll-smooth">
+          <div className="flex items-end gap-1 min-w-max px-2 py-1">
           {nums.map((n) => {
             const isPos = pos === n
             const isStart = start === n
             const onPath = start != null && pos != null && n > lo && n < hi
             return (
-              <div key={n} className="flex flex-col items-center w-9 md:w-11">
+              <div key={n} data-tall={n} className="flex flex-col items-center w-9 md:w-11">
                 <div className="h-8 text-2xl leading-none">{isPos ? <span className="animate-bouncey inline-block">🐰</span> : ''}</div>
                 <button
                   type="button"
@@ -163,7 +182,18 @@ export function NumberLine({ from = 0, to = 20, start = null }) {
               </div>
             )
           })}
+          </div>
         </div>
+        {kanter.venstre && (
+          <div data-testid="tallinje-mer-venstre" className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-white/95 to-transparent flex items-center justify-start pl-1 text-slate-400 font-extrabold text-2xl">
+            ‹
+          </div>
+        )}
+        {kanter.hoyre && (
+          <div data-testid="tallinje-mer-hoyre" className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white/95 to-transparent flex items-center justify-end pr-1 text-slate-400 font-extrabold text-2xl">
+            ›
+          </div>
+        )}
       </div>
       {hops != null && hops !== 0 && (
         <p className="text-center text-sky-700 font-bold mt-1">

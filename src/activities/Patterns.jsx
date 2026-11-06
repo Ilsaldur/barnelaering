@@ -345,12 +345,12 @@ export default function Patterns({ go }) {
             sound.click()
             setGame('pattern')
           }}
-          className="kid-btn bg-orange-500 text-white p-6 flex items-center gap-4 hover:scale-[1.02]"
+          className="kid-btn bg-orange-500 text-white p-4 md:p-6 flex items-center gap-3 md:gap-4 min-w-0 hover:scale-[1.02]"
         >
-          <span className="text-6xl">🔴🔵🔴</span>
-          <span className="text-left">
-            <span className="block text-3xl font-extrabold">Hva kommer neste?</span>
-            <span className="block text-lg opacity-95">Fullfør mønsteret</span>
+          <span className="text-3xl md:text-6xl shrink-0">🔴🔵🔴</span>
+          <span className="text-left min-w-0 flex-1">
+            <span className="block text-xl md:text-3xl font-extrabold break-words">Hva kommer neste?</span>
+            <span className="block text-base md:text-lg opacity-95">Fullfør mønsteret</span>
           </span>
         </button>
         <button
@@ -358,12 +358,12 @@ export default function Patterns({ go }) {
             sound.click()
             setGame('sort')
           }}
-          className="kid-btn bg-rose-500 text-white p-6 flex items-center gap-4 hover:scale-[1.02]"
+          className="kid-btn bg-rose-500 text-white p-4 md:p-6 flex items-center gap-3 md:gap-4 min-w-0 hover:scale-[1.02]"
         >
-          <span className="text-5xl">🔵 ⭐ 🐘</span>
-          <span className="text-left">
-            <span className="block text-3xl font-extrabold">Sortér etter størrelse</span>
-            <span className="block text-lg opacity-95">Dra fra minst til størst</span>
+          <span className="text-3xl md:text-5xl shrink-0">🔵⭐🐘</span>
+          <span className="text-left min-w-0 flex-1">
+            <span className="block text-xl md:text-3xl font-extrabold break-words">Sortér etter størrelse</span>
+            <span className="block text-base md:text-lg opacity-95">Dra fra minst til størst</span>
           </span>
         </button>
       </div>

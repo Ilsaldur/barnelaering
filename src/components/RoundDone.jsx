@@ -9,9 +9,9 @@ import { celebrate, resultMessage, resultTitle } from '../lib/scoring.js'
 // ved svakt resultat får barnet en vennlig oppfordring til å prøve igjen.
 // `before` legges over knapperaden (sjefstilbud, nivåmeldinger, samlekort);
 // `children` er ekstra knapper. Raden brytes over flere linjer på smale skjermer.
-export default function RoundDone({ correct, total, stars, onAgain, onHome, onNext, againLabel = '🔁 En gang til', before = null, children }) {
+export default function RoundDone({ correct, total, stars, onAgain, onHome, onNext, againLabel = '🔁 En gang til', before = null, melding = null, children }) {
   const [confetti, setConfetti] = useState(false)
-  const message = resultMessage(stars, correct, total)
+  const message = melding || resultMessage(stars, correct, total)
 
   useEffect(() => {
     if (celebrate(stars)) {

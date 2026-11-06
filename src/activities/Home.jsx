@@ -92,7 +92,7 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
                 {k.fast && <span className="absolute top-1 left-2 text-sm" title="Fast oppdrag">📌</span>}
                 {gjort && <span className="absolute top-1 right-2 bg-white text-emerald-500 rounded-full w-6 h-6 flex items-center justify-center text-sm font-extrabold">✓</span>}
                 <span className="text-4xl md:text-5xl">{k.overraskelse ? '🎁' : info.emoji}</span>
-                <span className="text-base md:text-xl font-extrabold text-center leading-tight">{k.overraskelse ? 'Overraskelse' : info.navn}</span>
+                <span className="text-base md:text-xl font-extrabold text-center leading-tight break-words [overflow-wrap:anywhere] max-w-full">{k.overraskelse ? 'Overraskelse' : info.navn}</span>
                 {k.overraskelse && <span className="text-xs opacity-90">{info.emoji} {info.navn}</span>}
                 {k.fag === 'matte' && matte?.nivaa && <span className="text-xs opacity-90">nivå {matte.nivaa}</span>}
                 {k.fag === 'lesing' && lesing?.nivaa && <span className="text-xs opacity-90">nivå {lesing.nivaa}</span>}
@@ -106,18 +106,18 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
       {/* Fri lek */}
       <h2 className="text-white font-extrabold text-xl md:text-2xl drop-shadow mb-2 mt-5">🎈 Fri lek</h2>
       <div className="grid grid-cols-2 gap-3 md:gap-4 mb-3">
-        <button onClick={() => { sound.click(); onMatte() }} className="kid-btn bg-cyan-500 text-white p-4 flex items-center gap-3 hover:scale-[1.02]">
+        <button onClick={() => { sound.click(); onMatte() }} className="kid-btn bg-cyan-500 text-white p-3 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 min-w-0 hover:scale-[1.02]">
           <span className="text-4xl">🗺️</span>
-          <span className="text-left">
-            <span className="block text-lg md:text-xl font-extrabold">Eventyrkartet</span>
-            <span className="block text-xs md:text-sm opacity-90">{matte?.nivaa ? `Reven er på nivå ${matte.nivaa}` : 'Finn nivået ditt'}</span>
+          <span className="text-center sm:text-left min-w-0 max-w-full">
+            <span className="block text-base sm:text-lg md:text-xl font-extrabold break-words [overflow-wrap:anywhere] leading-tight">Eventyrkartet</span>
+            <span className="block text-xs md:text-sm opacity-90 break-words [overflow-wrap:anywhere]">{matte?.nivaa ? `Reven er på nivå ${matte.nivaa}` : 'Finn nivået ditt'}</span>
           </span>
         </button>
-        <button onClick={() => { sound.click(); onLesing() }} className="kid-btn bg-violet-500 text-white p-4 flex items-center gap-3 hover:scale-[1.02]">
+        <button onClick={() => { sound.click(); onLesing() }} className="kid-btn bg-violet-500 text-white p-3 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 min-w-0 hover:scale-[1.02]">
           <span className="text-4xl">📖</span>
-          <span className="text-left">
-            <span className="block text-lg md:text-xl font-extrabold">Lesestigen</span>
-            <span className="block text-xs md:text-sm opacity-90">{lesing?.nivaa ? `Lese nivå ${lesing.nivaa} av 12` : 'Tre spor: lese, skrive, språk'}</span>
+          <span className="text-center sm:text-left min-w-0 max-w-full">
+            <span className="block text-base sm:text-lg md:text-xl font-extrabold break-words [overflow-wrap:anywhere] leading-tight">Lesestigen</span>
+            <span className="block text-xs md:text-sm opacity-90 break-words [overflow-wrap:anywhere]">{lesing?.nivaa ? `Lese nivå ${lesing.nivaa} av 12` : 'Tre spor: lese, skrive, språk'}</span>
           </span>
         </button>
         {[
@@ -125,33 +125,33 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
           { id: 'geografi', navn: 'Geografistigen', emoji: '🌍', farge: 'bg-teal-500', maks: 9 },
           { id: 'engelsk', navn: 'Engelskstigen', emoji: '🇬🇧', farge: 'bg-rose-500', maks: 7 },
         ].map((f) => (
-          <button key={f.id} onClick={() => { sound.click(); onFag(f.id) }} className={`kid-btn ${f.farge} text-white p-4 flex items-center gap-3 hover:scale-[1.02]`}>
+          <button key={f.id} onClick={() => { sound.click(); onFag(f.id) }} className={`kid-btn ${f.farge} text-white p-3 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 min-w-0 hover:scale-[1.02]`}>
             <span className="text-4xl">{f.emoji}</span>
-            <span className="text-left">
-              <span className="block text-lg md:text-xl font-extrabold">{f.navn}</span>
-              <span className="block text-xs md:text-sm opacity-90">{fag?.[f.id]?.nivaa ? `Nivå ${fag[f.id].nivaa} av ${f.maks}` : 'Finn nivået ditt'}</span>
+            <span className="text-center sm:text-left min-w-0 max-w-full">
+              <span className="block text-base sm:text-lg md:text-xl font-extrabold break-words [overflow-wrap:anywhere] leading-tight">{f.navn}</span>
+              <span className="block text-xs md:text-sm opacity-90 break-words [overflow-wrap:anywhere]">{fag?.[f.id]?.nivaa ? `Nivå ${fag[f.id].nivaa} av ${f.maks}` : 'Finn nivået ditt'}</span>
             </span>
           </button>
         ))}
-        <button onClick={() => { sound.click(); onNoetter() }} className="kid-btn bg-amber-700 text-white p-4 flex items-center gap-3 hover:scale-[1.02]">
+        <button onClick={() => { sound.click(); onNoetter() }} className="kid-btn bg-amber-700 text-white p-3 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 min-w-0 hover:scale-[1.02]">
           <span className="text-4xl">🌰</span>
-          <span className="text-left">
-            <span className="block text-lg md:text-xl font-extrabold">Nøttehula</span>
-            <span className="block text-xs md:text-sm opacity-90">Tenkenøtter</span>
+          <span className="text-center sm:text-left min-w-0 max-w-full">
+            <span className="block text-base sm:text-lg md:text-xl font-extrabold break-words [overflow-wrap:anywhere] leading-tight">Nøttehula</span>
+            <span className="block text-xs md:text-sm opacity-90 break-words [overflow-wrap:anywhere]">Tenkenøtter</span>
           </span>
         </button>
-        <button onClick={() => { sound.click(); onSamling() }} className="kid-btn bg-amber-500 text-white p-4 flex items-center gap-3 hover:scale-[1.02]">
+        <button onClick={() => { sound.click(); onSamling() }} className="kid-btn bg-amber-500 text-white p-3 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 min-w-0 hover:scale-[1.02]">
           <span className="text-4xl">🏆</span>
-          <span className="text-left">
-            <span className="block text-lg md:text-xl font-extrabold">Samlingen</span>
-            <span className="block text-xs md:text-sm opacity-90">Kort, kostymer og kisten</span>
+          <span className="text-center sm:text-left min-w-0 max-w-full">
+            <span className="block text-base sm:text-lg md:text-xl font-extrabold break-words [overflow-wrap:anywhere] leading-tight">Samlingen</span>
+            <span className="block text-xs md:text-sm opacity-90 break-words [overflow-wrap:anywhere]">Kort, kostymer og kisten</span>
           </span>
         </button>
-        <button onClick={() => { sound.click(); onGarden() }} className="kid-btn bg-emerald-500 text-white p-4 flex items-center gap-3 hover:scale-[1.02]">
+        <button onClick={() => { sound.click(); onGarden() }} className="kid-btn bg-emerald-500 text-white p-3 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 min-w-0 hover:scale-[1.02]">
           <span className="text-4xl">🌷</span>
-          <span className="text-left">
-            <span className="block text-lg md:text-xl font-extrabold">Hagen min</span>
-            <span className="block text-xs md:text-sm opacity-90">Bruk stjernene</span>
+          <span className="text-center sm:text-left min-w-0 max-w-full">
+            <span className="block text-base sm:text-lg md:text-xl font-extrabold break-words [overflow-wrap:anywhere] leading-tight">Hagen min</span>
+            <span className="block text-xs md:text-sm opacity-90 break-words [overflow-wrap:anywhere]">Bruk stjernene</span>
           </span>
         </button>
       </div>
@@ -160,7 +160,7 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
         {topics.map((t) => (
           <button key={t.id} onClick={() => { sound.click(); onPick(t.id) }} className={`kid-btn ${t.color} text-white p-3 md:p-4 flex flex-col items-center gap-1 hover:scale-105`}>
             <span className="text-3xl md:text-5xl">{t.emoji}</span>
-            <span className="text-sm md:text-lg font-extrabold text-center leading-tight">{t.title}</span>
+            <span className="text-sm md:text-lg font-extrabold text-center leading-tight break-words [overflow-wrap:anywhere] max-w-full">{t.title}</span>
           </button>
         ))}
       </div>

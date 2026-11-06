@@ -9,7 +9,7 @@ import { countries, pathFor, viewBoxFor, centroidFor } from '../geo/topo.js'
 import { genEngelsk, GEN_ENGELSK } from '../engelsk/generatorer.js'
 import { NIVAER_ENGELSK } from '../../data/engelsk/nivaer.js'
 import { ORD, SETNINGER, FYLL_INN, SPORSMAAL } from '../../data/engelsk/innhold.js'
-import { buildMission } from '../matte/oppdrag.js'
+import { buildMission, oppdragLengde } from '../matte/oppdrag.js'
 import { emptyFag } from '../profil.js'
 
 function sjekkValg(task, navn) {
@@ -131,7 +131,9 @@ describe('oppdrag i de nye stigene', () => {
     ]) {
       for (const nivaa of [1, Math.ceil(nivaer.length / 2), nivaer.length]) {
         const m = buildMission({ ...emptyFag(), nivaa, plassert: true }, { rng, stige: { nivaer, gen } })
-        expect(m.tasks).toHaveLength(8)
+        // Nivåer med færre enn 20 ulike spørsmål får fem oppgaver (etappe L).
+        expect(m.tasks).toHaveLength(oppdragLengde({ nivaer, gen }, nivaa))
+        expect([5, 8]).toContain(m.tasks.length)
       }
     }
   })

@@ -13,7 +13,7 @@ export function SpeakButton({ text, lang, size = 'text-2xl md:text-3xl', classNa
         sound.click()
         speech.speak(text, { lang })
       }}
-      className={`${size} hover:scale-110 active:scale-95 transition-transform ${className}`}
+      className={`${size} min-w-[44px] min-h-[44px] inline-flex items-center justify-center shrink-0 leading-none hover:scale-110 active:scale-95 transition-transform ${className}`}
       title="Les høyt"
       aria-label="Les høyt"
     >

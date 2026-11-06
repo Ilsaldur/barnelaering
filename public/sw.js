@@ -1,7 +1,7 @@
 // Service worker for Selmas skole: lagrer appskallet så appen starter uten nett
 // etter første besøk. Hashede filer i /assets/ caches først (de endrer seg
 // aldri), sider hentes fra nettet først med cachet index.html som reserve.
-const CACHE = 'selmas-skole-v2'
+const CACHE = 'selmas-skole-v3'
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png']
 
 // Ved installasjon: lagre skallet, og hent skriptene og stilarkene som
@@ -15,6 +15,10 @@ async function hentSkall() {
     await c.put('/index.html', new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } }))
     const filer = [...html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map((m) => m[1])
     await Promise.all(filer.map((f) => c.add(f).catch(() => {})))
+    // Alle flaggene, så flaggoppgavene virker uten nett etter første besøk.
+    const liste = await (await fetch('/flagg/liste.json', { cache: 'no-cache' })).json()
+    await c.add('/flagg/liste.json').catch(() => {})
+    await Promise.all(liste.map((k) => c.add(`/flagg/${k}.svg`).catch(() => {})))
   } catch {
     /* uten nett ved installasjon: skallet fylles ved neste besøk */
   }

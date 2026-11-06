@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { countries, pathFor, viewBoxFor, centroidFor } from '../lib/geo/topo.js'
-import { landFor } from '../data/geo/land.js'
+import { LAND } from '../data/geo/land.js'
+import { kartPool } from '../lib/geo/kart.js'
 
 // Et ordentlig kart å trykke på. Landene i `region` kan trykkes; resten er bakgrunn.
 //  - highlight: land-id som skal lyse (til «hvilket land er dette?»)
@@ -10,8 +11,8 @@ import { landFor } from '../data/geo/land.js'
 export default function VerdensKart({ region = 'norden', highlight = null, picked = null, answer = null, onPick, disabled = false, labels = false, className = '' }) {
   const vb = viewBoxFor(region)
   const alle = useMemo(() => countries().filter((c) => c.id !== '010'), [])
-  const iOmraadet = useMemo(() => new Set(landFor(region).map((l) => l.id)), [region])
-  const navn = useMemo(() => Object.fromEntries(landFor(region).map((l) => [l.id, l.navn])), [region])
+  const iOmraadet = useMemo(() => new Set(kartPool(region).map((l) => l.id)), [region])
+  const navn = useMemo(() => Object.fromEntries(LAND.map((l) => [l.id, l.navn])), [])
   const paths = useMemo(() => alle.map((c) => ({ c, d: pathFor(c) })), [alle])
   const strokeW = Math.max(0.08, vb.w / 900)
 

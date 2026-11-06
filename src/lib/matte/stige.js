@@ -45,7 +45,7 @@ export function oppdaterSvake(svake, perTask, nivaa) {
 export function applyResult(fag, { correct, total = OPPDRAG_LENGDE, nivaa, perTask = [], hjelpModus = false }, maks) {
   const next = { ...fag, beste: { ...fag.beste } }
   delete next.perfektRad
-  const events = { levelUp: false, levelDown: false, boss: null, stars: starsFor(correct, total) }
+  const events = { levelUp: false, levelDown: false, boss: null, toppKlart: false, stars: starsFor(correct, total) }
 
   next.beste[nivaa] = Math.max(next.beste[nivaa] || 0, events.stars)
   next.svake = oppdaterSvake(fag.svake, perTask, nivaa)
@@ -70,6 +70,10 @@ export function applyResult(fag, { correct, total = OPPDRAG_LENGDE, nivaa, perTa
       if (nivaa < maks) {
         next.nivaa = nivaa + 1
         events.levelUp = true
+      } else {
+        // Toppnivået klart to ganger: hele stigen er klart.
+        events.toppKlart = true
+        next.toppKlart = true
       }
     }
   } else if (correct >= sammeGrense) {

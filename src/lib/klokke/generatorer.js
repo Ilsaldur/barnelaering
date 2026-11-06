@@ -104,6 +104,7 @@ export const GEN_KLOKKE = {
     const feil = feilTider(h, m, pool, rng)
     return {
       type: `les_analog_${param.minutes || 'whole'}`,
+      emne: `${h12(h)}:${m}`,
       form: 'valg',
       prompt: 'Hva er klokka?',
       spoken: 'Hva er klokka?',
@@ -122,9 +123,10 @@ export const GEN_KLOKKE = {
     const step = param.minutes === 'five' ? 5 : param.minutes === 'quarter' ? 15 : param.minutes === 'half' ? 30 : 60
     return {
       type: `still_klokka_${param.minutes || 'whole'}`,
+      emne: `${h12(h)}:${m}`,
       form: 'still',
       prompt: `Still klokka på ${klokkespraak(h, m)}.`,
-      spoken: `Still klokka på ${klokkespraak(h, m)}. Dra den korte viseren til timen og den lange til minuttene.`,
+      spoken: `Still klokka på ${klokkespraak(h, m)}. Sett den lange viseren på minuttene og den korte på timen.`,
       answer: { h: h12(h), m },
       step,
       explain: `${klokkeSetning(h, m)}: den korte viseren ${m >= 30 ? `mellom ${h12(h)} og ${neste(h)}` : `på ${h12(h)}`}, den lange på ${m === 0 ? '12' : m / 5}.`,
@@ -138,6 +140,7 @@ export const GEN_KLOKKE = {
     const feil = feilTider(h, m, pool, rng)
     return {
       type: `finn_klokka_${param.minutes || 'whole'}`,
+      emne: `${h12(h)}:${m}`,
       form: 'valgklokke',
       prompt: `Hvilken klokke viser ${klokkespraak(h, m)}?`,
       spoken: `Hvilken klokke viser ${klokkespraak(h, m)}?`,
@@ -157,6 +160,7 @@ export const GEN_KLOKKE = {
     const feil = [digital((h24 + 12) % 24, m), digital((h24 + 1) % 24, m), digital(h24, (m + 30) % 60), digital((h24 + 23) % 24, m)].filter((x, i, a) => x !== svar && a.indexOf(x) === i).slice(0, 3)
     return {
       type: 'digital',
+      emne: `${h}:${m}`,
       form: 'valg',
       prompt: `Klokka viser dette ${dagdel}. Hva står det på en digital klokke?`,
       spoken: `Klokka viser dette ${dagdel}. Hva står det på en digital klokke?`,
@@ -176,6 +180,7 @@ export const GEN_KLOKKE = {
     const feil = feilTider(h, m, pool, rng)
     return {
       type: 'digital',
+      emne: `${h}:${m}`,
       form: 'valgklokke',
       prompt: `Hvilken klokke viser ${digital(h24, m)}?`,
       spoken: `Hvilken klokke viser ${digitalSpoken(h24, m)}?`,

@@ -184,7 +184,7 @@ describe('plasseringstest (A1)', () => {
     let s = startPlassering({ start: 13, tak: 23, maks: 38, trapp: TRAPP_MATTE })
     s = stegPlassering(s, false) // 13
     expect(s.pos).toBe(6)
-    expect(s.tak).toBe(15)
+    expect(s.tak).toBe(13) // taket er nivået barnet falt fra (runde 4, P2)
     s = stegPlassering(s, true)
     s = stegPlassering(s, true) // besto 6
     expect(s.pos).toBe(8)
@@ -255,8 +255,9 @@ describe('oppdrag (A5)', () => {
       expect(m.tasks).toHaveLength(8)
       const tags = m.tasks.map((t) => t.tag)
       expect(tags.filter((t) => t === 'eget' || t === 'kort').length).toBe(5)
-      expect(tags.filter((t) => t === 'rep' || t === 'svak').length).toBe(2)
-      expect(tags.filter((t) => t === 'neste').length).toBe(1)
+      // På toppnivået byttes smakebiten med en repetisjon (etappe L).
+      expect(tags.filter((t) => t === 'rep' || t === 'svak').length).toBe(nivaa === 38 ? 3 : 2)
+      expect(tags.filter((t) => t === 'neste').length).toBe(nivaa === 38 ? 0 : 1)
       for (const t of m.tasks.filter((x) => x.tag === 'rep')) {
         expect(t.nivaa).toBeGreaterThanOrEqual(Math.max(1, nivaa - 5))
         expect(t.nivaa).toBeLessThan(Math.max(2, nivaa))

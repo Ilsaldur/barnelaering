@@ -43,9 +43,10 @@ export function stegPlassering(state, ok) {
     if (state.retning === null && L === state.start && state.sisteBestaatt === null) {
       if (L <= 1) return { ...next, ferdig: true, nivaa: 1 }
       // Ned til startnivået i verdenen under (eller to ned uten trapp).
+      // Taket er nivået barnet falt fra: testen klatrer ikke forbi det.
       const under = [...state.trapp].reverse().find((x) => x.start < L)
-      if (under) return { ...next, start: under.start, tak: under.tak, pos: under.start, paaNivaa: 0 }
-      return { ...next, start: Math.max(1, L - 2), pos: Math.max(1, L - 2), paaNivaa: 0 }
+      if (under) return { ...next, start: under.start, tak: Math.min(under.tak, L), pos: under.start, paaNivaa: 0 }
+      return { ...next, start: Math.max(1, L - 2), tak: L, pos: Math.max(1, L - 2), paaNivaa: 0 }
     }
     return { ...next, ferdig: true, nivaa: Math.min(state.tak, (state.sisteBestaatt ?? L - 1) + 1) }
   }
@@ -60,7 +61,12 @@ export function stegPlassering(state, ok) {
   return { ...next, retning: 'opp', pos: Math.min(state.tak, L + 2), paaNivaa: 0, sisteBestaatt: L }
 }
 
-// Høyeste antall oppgaver en test kan ta (til framdriftsviseren).
+// Høyeste antall oppgaver en test kan ta (til framdriftsviseren): det som er
+// tatt, pluss det som gjenstår opp til taket. Aldri lavere enn oppgavenummeret,
+// også etter et fall til et lavere startnivå.
 export function maksOppgaver(state) {
-  return Math.max(8, Math.ceil((state.tak - state.start) / 2 + 1) * OPPGAVER_PER_NIVAA)
+  const tatt = state.steg?.length || 0
+  if (state.ferdig) return Math.max(1, tatt)
+  const igjen = (Math.ceil(Math.max(0, state.tak - state.pos) / 2) + 1) * OPPGAVER_PER_NIVAA - (state.paaNivaa || 0)
+  return Math.max(tatt === 0 ? 8 : tatt + 1, tatt + igjen)
 }
