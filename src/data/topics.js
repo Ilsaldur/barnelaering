@@ -4,10 +4,11 @@
 // Et nivå = { sub, engine, config }. Tall, telling og klokke GENERERES
 // (uendelig variasjon); feilsvarene lages tett på fasit (én for mye, én for lite).
 //
-// Mellomtrinnet mellom barnehage og 1. klasse ligger i «Tall og telling»
-// (telle til 20, før og etter, mer og mindre) og «Pluss og minus» (til 10).
+// Matte (telling, pluss/minus, gange, brøk) ligger ikke her lenger, men i
+// mattestigen (src/data/matte/nivaer.js). Generatorene under brukes av tester
+// og kan gjenbrukes.
 
-import { COLORS, SHAPES, FIRST_LETTER, LETTER_SOUNDS, OPPOSITES, FRACTIONS } from './levels.js'
+import { COLORS, SHAPES, FIRST_LETTER, LETTER_SOUNDS, OPPOSITES } from './levels.js'
 import { randInt, pick, shuffle } from '../lib/rng.js'
 import { nearDistractors, makeOptions } from '../lib/distractors.js'
 
@@ -126,50 +127,7 @@ function missingGen(maxN) {
   }
 }
 
-const tellCfg = (sub, extra) => ({ title: 'Telling', emoji: '🔢', color: 'bg-rose-500', rounds: 8, readOptions: true, ...extra })
-
 export const TOPICS = [
-  {
-    id: 'telling',
-    title: 'Tall og telling',
-    emoji: '🔢',
-    color: 'bg-rose-500',
-    levels: [
-      { sub: 'Tell 1 til 5', engine: 'quiz', config: tellCfg('tell5', { prompt: 'Hvor mange er det?', generator: countingGen(5) }) },
-      { sub: 'Tell 1 til 10', engine: 'quiz', config: tellCfg('tell10', { prompt: 'Hvor mange er det?', generator: countingGen(10, 3) }) },
-      { sub: 'Flest eller færrest?', engine: 'quiz', config: tellCfg('flest', { title: 'Flest og færrest', emoji: '⚖️', readOptions: false, generator: moreLessGen(8) }) },
-      { sub: 'Tell 1 til 20', engine: 'quiz', config: tellCfg('tell20', { prompt: 'Hvor mange er det?', generator: countingGen(20, 6) }) },
-      { sub: 'Hvilket tall er størst og minst?', engine: 'quiz', config: tellCfg('storst', { title: 'Størst og minst', readOptions: false, generator: biggerGen(20) }) },
-      { sub: 'Før og etter, til 20', engine: 'quiz', config: tellCfg('foretter20', { title: 'Før og etter', generator: beforeAfterGen(20) }) },
-      { sub: 'Hvilket tall mangler? (til 20)', engine: 'quiz', config: tellCfg('mangler20', { title: 'Tallrekka', readOptions: false, generator: missingGen(20) }) },
-      { sub: 'Før og etter, til 100', engine: 'quiz', config: tellCfg('foretter100', { title: 'Før og etter', readOptions: false, generator: beforeAfterGen(100) }) },
-    ],
-  },
-  {
-    id: 'pluss',
-    title: 'Pluss og minus',
-    emoji: '➕',
-    color: 'bg-pink-500',
-    levels: [
-      { sub: 'Pluss, tall 1–10', engine: 'math', config: { title: 'Pluss', emoji: '➕', color: 'bg-pink-500', ops: ['add'], max: 10 } },
-      { sub: 'Pluss og minus, 1–10', engine: 'math', config: { title: 'Pluss og minus', emoji: '➕', color: 'bg-pink-500', ops: ['add', 'sub'], max: 10 } },
-      { sub: 'Pluss og minus, 1–20', engine: 'math', config: { title: 'Pluss og minus', emoji: '➕', color: 'bg-pink-500', ops: ['add', 'sub'], max: 20 } },
-      { sub: 'Pluss og minus, 1–50', engine: 'math', config: { title: 'Pluss og minus', emoji: '➕', color: 'bg-pink-500', ops: ['add', 'sub'], max: 50 } },
-      { sub: 'Pluss og minus, 1–100', engine: 'math', config: { title: 'Pluss og minus', emoji: '➕', color: 'bg-pink-500', ops: ['add', 'sub'], max: 100 } },
-    ],
-  },
-  {
-    id: 'gange',
-    title: 'Gange og deling',
-    emoji: '✖️',
-    color: 'bg-rose-600',
-    levels: [
-      { sub: '2-, 5- og 10-gangen', engine: 'math', config: { title: 'Gangetabell', emoji: '✖️', color: 'bg-rose-600', ops: ['mul'], mulFactors: [2, 5, 10] } },
-      { sub: 'Hele gangetabellen', engine: 'math', config: { title: 'Gangetabell', emoji: '✖️', color: 'bg-rose-600', ops: ['mul'], mulMax: 10 } },
-      { sub: 'Deling', engine: 'math', config: { title: 'Deling', emoji: '➗', color: 'bg-rose-600', ops: ['div'], divMax: 10 } },
-      { sub: 'Gange og deling', engine: 'math', config: { title: 'Gange og deling', emoji: '✖️', color: 'bg-rose-600', ops: ['mul', 'div'], mulMax: 10, divMax: 10 } },
-    ],
-  },
   {
     id: 'bokstaver',
     title: 'Bokstaver og lyder',
@@ -240,13 +198,6 @@ export const TOPICS = [
       { sub: 'Europa', engine: 'geography', config: { region: 'europa' } },
       { sub: 'Hele verden', engine: 'geography', config: { region: 'verden' } },
     ],
-  },
-  {
-    id: 'brok',
-    title: 'Brøk og halvparten',
-    emoji: '🍕',
-    color: 'bg-amber-600',
-    levels: [{ sub: 'Halvparten og brøk', engine: 'quiz', config: { ...FRACTIONS } }],
   },
 ]
 

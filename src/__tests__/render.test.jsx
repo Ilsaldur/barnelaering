@@ -12,6 +12,13 @@ import Family from '../activities/Family.jsx'
 import TopicLadder from '../activities/TopicLadder.jsx'
 import RoundDone from '../components/RoundDone.jsx'
 import AdultGate from '../components/AdultGate.jsx'
+import MatteStige from '../activities/MatteStige.jsx'
+import Noettehula from '../activities/Noettehula.jsx'
+import Oppdrag, { TaskCard } from '../activities/Oppdrag.jsx'
+import { NIVAER } from '../data/matte/nivaer.js'
+import { gen } from '../lib/matte/generatorer.js'
+import { lagNoetter } from '../lib/matte/noetter.js'
+import { seeded } from '../lib/rng.js'
 
 const noop = () => {}
 const wrap = (el) => renderToString(<StarProvider>{el}</StarProvider>)
@@ -24,7 +31,7 @@ describe('alle skjermer rendrer uten feil', () => {
     expect(wrap(<Parents go={noop} onSwitchProfile={noop} />)).toContain('Hold inne')
     expect(wrap(<Garden go={noop} />)).toContain('Hagebutikken')
     expect(wrap(<Family onPicked={noop} />)).toContain('Hvem skal spille')
-    expect(wrap(<TopicLadder topic={TOPICS[0]} go={noop} onOpenLevel={noop} />)).toContain('Tell 1 til 5')
+    expect(wrap(<TopicLadder topic={TOPICS[0]} go={noop} onOpenLevel={noop} />)).toContain('Første bokstav')
     expect(renderToString(<AdultGate onPass={noop} />)).toContain('tre sekunder')
   })
 
@@ -46,6 +53,27 @@ describe('alle skjermer rendrer uten feil', () => {
         // Tallinja skal aldri være synlig før barnet ber om hjelp.
         expect(html).not.toContain('🐰')
       })
+    }
+  })
+
+  it('mattestigen: plassering, nøttehula og alle oppgavetyper rendrer', () => {
+    expect(wrap(<MatteStige go={noop} onNoetter={noop} />)).toContain('Hvor vil du begynne')
+    expect(wrap(<Noettehula go={noop} />)).toContain('Nøttehula')
+    const rng = seeded(21)
+    for (const n of NIVAER) {
+      for (const t of n.typer) {
+        for (let i = 0; i < 3; i++) {
+          const task = { ...gen(t.type, t.param, rng), nivaa: n.id }
+          const html = wrap(<TaskCard task={task} onDone={noop} index={0} total={8} />)
+          expect(html.length, `${n.id}/${t.type}`).toBeGreaterThan(300)
+          // Hjelp er lukket som standard: haren på tallinja skal ikke være synlig.
+          expect(html, `${n.id}/${t.type}`).not.toContain('🐰')
+        }
+      }
+    }
+    for (const grad of [1, 2, 3]) {
+      const tasks = lagNoetter(grad, 4, rng)
+      expect(wrap(<Oppdrag tasks={tasks} title="Nøtter" onDone={noop} onHome={noop} />)).toContain('Oppgave')
     }
   })
 })

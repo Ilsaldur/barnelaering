@@ -5,6 +5,8 @@ import { ENGINES } from './activities/engines.js'
 import Home from './activities/Home.jsx'
 import TopicLadder from './activities/TopicLadder.jsx'
 import AdventureMap from './activities/AdventureMap.jsx'
+import MatteStige from './activities/MatteStige.jsx'
+import Noettehula from './activities/Noettehula.jsx'
 import Rewards from './activities/Rewards.jsx'
 import Garden from './activities/Garden.jsx'
 import Parents from './activities/Parents.jsx'
@@ -17,6 +19,7 @@ const REWARDS_BG = 'from-yellow-300 via-amber-400 to-orange-400'
 const GARDEN_BG = 'from-sky-400 via-emerald-300 to-green-400'
 const PARENTS_BG = 'from-slate-500 via-slate-400 to-sky-400'
 const EVENTYR_BG = 'from-cyan-400 via-sky-400 to-emerald-300'
+const MATTE_BG = 'from-sky-400 via-indigo-400 to-fuchsia-400'
 
 function AppInner() {
   // Enkel navigasjon uten router.
@@ -32,6 +35,8 @@ function AppInner() {
   // adaptivitet). Nullstilles når man går ut av nivået.
   useEffect(() => {
     if (nav.view === 'level') setActiveLevel({ topicId: nav.topicId, levelIndex: nav.levelIndex })
+    else if (nav.view === 'matte') setActiveLevel({ fag: 'matte' })
+    else if (nav.view === 'noetter') setActiveLevel({ fag: 'nott' })
     else setActiveLevel(null)
   }, [nav, setActiveLevel])
 
@@ -75,6 +80,12 @@ function AppInner() {
   } else if (nav.view === 'eventyr') {
     bg = EVENTYR_BG
     content = <AdventureMap go={goHome} />
+  } else if (nav.view === 'matte') {
+    bg = MATTE_BG
+    content = <MatteStige go={goHome} onNoetter={() => setNav({ view: 'noetter' })} />
+  } else if (nav.view === 'noetter') {
+    bg = 'from-amber-600 via-orange-500 to-yellow-400'
+    content = <Noettehula go={() => setNav({ view: 'matte' })} />
   } else if (nav.view === 'rewards') {
     bg = REWARDS_BG
     content = <Rewards go={goHome} />
@@ -94,6 +105,7 @@ function AppInner() {
         onParents={() => setNav({ view: 'parents' })}
         onSwitchProfile={signOutProfile}
         onEventyr={() => setNav({ view: 'eventyr' })}
+        onMatte={() => setNav({ view: 'matte' })}
       />
     )
   }

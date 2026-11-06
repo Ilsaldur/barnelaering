@@ -4,8 +4,9 @@ import { continueSuggestion } from '../progress.js'
 import { sound } from '../sound.js'
 
 // Startskjerm: velg tema. Hvert tema har sin egen nivåstige.
-export default function Home({ topics, onPick, onRewards, onGarden, onParents, onSwitchProfile, onEventyr }) {
-  const { stars, unlocked, profile, log, best, onLine, session } = useStars()
+export default function Home({ topics, onPick, onRewards, onGarden, onParents, onSwitchProfile, onEventyr, onMatte }) {
+  const { stars, unlocked, profile, log, best, onLine, session, fag } = useStars()
+  const matte = fag?.matte
 
   // Adaptivt: foreslå å fortsette der man slapp, på anbefalt nivå.
   const suggestion = continueSuggestion(log, best)
@@ -38,6 +39,26 @@ export default function Home({ topics, onPick, onRewards, onGarden, onParents, o
         <h1 className="text-white font-extrabold text-4xl md:text-6xl drop-shadow-lg">Selmas Skole</h1>
         <p className="text-white/95 font-bold text-xl md:text-2xl mt-2">Hva vil du øve på? 👇</p>
       </header>
+
+      {/* Mattestigen */}
+      {onMatte && (
+        <button
+          onClick={() => {
+            sound.click()
+            onMatte()
+          }}
+          className="kid-btn bg-gradient-to-r from-indigo-500 to-fuchsia-500 text-white w-full p-5 md:p-6 mb-4 flex items-center gap-4 hover:scale-[1.02]"
+        >
+          <span className="text-5xl md:text-6xl">🔢</span>
+          <span className="text-left flex-1">
+            <span className="block text-2xl md:text-3xl font-extrabold">Matte</span>
+            <span className="block text-base md:text-lg font-semibold opacity-95">
+              {matte?.plassert && matte?.nivaa ? `Nivå ${matte.nivaa} av 38 – nytt oppdrag venter!` : 'Reven finner nivået ditt. Start her!'}
+            </span>
+          </span>
+          <span className="text-4xl">▶️</span>
+        </button>
+      )}
 
       {/* Fortsett der du slapp */}
       {suggestion && (

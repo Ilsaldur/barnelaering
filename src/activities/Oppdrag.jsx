@@ -1,0 +1,313 @@
+import { useEffect, useState } from 'react'
+import { TopBar, Mascot, BigButton } from '../components/ui.jsx'
+import { SpeakButton, useAutoSpeak, AutoSpeakToggle } from '../components/Speak.jsx'
+import Keypad, { parseAnswer } from '../components/Keypad.jsx'
+import { Visual, Help } from '../components/TaskVisual.jsx'
+import { useStars } from '../StarContext.jsx'
+import { sound } from '../sound.js'
+import { speech } from '../speech.js'
+import { fmt } from '../lib/matte/felles.js'
+
+// Tallinje å trykke på: bare noen tall står skrevet, barnet finner plassen.
+function TapLine({ line, picked, answer, disabled, onPick }) {
+  const ticks = []
+  for (let v = line.from; v <= line.to; v += line.step) ticks.push(v)
+  return (
+    <div className="overflow-x-auto py-2">
+      <div className="flex items-end gap-0.5 min-w-max px-2 mx-auto w-max">
+        {ticks.map((v) => {
+          const labeled = (v - line.from) % line.labelEvery === 0
+          const isPicked = picked === v
+          const isAnswer = answer === v
+          let color = 'bg-white border-slate-300 text-transparent'
+          if (isAnswer) color = 'bg-emerald-500 border-emerald-600 text-white'
+          else if (isPicked) color = answer == null ? 'bg-sky-500 border-sky-600 text-white' : 'bg-rose-400 border-rose-500 text-white'
+          return (
+            <button
+              key={v}
+              type="button"
+              disabled={disabled}
+              onClick={() => onPick(v)}
+              aria-label={`${v}`}
+              className="flex flex-col items-center w-7 md:w-9"
+            >
+              <span className={`rounded-full border-2 flex items-center justify-center text-xs md:text-sm font-extrabold transition-all ${labeled ? 'w-7 h-7 md:w-9 md:h-9' : 'w-4 h-4 md:w-5 md:h-5 mb-1.5 md:mb-2'} ${color}`}>
+                {isPicked || isAnswer ? v : ''}
+              </span>
+              <span className={`text-xs md:text-sm font-bold mt-1 ${labeled ? 'text-slate-600' : 'text-transparent'}`}>{labeled ? v : '·'}</span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// Én oppgave: to forsøk, Hjelp-knapp, løsning med forklaring etter andre feil.
+// onAnswer({ ok, forste, hjelp }) kalles når oppgaven er ferdig (riktig eller etter to feil).
+// Bare første forsøk uten hjelp teller mot nivået; det regner den som kaller ut.
+export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index, total, fag = 'matte' }) {
+  const { recordAttempt } = useStars()
+  const [attempt, setAttempt] = useState(1)
+  const [input, setInput] = useState('')
+  const [picked, setPicked] = useState(null)
+  const [feedback, setFeedback] = useState(null) // null | 'right' | 'retry' | 'solution'
+  const [help, setHelp] = useState(hjelpStart && !!task.hjelp)
+  const [usedHelp, setUsedHelp] = useState(hjelpStart && !!task.hjelp)
+  const [result, setResult] = useState(null)
+  const [seq, setSeq] = useState([]) // sortering: valgt rekkefølge
+
+  const spoken = task.spoken || task.prompt
+  const readOptions = task.form === 'valg' && task.readOptions
+  const spokenFull = readOptions ? `${spoken} Er det ${task.options.slice(0, -1).join(', ')} eller ${task.options[task.options.length - 1]}?` : spoken
+  useAutoSpeak(spokenFull, [task])
+
+  useEffect(() => {
+    setAttempt(1)
+    setInput('')
+    setPicked(null)
+    setFeedback(null)
+    setHelp(hjelpStart && !!task.hjelp)
+    setUsedHelp(hjelpStart && !!task.hjelp)
+    setResult(null)
+    setSeq([])
+  }, [task, hjelpStart])
+
+  const answerText = task.form === 'santusant' ? (task.answer ? 'Sant' : 'Usant') : Array.isArray(task.answer) ? task.answer.join(', ') : typeof task.answer === 'number' ? fmt(task.answer) : String(task.answer)
+
+  function isCorrect(value) {
+    if (task.form === 'tastatur') {
+      const n = parseAnswer(value)
+      return n != null && Math.abs(n - task.answer) < 1e-9
+    }
+    if (task.form === 'santusant') return value === task.answer
+    if (task.form === 'sorter') return Array.isArray(value) && value.length === task.answer.length && value.every((v, i) => v === task.answer[i])
+    if (task.form === 'tallinje') return Number(value) === task.answer
+    return String(value) === String(task.answer)
+  }
+
+  function submit(value) {
+    if (feedback === 'right' || feedback === 'solution') return
+    setPicked(value)
+    const ok = isCorrect(value)
+    const forste = attempt === 1
+    recordAttempt({ fag, nivaa: task.nivaa, type: task.type, ok, forste, hjelp: usedHelp })
+    if (ok) {
+      sound.correct()
+      speech.auto('Riktig!')
+      setFeedback('right')
+      setResult({ ok: true, forste, hjelp: usedHelp })
+    } else if (attempt < attempts) {
+      sound.wrong()
+      speech.auto('Ikke helt. Prøv en gang til!')
+      setFeedback('retry')
+      setAttempt(attempt + 1)
+      setTimeout(() => {
+        setFeedback((f) => (f === 'retry' ? null : f))
+        setPicked(null)
+        setInput('')
+        setSeq([])
+      }, 1200)
+    } else {
+      sound.wrong()
+      speech.auto(`Svaret er ${answerText}. ${task.explain || ''}`)
+      setFeedback('solution')
+      setResult({ ok: false, forste: false, hjelp: usedHelp })
+    }
+  }
+
+  const done = feedback === 'right' || feedback === 'solution'
+  const canHelp = !!task.hjelp
+
+  return (
+    <div className="bg-white/95 rounded-3xl p-5 md:p-8 shadow-xl">
+      {index != null && (
+        <p className="text-center text-sm font-bold text-slate-400 mb-1">
+          Oppgave {index + 1} av {total}
+          {attempt === 2 && !done && <span className="text-amber-500"> · andre forsøk</span>}
+        </p>
+      )}
+      <div className="flex items-start justify-center gap-2 mb-3">
+        <p className={`text-center font-extrabold text-slate-700 ${task.prompt.length > 40 ? 'text-xl md:text-2xl' : 'text-4xl md:text-5xl'}`}>{task.prompt}</p>
+        <SpeakButton text={spokenFull} />
+      </div>
+
+      {task.visual && (
+        <div className="my-3">
+          <Visual visual={task.visual} />
+        </div>
+      )}
+
+      {canHelp && !done && (
+        <div className="text-center my-2">
+          <button
+            type="button"
+            onClick={() => {
+              sound.click()
+              if (!help) setUsedHelp(true)
+              setHelp((h) => !h)
+            }}
+            className={`kid-btn text-base px-4 py-2 ${task.hjelpAlltid ? 'bg-sky-500 text-white' : 'bg-sky-100 text-sky-700'}`}
+          >
+            {help ? '🙈 Skjul hjelp' : '💡 Hjelp'}
+          </button>
+          {help && (
+            <div className="mt-3 bg-sky-50 rounded-2xl p-3">
+              <Help hjelp={task.hjelp} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Svar */}
+      {task.form === 'valg' && (
+        <div className={`grid gap-3 md:gap-4 mt-4 ${task.options.length === 2 ? 'grid-cols-2' : task.options.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          {task.options.map((opt) => {
+            const isPicked = picked !== null && String(picked) === String(opt)
+            const isAnswer = String(opt) === String(task.answer)
+            let color = 'bg-indigo-500'
+            if (done) {
+              if (isAnswer) color = 'bg-emerald-500'
+              else if (isPicked) color = 'bg-rose-400'
+              else color = 'bg-slate-300'
+            } else if (feedback === 'retry' && isPicked) color = 'bg-rose-400'
+            const label = typeof opt === 'number' ? fmt(opt) : String(opt)
+            const big = label.length <= 3
+            return (
+              <button
+                key={String(opt)}
+                disabled={done || feedback === 'retry'}
+                onClick={() => submit(opt)}
+                className={`kid-btn ${color} text-white py-5 md:py-6 ${big ? 'text-4xl md:text-5xl' : 'text-2xl md:text-3xl'} ${done && isAnswer ? 'animate-bouncey' : ''} ${feedback === 'retry' && isPicked ? 'animate-shake' : ''}`}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {task.form === 'santusant' && (
+        <div className="grid grid-cols-2 gap-3 md:gap-4 mt-4">
+          {[true, false].map((v) => {
+            const isPicked = picked === v
+            const isAnswer = v === task.answer
+            let color = v ? 'bg-emerald-500' : 'bg-rose-500'
+            if (done) color = isAnswer ? 'bg-emerald-500' : isPicked ? 'bg-rose-400' : 'bg-slate-300'
+            return (
+              <button key={String(v)} disabled={done || feedback === 'retry'} onClick={() => submit(v)} className={`kid-btn ${color} text-white text-3xl md:text-4xl py-6 ${done && isAnswer ? 'animate-bouncey' : ''} ${feedback === 'retry' && isPicked ? 'animate-shake' : ''}`}>
+                {v ? '✅ Sant' : '❌ Usant'}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {task.form === 'sorter' && (
+        <div className="mt-4">
+          <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-3 min-h-[3.5rem]">
+            {seq.length === 0 && <span className="text-slate-400 font-bold self-center">Minst først …</span>}
+            {seq.map((v, i) => (
+              <span key={i} className={`kid-btn px-4 py-2 text-2xl md:text-3xl text-white ${done ? (task.answer[i] === v ? 'bg-emerald-500' : 'bg-rose-400') : 'bg-sky-500'}`}>
+                {v}
+              </span>
+            ))}
+          </div>
+          {done && feedback === 'solution' && <p className="text-center font-bold text-slate-500 mb-2">Riktig rekkefølge: {task.answer.join(', ')}</p>}
+          <div className="flex flex-wrap justify-center gap-2 md:gap-3">
+            {task.items.map((v, i) => {
+              const used = seq.includes(v)
+              return (
+                <button
+                  key={i}
+                  disabled={done || used || feedback === 'retry'}
+                  onClick={() => {
+                    sound.click()
+                    const next = [...seq, v]
+                    setSeq(next)
+                    if (next.length === task.items.length) submit(next)
+                  }}
+                  className={`kid-btn text-3xl md:text-4xl px-5 py-4 ${used ? 'bg-slate-200 text-slate-400' : 'bg-indigo-500 text-white'}`}
+                >
+                  {v}
+                </button>
+              )
+            })}
+          </div>
+          {!done && seq.length > 0 && (
+            <div className="text-center mt-3">
+              <button type="button" onClick={() => setSeq([])} className="text-sm font-bold text-slate-400 underline">
+                Begynn på nytt
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {task.form === 'tallinje' && (
+        <div className="mt-4">
+          <TapLine line={task.line} picked={picked} answer={done ? task.answer : null} disabled={done || feedback === 'retry'} onPick={(v) => submit(v)} />
+        </div>
+      )}
+
+      {task.form === 'tastatur' && !done && (
+        <div className={`mt-4 ${feedback === 'retry' ? 'animate-shake' : ''}`}>
+          <Keypad value={input} onChange={setInput} onSubmit={() => submit(input)} allowNegative={!!task.allowNegative} allowDecimal={!!task.allowDecimal} disabled={feedback === 'retry'} unit={task.unit} />
+        </div>
+      )}
+
+      {feedback === 'retry' && (
+        <div className="mt-4 flex justify-center">
+          <Mascot mood="think" message="Ikke helt. Prøv en gang til! 💪" size="text-5xl" />
+        </div>
+      )}
+
+      {done && (
+        <div className="mt-5 flex flex-col items-center gap-3">
+          <Mascot mood={feedback === 'right' ? 'cheer' : 'oops'} message={feedback === 'right' ? (result?.forste && !result?.hjelp ? 'Riktig! 🎉' : 'Riktig! 👍') : `Svaret er ${answerText}${task.unit ? ' ' + task.unit : ''}.`} size="text-5xl" />
+          {feedback === 'solution' && task.explain && (
+            <div className="flex items-start gap-2 bg-amber-50 rounded-2xl px-4 py-3 max-w-lg">
+              <p className="text-slate-600 font-semibold text-base md:text-lg">{task.explain}</p>
+              <SpeakButton text={task.explain} size="text-xl" />
+            </div>
+          )}
+          <BigButton color="bg-amber-500" onClick={() => onDone(result)}>
+            {index != null && index + 1 >= total ? '🏁 Se resultat' : '➡️ Neste'}
+          </BigButton>
+        </div>
+      )}
+      <AutoSpeakToggle current={spokenFull} />
+    </div>
+  )
+}
+
+// Kjører en liste oppgaver og samler resultatet.
+// onDone({ correct, total, perTask, missedTypes })
+export default function Oppdrag({ tasks, title, hjelpStart = false, onDone, onHome, fag = 'matte', attempts = 2 }) {
+  const [i, setI] = useState(0)
+  const [perTask, setPerTask] = useState([])
+  const task = tasks[i]
+
+  function next(res) {
+    const entry = { type: task.type, nivaa: task.nivaa, kortId: task.kortId, ...res, counts: !!(res.ok && res.forste && !res.hjelp) }
+    const all = [...perTask, entry]
+    if (i + 1 >= tasks.length) {
+      const correct = all.filter((r) => r.counts).length
+      const missedTypes = [...new Set(all.filter((r) => !r.ok).map((r) => r.type))]
+      onDone({ correct, total: tasks.length, perTask: all, missedTypes })
+    } else {
+      setPerTask(all)
+      setI(i + 1)
+    }
+  }
+
+  return (
+    <div className="animate-pop-in">
+      <TopBar title={title} onHome={onHome} />
+      <div className="bg-white/80 rounded-full h-5 overflow-hidden mb-4 shadow-inner">
+        <div className="bg-amber-400 h-full transition-all duration-300" style={{ width: `${(i / tasks.length) * 100}%` }} />
+      </div>
+      <TaskCard key={i} task={task} index={i} total={tasks.length} onDone={next} hjelpStart={hjelpStart} fag={fag} attempts={attempts} />
+    </div>
+  )
+}
