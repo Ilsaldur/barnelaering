@@ -52,6 +52,10 @@ export const UTSNITT = {
   norden: [-26, 53, 34, 72],
   europa: [-12, 34, 36, 72],
   verden: [-170, -56, 180, 78],
+  amerika: [-170, -56, -30, 75],
+  afrika: [-20, -36, 52, 38],
+  asia: [25, -11, 150, 78],
+  oseania: [110, -48, 180, 0],
 }
 
 export function viewBoxFor(region) {
@@ -116,13 +120,16 @@ export function pikselStorrelse(country, region = 'verden', breddePx = 390) {
   return { w: (x1 - x0) * skala, h: (y1 - y0) * skala }
 }
 
-// Land som er minst `min` × `min` punkter på verdenskartet ved 390 punkters bredde.
-export function storeNokPaaVerdenskart(ids, min = 24) {
+// Land som er minst `min` × `min` punkter på kartet over `region` ved 390 punkters bredde.
+export function storeNokPaaKart(ids, region = 'verden', min = 24) {
   const alle = countries()
   return ids.filter((id) => {
     const c = alle.find((x) => x.id === id)
     if (!c) return false
-    const { w, h } = pikselStorrelse(c, 'verden', 390)
+    const { w, h } = pikselStorrelse(c, region, 390)
     return w >= min && h >= min
   })
+}
+export function storeNokPaaVerdenskart(ids, min = 24) {
+  return storeNokPaaKart(ids, 'verden', min)
 }

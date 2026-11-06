@@ -130,10 +130,10 @@ describe('L2 – emne', () => {
 })
 
 describe('L4 – små nivåer og toppnivået', () => {
-  it('nivåer med færre enn 20 ulike spørsmål får fem oppgaver: i dag Geografi 1, 2, 3 og 9, Språk 2 og Engelsk 7', () => {
+  it('nivåer med færre enn 20 ulike spørsmål får fem oppgaver: etter etappe M bare Geografi 1', () => {
     const smaa = []
     for (const [fag, stige] of Object.entries(STIGER)) for (const def of stige.nivaer) if (!def.tekstOppdrag && oppdragLengde(stige, def.id) === 5) smaa.push(`${fag} ${def.id}`)
-    expect(smaa.sort()).toEqual(['engelsk 7', 'geografi 1', 'geografi 2', 'geografi 3', 'geografi 9', 'sprak 2'])
+    expect(smaa.sort()).toEqual(['geografi 1'])
     const m = buildMission(fagPaa(1), { rng: seeded(3), stige: STIGER.geografi })
     expect(m.tasks).toHaveLength(5)
     expect(m.tasks.filter((t) => t.tag === 'eget')).toHaveLength(3)

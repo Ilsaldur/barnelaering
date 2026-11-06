@@ -61,6 +61,48 @@ export const LAND = [
   { id: '496', kode: 'mn', navn: 'Mongolia', hovedstad: 'Ulan Bator', flagg: '🇲🇳', region: 'verden', verdensdel: 'Asia' },
   { id: '036', kode: 'au', navn: 'Australia', hovedstad: 'Canberra', flagg: '🇦🇺', region: 'verden', verdensdel: 'Oseania' },
   { id: '554', kode: 'nz', navn: 'New Zealand', hovedstad: 'Wellington', flagg: '🇳🇿', region: 'verden', verdensdel: 'Oseania' },
+
+  // --- UTKAST (runde 4, etappe M): land til kartene over verdensdelene og
+  // verdensdel-spørsmålene. `bareKart`: ikke flagg- eller hovedstadsspørsmål.
+  { id: '068', kode: 'bo', navn: 'Bolivia', hovedstad: 'La Paz', flagg: '🇧🇴', region: 'verden', verdensdel: 'Sør-Amerika', bareKart: true },
+  { id: '862', kode: 've', navn: 'Venezuela', hovedstad: 'Caracas', flagg: '🇻🇪', region: 'verden', verdensdel: 'Sør-Amerika', bareKart: true },
+  { id: '834', kode: 'tz', navn: 'Tanzania', hovedstad: 'Dodoma', flagg: '🇹🇿', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '180', kode: 'cd', navn: 'Kongo', hovedstad: 'Kinshasa', flagg: '🇨🇩', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '706', kode: 'so', navn: 'Somalia', hovedstad: 'Mogadishu', flagg: '🇸🇴', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '729', kode: 'sd', navn: 'Sudan', hovedstad: 'Khartoum', flagg: '🇸🇩', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '148', kode: 'td', navn: 'Tsjad', hovedstad: 'N’Djamena', flagg: '🇹🇩', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '716', kode: 'zw', navn: 'Zimbabwe', hovedstad: 'Harare', flagg: '🇿🇼', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '072', kode: 'bw', navn: 'Botswana', hovedstad: 'Gaborone', flagg: '🇧🇼', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '516', kode: 'na', navn: 'Namibia', hovedstad: 'Windhoek', flagg: '🇳🇦', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '466', kode: 'ml', navn: 'Mali', hovedstad: 'Bamako', flagg: '🇲🇱', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '478', kode: 'mr', navn: 'Mauritania', hovedstad: 'Nouakchott', flagg: '🇲🇷', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '562', kode: 'ne', navn: 'Niger', hovedstad: 'Niamey', flagg: '🇳🇪', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '120', kode: 'cm', navn: 'Kamerun', hovedstad: 'Yaoundé', flagg: '🇨🇲', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '384', kode: 'ci', navn: 'Elfenbenskysten', hovedstad: 'Yamoussoukro', flagg: '🇨🇮', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '324', kode: 'gn', navn: 'Guinea', hovedstad: 'Conakry', flagg: '🇬🇳', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '854', kode: 'bf', navn: 'Burkina Faso', hovedstad: 'Ouagadougou', flagg: '🇧🇫', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '140', kode: 'cf', navn: 'Den sentralafrikanske republikk', hovedstad: 'Bangui', flagg: '🇨🇫', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '178', kode: 'cg', navn: 'Kongo-Brazzaville', hovedstad: 'Brazzaville', flagg: '🇨🇬', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '266', kode: 'ga', navn: 'Gabon', hovedstad: 'Libreville', flagg: '🇬🇦', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '894', kode: 'zm', navn: 'Zambia', hovedstad: 'Lusaka', flagg: '🇿🇲', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '508', kode: 'mz', navn: 'Mosambik', hovedstad: 'Maputo', flagg: '🇲🇿', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '024', kode: 'ao', navn: 'Angola', hovedstad: 'Luanda', flagg: '🇦🇴', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '450', kode: 'mg', navn: 'Madagaskar', hovedstad: 'Antananarivo', flagg: '🇲🇬', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '012', kode: 'dz', navn: 'Algerie', hovedstad: 'Alger', flagg: '🇩🇿', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '434', kode: 'ly', navn: 'Libya', hovedstad: 'Tripoli', flagg: '🇱🇾', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '800', kode: 'ug', navn: 'Uganda', hovedstad: 'Kampala', flagg: '🇺🇬', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '728', kode: 'ss', navn: 'Sør-Sudan', hovedstad: 'Juba', flagg: '🇸🇸', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '232', kode: 'er', navn: 'Eritrea', hovedstad: 'Asmara', flagg: '🇪🇷', region: 'verden', verdensdel: 'Afrika', bareKart: true },
+  { id: '398', kode: 'kz', navn: 'Kasakhstan', hovedstad: 'Astana', flagg: '🇰🇿', region: 'verden', verdensdel: 'Asia', bareKart: true },
+  { id: '860', kode: 'uz', navn: 'Usbekistan', hovedstad: 'Tasjkent', flagg: '🇺🇿', region: 'verden', verdensdel: 'Asia', bareKart: true },
+  { id: '368', kode: 'iq', navn: 'Irak', hovedstad: 'Bagdad', flagg: '🇮🇶', region: 'verden', verdensdel: 'Asia', bareKart: true },
+  { id: '512', kode: 'om', navn: 'Oman', hovedstad: 'Muskat', flagg: '🇴🇲', region: 'verden', verdensdel: 'Asia', bareKart: true },
+  { id: '104', kode: 'mm', navn: 'Myanmar', hovedstad: 'Naypyidaw', flagg: '🇲🇲', region: 'verden', verdensdel: 'Asia', bareKart: true },
+  { id: '586', kode: 'pk', navn: 'Pakistan', hovedstad: 'Islamabad', flagg: '🇵🇰', region: 'verden', verdensdel: 'Asia', bareKart: true },
+  { id: '004', kode: 'af', navn: 'Afghanistan', hovedstad: 'Kabul', flagg: '🇦🇫', region: 'verden', verdensdel: 'Asia', bareKart: true },
+  { id: '795', kode: 'tm', navn: 'Turkmenistan', hovedstad: 'Asjkhabad', flagg: '🇹🇲', region: 'verden', verdensdel: 'Asia', bareKart: true },
+  { id: '364', kode: 'ir', navn: 'Iran', hovedstad: 'Teheran', flagg: '🇮🇷', region: 'verden', verdensdel: 'Asia', bareKart: true },
+  { id: '598', kode: 'pg', navn: 'Papua Ny-Guinea', hovedstad: 'Port Moresby', flagg: '🇵🇬', region: 'verden', verdensdel: 'Oseania', bareKart: true },
 ]
 
 export const VERDENSDELER = ['Europa', 'Asia', 'Afrika', 'Nord-Amerika', 'Sør-Amerika', 'Oseania']
@@ -69,13 +111,34 @@ export const REGIONER = [
   { id: 'norden', navn: 'Norden', emoji: '❄️' },
   { id: 'europa', navn: 'Europa', emoji: '🏰' },
   { id: 'verden', navn: 'Hele verden', emoji: '🌍' },
+  { id: 'amerika', navn: 'Amerika', emoji: '🌎' },
+  { id: 'afrika', navn: 'Afrika', emoji: '🦒' },
+  { id: 'asia', navn: 'Asia', emoji: '🐼' },
+  { id: 'oseania', navn: 'Oseania', emoji: '🦘' },
 ]
 
-// Landene i et område (kumulativt: Europa inkluderer Norden, verden alt).
+// Kart som zoomer inn på én verdensdel: hvilke verdensdeler hører til.
+export const KONTINENTER = {
+  amerika: ['Nord-Amerika', 'Sør-Amerika'],
+  afrika: ['Afrika'],
+  asia: ['Asia'],
+  oseania: ['Oseania'],
+}
+
+// Alle land i en verdensdel (også de som bare brukes på kart).
+export function landIKontinent(region) {
+  const deler = KONTINENTER[region]
+  if (!deler) return []
+  return LAND.filter((l) => deler.includes(l.verdensdel))
+}
+
+// Landene i et område til flagg- og hovedstadsspørsmål (kumulativt: Europa
+// inkluderer Norden, verden alt). Land merket `bareKart` er ikke med.
 export function landFor(region) {
   if (region === 'norden') return LAND.filter((l) => l.region === 'norden')
   if (region === 'europa') return LAND.filter((l) => l.region !== 'verden')
-  return LAND
+  if (KONTINENTER[region]) return landIKontinent(region)
+  return LAND.filter((l) => !l.bareKart)
 }
 
 export function landById(id) {

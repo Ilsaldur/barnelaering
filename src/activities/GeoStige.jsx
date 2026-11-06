@@ -8,7 +8,8 @@ import { sound } from '../sound.js'
 import { speech } from '../speech.js'
 import { NIVAER_GEO, GEO_OMRAADER, geoOmraadeFor } from '../data/geo/nivaer.js'
 import { genGeo } from '../lib/geo/generatorer.js'
-import { REGIONER, landFor, landById } from '../data/geo/land.js'
+import { REGIONER, landById } from '../data/geo/land.js'
+import { kartPool } from '../lib/geo/kart.js'
 
 const START = [
   { id: 'norden', navn: 'Jeg lærer landene i Norden', emoji: '❄️', nivaa: 1, farge: 'bg-sky-500' },
@@ -59,7 +60,7 @@ function Utforsk({ onClose }) {
             <SpeakButton text={`${l.navn}. Hovedstaden er ${l.hovedstad}.`} />
           </div>
         ) : (
-          <p className="text-slate-500 font-bold">👆 Trykk på et grønt land! {landFor(region).length} land å finne.</p>
+          <p className="text-slate-500 font-bold">👆 Trykk på et grønt land! {kartPool(region).length} land å finne.</p>
         )}
       </div>
       <div className="flex justify-center mt-3">

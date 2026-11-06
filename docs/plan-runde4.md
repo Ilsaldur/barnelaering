@@ -5,7 +5,7 @@
 | Etappe | Status | Sist oppdatert |
 |--------|--------|----------------|
 | L – Gjentakelser (viktigst) | Ferdig og pushet. Se `docs/etappeL.md`. | 2026-11-06 |
-| M – Mer innhold der bunken er liten | Ikke startet. | |
+| M – Mer innhold der bunken er liten | Ferdig og pushet. Se `docs/etappeM.md`. Nytt innhold er UTKAST. | 2026-11-06 |
 | N – Mobil og tallinje | Ikke startet. | |
 | O – Still klokka | Ikke startet. | |
 | P – Flagg, plassering og småfeil | Ikke startet. | |

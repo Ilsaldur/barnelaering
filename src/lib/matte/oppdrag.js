@@ -172,7 +172,7 @@ function fyll(plan, rng, stige, { sett = [], emneMaks = EMNE_MAKS, ekstraAvvis =
 
 // Lett før vanskelig, og aldri samme emne i to oppgaver på rad. Står to like
 // ved siden av hverandre, lages den andre på nytt (samme nivå og tag).
-function ordne(tasks, rng, stige, sett) {
+function ordne(tasks, rng, stige, sett, emneMaks = EMNE_MAKS) {
   const out = [...tasks].sort((a, b) => a.nivaa - b.nivaa)
   for (let i = 1; i < out.length; i++) {
     const t = out[i]
@@ -186,9 +186,11 @@ function ordne(tasks, rng, stige, sett) {
     if (t.tag === 'kort' || t.tag === 'sjef') continue
     const brukt = new Set(out.map(nokkel))
     const naboer = new Set([out[i - 1].emne, out[i + 1]?.emne])
+    const teller = emneTeller(out.filter((_, k) => k !== i))
+    const ok = (x) => x.emne == null || (!naboer.has(x.emne) && (teller[x.emne] || 0) < emneMaks)
     const lag = (r) => ({ ...(t.tag === 'svak' ? lagOppgaveAvType(t.nivaa, t.type, r, stige) : lagOppgave(t.nivaa, r, {}, stige)), tag: t.tag })
-    const ny = velg(lag, rng, { brukt, sett, emneOk: (x) => x.emne == null || !naboer.has(x.emne), avvis: (x) => !!x.harNull })
-    if (ny.emne == null || !naboer.has(ny.emne)) out[i] = ny
+    const ny = velg(lag, rng, { brukt, sett, emneOk: ok, avvis: (x) => !!x.harNull })
+    if (ok(ny)) out[i] = ny
   }
   return out
 }
@@ -318,7 +320,7 @@ export function buildMission(fag, { rng = Math.random, stige = MATTE_STIGE, leng
   // Kortene først, så de andre oppgavene unngår dem.
   const rekkef = [...plan.filter((p) => p.tag === 'kort'), ...plan.filter((p) => p.tag !== 'kort')]
   let tasks = fyll(rekkef, rng, stige, { sett, emneMaks: stige.emneMaks || EMNE_MAKS })
-  tasks = ordne(tasks, rng, stige, sett)
+  tasks = ordne(tasks, rng, stige, sett, stige.emneMaks || EMNE_MAKS)
   return { nivaa, hjelp, tasks: tasks.slice(0, L), kortIds }
 }
 
@@ -351,7 +353,7 @@ export function buildBoss(nivaa, target, { rng = Math.random, stige = MATTE_STIG
     for (let k = 0; k < fordeling[i]; k++) plan.push({ nivaa: n, tag: 'sjef' })
   })
   let tasks = fyll(plan, rng, stige, { sett, emneMaks: stige.emneMaks || EMNE_MAKS })
-  tasks = ordne(tasks, rng, stige, sett)
+  tasks = ordne(tasks, rng, stige, sett, stige.emneMaks || EMNE_MAKS)
   return { target: maal, tasks: tasks.slice(0, SJEF_LENGDE) }
 }
 
