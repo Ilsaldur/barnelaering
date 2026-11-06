@@ -46,7 +46,11 @@ function LoginForm({ onCancel, onPrivacy }) {
         const { data, error } = await supabase.auth.signUp({ email: mail, password, options: { emailRedirectTo: window.location.origin } })
         if (error) setMsg(feilTekst(error))
         else if (data.session) onCancel()
-        else setDone({ tittel: 'Nesten ferdig!', tekst: `Vi har sendt en bekreftelseslenke til ${mail}. Trykk på den, og logg så inn her med passordet ditt.` })
+        else if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          // Supabase svarer «ok» uten å sende e-post når adressen allerede har konto.
+          setMsg('Det finnes allerede en konto med denne e-posten. Logg inn, eller bruk «Glemt passord».')
+          setMode('inn')
+        } else setDone({ tittel: 'Nesten ferdig!', tekst: `Vi har sendt en bekreftelseslenke til ${mail}. Trykk på den, og logg så inn her med passordet ditt.` })
       }
     } else {
       const { error } = await supabase.auth.resetPasswordForEmail(mail, { redirectTo: window.location.origin })
