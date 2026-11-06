@@ -180,6 +180,7 @@ export function StarRating({ earned, total = 3 }) {
   const [shown, setShown] = useState(0)
   useEffect(() => {
     setShown(0)
+    if (!earned || earned <= 0) return undefined
     let i = 0
     const id = setInterval(() => {
       i++

@@ -42,7 +42,7 @@ export function oppdaterSvake(svake, perTask, nivaa) {
   return out
 }
 
-export function applyResult(fag, { correct, total = OPPDRAG_LENGDE, nivaa, perTask = [] }, maks) {
+export function applyResult(fag, { correct, total = OPPDRAG_LENGDE, nivaa, perTask = [], hjelpModus = false }, maks) {
   const next = { ...fag, beste: { ...fag.beste } }
   delete next.perfektRad
   const events = { levelUp: false, levelDown: false, boss: null, stars: starsFor(correct, total) }
@@ -52,6 +52,14 @@ export function applyResult(fag, { correct, total = OPPDRAG_LENGDE, nivaa, perTa
 
   const oppGrense = Math.ceil((total * 7) / 8)
   const sammeGrense = Math.ceil((total * 5) / 8)
+  if (hjelpModus && correct >= sammeGrense) {
+    // Et oppdrag i hjelpemodus gir aldri paaRad + 1 og aldri sjefsoppgave.
+    // Går det bra, slås hjelpemodus av.
+    next.svakRad = 0
+    next.hjelpNeste = false
+    next.sjef = null
+    return { fag: next, events }
+  }
   if (correct >= oppGrense) {
     next.paaRad = (fag.paaRad || 0) + 1
     next.svakRad = 0
@@ -77,6 +85,7 @@ export function applyResult(fag, { correct, total = OPPDRAG_LENGDE, nivaa, perTa
         next.nivaa = nivaa - 1
         events.levelDown = true
         next.svake = {}
+        next.hjelpNeste = false // flyttes barnet ned, slås hjelpemodus av
       }
     }
   }

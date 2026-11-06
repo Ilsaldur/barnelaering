@@ -61,7 +61,7 @@ export default function Stige({ cfg, go }) {
       nf = { ...state, beste: { ...state.beste, [mission.nivaa]: Math.max(state.beste?.[mission.nivaa] || 0, stars) } }
       events = { stars, levelUp: false, levelDown: false, boss: null }
     } else {
-      ;({ fag: nf, events } = applyResult(state, { correct: res.correct, total: res.total, nivaa: mission.nivaa, perTask: res.perTask }, MAKS))
+      ;({ fag: nf, events } = applyResult(state, { correct: res.correct, total: res.total, nivaa: mission.nivaa, perTask: res.perTask, hjelpModus: !!mission.hjelp }, MAKS))
     }
     let bokser = nf.bokser || {}
     for (const r of res.perTask) if (r.kortId) bokser = oppdaterBoks(bokser, r.kortId, r.ok && r.forste)
