@@ -281,3 +281,47 @@ describe('oppdrag (A5)', () => {
     expect(activeWeakTypes({ svake: { a: {} } })).toEqual(['a'])
   })
 })
+
+describe('hjelpemodus (etappe F)', () => {
+  it('gir aldri paaRad + 1 eller sjefsoppgave; godt resultat slår hjelp av', () => {
+    const f = fagAt(18, { hjelpNeste: true, svakRad: 1, paaRad: 0 })
+    const r = applyResult(f, { correct: 8, total: 8, nivaa: 18, hjelpModus: true }, 38)
+    expect(r.fag.nivaa).toBe(18)
+    expect(r.fag.paaRad).toBe(0)
+    expect(r.fag.hjelpNeste).toBe(false)
+    expect(r.fag.svakRad).toBe(0)
+    expect(r.events.boss).toBe(null)
+    expect(r.events.levelUp).toBe(false)
+    const r5 = applyResult(f, { correct: 5, total: 8, nivaa: 18, hjelpModus: true }, 38)
+    expect(r5.fag.hjelpNeste).toBe(false)
+    expect(r5.fag.svakRad).toBe(0)
+  })
+  it('svakt resultat i hjelpemodus teller som svakt; nedflytting slår hjelp av', () => {
+    const f = fagAt(18, { hjelpNeste: true, svakRad: 1 })
+    const r = applyResult(f, { correct: 3, total: 8, nivaa: 18, hjelpModus: true }, 38)
+    expect(r.events.levelDown).toBe(true)
+    expect(r.fag.nivaa).toBe(17)
+    expect(r.fag.hjelpNeste).toBe(false)
+    expect(r.fag.svakRad).toBe(0)
+  })
+  it('akseptansetest 2: 92 % til nivå 12, 55 % på 13, 15 % over – færre enn 5 % ender på ≤ 9', () => {
+    const rng = seeded(2024)
+    const BARN = 300
+    let lave = 0
+    for (let b = 0; b < BARN; b++) {
+      let fag = fagAt(12)
+      for (let m = 0; m < 40; m++) {
+        const mission = buildMission(fag, { rng })
+        const perTask = mission.tasks.map((t) => {
+          const p = t.nivaa <= 12 ? 0.92 : t.nivaa === 13 ? 0.55 : 0.15
+          const ok = rng() < p
+          return { type: t.type, nivaa: t.nivaa, tag: t.tag, ok, forste: true, hjelp: false, counts: ok }
+        })
+        const correct = perTask.filter((x) => x.counts).length
+        fag = applyResult(fag, { correct, total: mission.tasks.length, nivaa: mission.nivaa, perTask, hjelpModus: mission.hjelp }, 38).fag
+      }
+      if (fag.nivaa <= 9) lave++
+    }
+    expect(lave / BARN).toBeLessThan(0.05)
+  })
+})

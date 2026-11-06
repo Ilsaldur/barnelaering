@@ -59,7 +59,8 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
   const [picked, setPicked] = useState(null)
   const [feedback, setFeedback] = useState(null) // null | 'right' | 'retry' | 'solution'
   const [help, setHelp] = useState(hjelpStart && !!task.hjelp)
-  const [usedHelp, setUsedHelp] = useState(hjelpStart && !!task.hjelp)
+  // Hjelp som appen åpner selv (hjelpemodus) regnes ikke som brukt hjelp.
+  const [usedHelp, setUsedHelp] = useState(false)
   const [result, setResult] = useState(null)
   const [seq, setSeq] = useState([]) // sortering: valgt rekkefølge
 
@@ -83,7 +84,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
     setPicked(null)
     setFeedback(null)
     setHelp(hjelpStart && !!task.hjelp)
-    setUsedHelp(hjelpStart && !!task.hjelp)
+    setUsedHelp(false)
     setResult(null)
     setSeq([])
     setKlokke({ h: 12, m: 0 })
