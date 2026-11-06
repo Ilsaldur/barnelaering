@@ -6,6 +6,7 @@ import Home from './activities/Home.jsx'
 import TopicLadder from './activities/TopicLadder.jsx'
 import MatteStige from './activities/MatteStige.jsx'
 import Noettehula from './activities/Noettehula.jsx'
+import LeseStige from './activities/LeseStige.jsx'
 import Samling from './activities/Samling.jsx'
 import Clock from './activities/Clock.jsx'
 import Geography from './activities/Geography.jsx'
@@ -37,6 +38,7 @@ function AppInner() {
   useEffect(() => {
     if (nav.view === 'level') setActiveLevel({ topicId: nav.topicId, levelIndex: nav.levelIndex })
     else if (nav.view === 'matte') setActiveLevel({ fag: 'matte' })
+    else if (nav.view === 'lesing') setActiveLevel({ fag: 'lesing' })
     else if (nav.view === 'noetter') setActiveLevel({ fag: 'nott', oppdrag: !!nav.oppdrag })
     else if (nav.view === 'dagens') setActiveLevel({ fag: nav.fag, oppdrag: true, topicId: nav.fag, levelIndex: nav.levelIndex })
     else setActiveLevel(null)
@@ -95,6 +97,9 @@ function AppInner() {
   } else if (nav.view === 'matte') {
     bg = MATTE_BG
     content = <MatteStige go={goHome} onNoetter={() => setNav({ view: 'noetter' })} />
+  } else if (nav.view === 'lesing') {
+    bg = 'from-violet-400 via-fuchsia-400 to-rose-300'
+    content = <LeseStige go={goHome} />
   } else if (nav.view === 'noetter') {
     bg = 'from-amber-600 via-orange-500 to-yellow-400'
     content = <Noettehula go={goHome} />
@@ -118,8 +123,10 @@ function AppInner() {
         onSwitchProfile={signOutProfile}
         onMatte={() => setNav({ view: 'matte' })}
         onNoetter={() => setNav({ view: 'noetter' })}
+        onLesing={() => setNav({ view: 'lesing' })}
         onDagens={(fag) => {
           if (fag === 'nott') return setNav({ view: 'noetter', oppdrag: true })
+          if (fag === 'lesing') return setNav({ view: 'lesing' })
           const topic = topicById(fag)
           const idx = topic ? Math.max(0, recommendedIndex(topic, best)) : 0
           setNav({ view: 'dagens', fag, levelIndex: idx })

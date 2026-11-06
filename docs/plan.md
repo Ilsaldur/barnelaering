@@ -9,13 +9,14 @@
 | 2 – Innlogging, profiler og synkronisering | Kode ferdig. Jon må sette Vercel-nøkler, stenge registrering og legge inn e-poster i Supabase (se `docs/etappe2.md`). | 2026-11-05 |
 | 3 – Mattestigen | Kode ferdig og pushet. Se `docs/etappe3.md`. | 2026-11-06 |
 | 4 – Dagens økt, kart og belønning | Kode ferdig og pushet. Se `docs/etappe4.md`. | 2026-11-06 |
-| 5 – Lesestigen | Ikke startet | |
+| 5 – Lesestigen | Kode ferdig og pushet. Innholdet i `src/data/lesing/innhold.js` er UTKAST og må leses gjennom. Se `docs/etappe5.md`. | 2026-11-06 |
 | 6 – Klokke, geografi og engelsk | Ikke startet | |
 
 Arbeidsgren: `adaptiv-laering` (ikke push til `main` uten OK).
 
 Viktige funn for en ny økt:
-- Kjør `npm test` (Vitest) og `npm run build` før hver etappe avsluttes. Delt logikk ligger i `src/lib/` (rng, scoring, distractors, round, matte, klokke, quiz).
+- Kjør `npm test` (Vitest) og `npm run build` før hver etappe avsluttes. Delt logikk ligger i `src/lib/` (rng, scoring, distractors, round, profil, dagen, samling, matte/*, lesing/*).
+- Stigene er data: `src/data/matte/nivaer.js` (38 nivåer) og `src/data/lesing/nivaer.js` (16 nivåer). Oppdragsbygger og nivåregler er felles (`src/lib/matte/oppdrag.js`, `src/lib/matte/stige.js`) og tar en `stige` ({ nivaer, gen }).
 - Det finnes to utgaver av appen. Produksjon på Vercel kjører commit `2d5b097` (klassetrinn + Eventyrkart). Lokal `main` har en upushet commit `da2fcc1` (profiler, Supabase, temastiger, voksenside, opplesing, hage) som slettet Eventyrkartet. Se `docs/etappe0.md`.
 - Supabase-prosjektet `selmas-skole` (eu-north-1) finnes med tabellene `children` og `progress`, RLS på, ingen rader.
 - Vercel-prosjektet `selmasskole` har ingen miljøvariabler. `VITE_SUPABASE_URL` og `VITE_SUPABASE_ANON_KEY` må legges inn der før etappe 2 rulles ut (Jon gjør det i Vercel-dashbordet, nøkler skal ikke i repoet).

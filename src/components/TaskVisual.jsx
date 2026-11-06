@@ -279,7 +279,37 @@ export function Visual({ visual }) {
         </div>
       )
     case 'ikon':
-      return <div className="text-center text-6xl">{visual.emoji}</div>
+      return (
+        <div className="text-center">
+          <div className="text-6xl md:text-7xl">{visual.emoji}</div>
+          {visual.tekst && <div className="text-2xl md:text-3xl font-extrabold text-slate-500 tracking-widest mt-1">{visual.tekst}</div>}
+        </div>
+      )
+    case 'bokstav':
+      return <div className="text-center text-8xl md:text-9xl font-extrabold text-slate-700">{visual.tekst}</div>
+    case 'ordkort':
+      return (
+        <div className="text-center">
+          <span className="inline-block bg-amber-50 border-4 border-amber-200 rounded-3xl px-8 py-4 text-5xl md:text-6xl font-extrabold text-slate-700 tracking-wider">{visual.tekst}</span>
+        </div>
+      )
+    case 'lyder':
+      return (
+        <div className="flex justify-center gap-3">
+          {visual.bokstaver.map((b, i) => (
+            <span key={i} className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-sky-100 border-4 border-sky-300 flex items-center justify-center text-4xl md:text-5xl font-extrabold text-slate-700">
+              {b}
+            </span>
+          ))}
+        </div>
+      )
+    case 'tekst':
+      return (
+        <div className="bg-amber-50 rounded-2xl p-4 md:p-5 max-w-2xl mx-auto text-left">
+          {visual.tittel && <h3 className="text-xl md:text-2xl font-extrabold text-slate-700 mb-2">{visual.tittel}</h3>}
+          <p className="text-lg md:text-xl leading-relaxed font-semibold text-slate-700">{visual.tekst}</p>
+        </div>
+      )
     case 'tallinje':
       return <TallinjePil from={visual.from} to={visual.to} step={visual.step} marker={visual.marker} />
     case 'rutenett':

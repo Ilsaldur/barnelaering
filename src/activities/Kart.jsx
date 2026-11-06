@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useStarsOptional } from '../StarContext.jsx'
 import { kostymeById } from '../data/kostymer.js'
-import { NIVAER, VERDENER } from '../data/matte/nivaer.js'
+import { NIVAER as NIVAER_MATTE, VERDENER as VERDENER_MATTE } from '../data/matte/nivaer.js'
 import { sound } from '../sound.js'
 
 // Eventyrkartet: hvert nivå er et sted, reven står på nivået barnet er på.
@@ -18,7 +18,9 @@ function Fox({ className = '' }) {
   )
 }
 
-export default function Kart({ matte, onStart, onReplay }) {
+export default function Kart({ matte, onStart, onReplay, nivaer = NIVAER_MATTE, verdener = VERDENER_MATTE, ikoner }) {
+  const NIVAER = nivaer
+  const VERDENER = verdener
   const cur = matte.nivaa || 1
   const [msg, setMsg] = useState(null)
 
@@ -73,7 +75,7 @@ export default function Kart({ matte, onStart, onReplay }) {
                       isHere ? 'bg-white shadow-xl scale-105 ring-4 ring-amber-300' : done ? 'bg-white/90 shadow hover:scale-105' : 'bg-white/40 text-slate-500'
                     }`}
                   >
-                    {isHere ? <Fox className="text-4xl md:text-5xl animate-bouncey" /> : locked ? <span className="text-2xl">🔒</span> : <span className="text-2xl md:text-3xl">{n.id <= 6 ? '🌼' : n.id <= 14 ? '🐚' : n.id <= 22 ? '🪨' : n.id <= 30 ? '🏵️' : '⭐'}</span>}
+                    {isHere ? <Fox className="text-4xl md:text-5xl animate-bouncey" /> : locked ? <span className="text-2xl">🔒</span> : <span className="text-2xl md:text-3xl">{ikoner ? ikoner(n) : n.id <= 6 ? '🌼' : n.id <= 14 ? '🐚' : n.id <= 22 ? '🪨' : n.id <= 30 ? '🏵️' : '⭐'}</span>}
                     <span className={`text-xs md:text-sm font-extrabold ${isHere ? 'text-amber-600' : 'text-slate-600'}`}>Nivå {n.id}</span>
                     {stars > 0 && <span className="absolute -top-2 bg-white rounded-full px-1.5 text-[11px] leading-5 shadow">{'⭐'.repeat(stars)}</span>}
                   </button>

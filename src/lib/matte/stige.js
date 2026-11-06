@@ -21,10 +21,12 @@ export function applyResult(fag, { correct, total = OPPDRAG_LENGDE, nivaa, misse
   // Beste stjerner på nivået (bare første forsøk).
   next.beste[nivaa] = Math.max(next.beste[nivaa] || 0, events.stars)
 
-  if (correct >= 7) {
+  const oppGrense = Math.ceil((total * 7) / 8) // 7 av 8
+  const sammeGrense = Math.ceil((total * 5) / 8) // 5 av 8
+  if (correct >= oppGrense) {
     next.paaRad = (fag.paaRad || 0) + 1
     next.hjelpNeste = false
-  } else if (correct >= 5) {
+  } else if (correct >= sammeGrense) {
     next.paaRad = 0
     next.hjelpNeste = false
   } else {

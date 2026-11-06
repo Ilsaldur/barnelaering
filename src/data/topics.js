@@ -8,7 +8,7 @@
 // mattestigen (src/data/matte/nivaer.js). Generatorene under brukes av tester
 // og kan gjenbrukes.
 
-import { COLORS, SHAPES, FIRST_LETTER, LETTER_SOUNDS, OPPOSITES } from './levels.js'
+import { COLORS, SHAPES } from './levels.js'
 import { randInt, pick, shuffle } from '../lib/rng.js'
 import { nearDistractors, makeOptions } from '../lib/distractors.js'
 
@@ -129,27 +129,6 @@ function missingGen(maxN) {
 
 export const TOPICS = [
   {
-    id: 'bokstaver',
-    title: 'Bokstaver og lyder',
-    emoji: '🅰️',
-    color: 'bg-emerald-500',
-    levels: [
-      { sub: 'Første bokstav', engine: 'quiz', config: { ...FIRST_LETTER } },
-      { sub: 'Finn ordet', engine: 'quiz', config: { ...LETTER_SOUNDS } },
-    ],
-  },
-  {
-    id: 'ord',
-    title: 'Ord og lesing',
-    emoji: '🔤',
-    color: 'bg-violet-500',
-    levels: [
-      { sub: 'Korte ord', engine: 'words', config: { title: 'Ord', emoji: '🔤', maxLen: 4 } },
-      { sub: 'Lengre ord', engine: 'words', config: { title: 'Ord', emoji: '🔤', maxLen: 6 } },
-      { sub: 'Alle ord', engine: 'words', config: { title: 'Ord og lesing', emoji: '🔤' } },
-    ],
-  },
-  {
     id: 'klokke',
     title: 'Klokka',
     emoji: '🕐',
@@ -180,13 +159,6 @@ export const TOPICS = [
       { sub: 'Grunnfarger', engine: 'quiz', config: { ...COLORS, bank: COLORS.bank.slice(0, 8) } },
       { sub: 'Alle farger', engine: 'quiz', config: { ...COLORS } },
     ],
-  },
-  {
-    id: 'motsatt',
-    title: 'Motsetninger',
-    emoji: '↔️',
-    color: 'bg-cyan-500',
-    levels: [{ sub: 'Hva er motsatt?', engine: 'quiz', config: { ...OPPOSITES } }],
   },
   {
     id: 'geografi',

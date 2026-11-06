@@ -17,6 +17,9 @@ import TopicLadder from '../activities/TopicLadder.jsx'
 import RoundDone from '../components/RoundDone.jsx'
 import AdultGate from '../components/AdultGate.jsx'
 import MatteStige from '../activities/MatteStige.jsx'
+import LeseStige from '../activities/LeseStige.jsx'
+import { NIVAER_LESING } from '../data/lesing/nivaer.js'
+import { genLesing } from '../lib/lesing/generatorer.js'
 import Noettehula from '../activities/Noettehula.jsx'
 import Oppdrag, { TaskCard } from '../activities/Oppdrag.jsx'
 import { NIVAER } from '../data/matte/nivaer.js'
@@ -29,7 +32,7 @@ const wrap = (el) => renderToString(<StarProvider>{el}</StarProvider>)
 
 describe('alle skjermer rendrer uten feil', () => {
   it('forside, kart, stjerner, hage, voksenside, profilvalg', () => {
-    const home = wrap(<Home topics={TOPICS} onPick={noop} onSamling={noop} onGarden={noop} onParents={noop} onSwitchProfile={noop} onMatte={noop} onNoetter={noop} onDagens={noop} />)
+    const home = wrap(<Home topics={TOPICS} onPick={noop} onSamling={noop} onGarden={noop} onParents={noop} onSwitchProfile={noop} onMatte={noop} onLesing={noop} onNoetter={noop} onDagens={noop} />)
     expect(home).toContain('Dagens økt')
     expect(home).toContain('Eventyrkartet')
     expect(wrap(<Samling go={noop} onGarden={noop} />)).toContain('Familiekisten')
@@ -38,7 +41,7 @@ describe('alle skjermer rendrer uten feil', () => {
     expect(wrap(<Parents go={noop} onSwitchProfile={noop} />)).toContain('Hold inne')
     expect(wrap(<Garden go={noop} />)).toContain('Hagebutikken')
     expect(wrap(<Family onPicked={noop} />)).toContain('Hvem skal spille')
-    expect(wrap(<TopicLadder topic={TOPICS[0]} go={noop} onOpenLevel={noop} />)).toContain('Første bokstav')
+    expect(wrap(<TopicLadder topic={TOPICS[0]} go={noop} onOpenLevel={noop} />)).toContain('Hele timer')
     expect(renderToString(<AdultGate onPass={noop} />)).toContain('tre sekunder')
   })
 
@@ -66,6 +69,14 @@ describe('alle skjermer rendrer uten feil', () => {
   it('mattestigen: plassering, nøttehula og alle oppgavetyper rendrer', () => {
     expect(wrap(<MatteStige go={noop} onNoetter={noop} />)).toContain('Hvor vil du begynne')
     expect(wrap(<Noettehula go={noop} />)).toContain('Nøttehula')
+    expect(wrap(<LeseStige go={noop} />)).toContain('Hva passer best')
+    const rngL = seeded(31)
+    for (const n of NIVAER_LESING) {
+      for (const t of n.typer) {
+        const task = { ...genLesing(t.type, t.param, rngL), nivaa: n.id }
+        expect(wrap(<TaskCard task={task} onDone={noop} index={0} total={8} fag="lesing" />).length, `lesing ${n.id}/${t.type}`).toBeGreaterThan(300)
+      }
+    }
     const rng = seeded(21)
     for (const n of NIVAER) {
       for (const t of n.typer) {

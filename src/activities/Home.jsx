@@ -14,9 +14,10 @@ const KORT_INFO = {
 }
 
 // Barnets forside: «Dagens økt» øverst, fri lek under.
-export default function Home({ topics, onPick, onSamling, onGarden, onParents, onSwitchProfile, onMatte, onNoetter, onDagens }) {
+export default function Home({ topics, onPick, onSamling, onGarden, onParents, onSwitchProfile, onMatte, onLesing, onNoetter, onDagens }) {
   const { profile, onLine, session, fag, data, settings } = useStars()
   const matte = fag?.matte
+  const lesing = fag?.lesing
   const fagTilgjengelig = Object.keys(STIGER)
   const kort = dagensKort({ settings, fagTilgjengelig })
   const status = dagStatus({ dager: data.dager, settings })
@@ -31,6 +32,7 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
   function velg(k) {
     sound.click()
     if (k.fag === 'matte') onMatte()
+    else if (k.fag === 'lesing') onLesing()
     else if (k.fag === 'nott') onDagens('nott')
     else onDagens(k.fag)
   }
@@ -92,6 +94,7 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
                 <span className="text-base md:text-xl font-extrabold text-center leading-tight">{k.overraskelse ? 'Overraskelse' : info.navn}</span>
                 {k.overraskelse && <span className="text-xs opacity-90">{info.emoji} {info.navn}</span>}
                 {k.fag === 'matte' && matte?.nivaa && <span className="text-xs opacity-90">nivå {matte.nivaa}</span>}
+                {k.fag === 'lesing' && lesing?.nivaa && <span className="text-xs opacity-90">nivå {lesing.nivaa}</span>}
               </button>
             )
           })}
@@ -106,6 +109,13 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
           <span className="text-left">
             <span className="block text-lg md:text-xl font-extrabold">Eventyrkartet</span>
             <span className="block text-xs md:text-sm opacity-90">{matte?.nivaa ? `Reven er på nivå ${matte.nivaa}` : 'Finn nivået ditt'}</span>
+          </span>
+        </button>
+        <button onClick={() => { sound.click(); onLesing() }} className="kid-btn bg-violet-500 text-white p-4 flex items-center gap-3 hover:scale-[1.02]">
+          <span className="text-4xl">📖</span>
+          <span className="text-left">
+            <span className="block text-lg md:text-xl font-extrabold">Lesestigen</span>
+            <span className="block text-xs md:text-sm opacity-90">{lesing?.nivaa ? `Nivå ${lesing.nivaa} av 16` : 'Finn nivået ditt'}</span>
           </span>
         </button>
         <button onClick={() => { sound.click(); onNoetter() }} className="kid-btn bg-amber-700 text-white p-4 flex items-center gap-3 hover:scale-[1.02]">

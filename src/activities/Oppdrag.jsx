@@ -83,6 +83,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
     if (task.form === 'santusant') return value === task.answer
     if (task.form === 'sorter') return Array.isArray(value) && value.length === task.answer.length && value.every((v, i) => v === task.answer[i])
     if (task.form === 'tallinje') return Number(value) === task.answer
+    if (task.form === 'skriv') return String(value).trim().toLowerCase().replace(/\s+/g, ' ') === String(task.answer).trim().toLowerCase()
     return String(value) === String(task.answer)
   }
 
@@ -138,6 +139,14 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
         </div>
       )}
 
+      {task.hørOrd && task.form !== 'skriv' && !done && (
+        <div className="text-center my-2">
+          <button type="button" onClick={() => speech.speak(`${task.hørOrd}. ${task.hørOrd}.`)} className="kid-btn bg-violet-500 text-white px-5 py-3 text-lg font-extrabold">
+            🔊 Hør ordet
+          </button>
+        </div>
+      )}
+
       {canHelp && !done && (
         <div className="text-center my-2">
           <button
@@ -161,7 +170,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
 
       {/* Svar */}
       {task.form === 'valg' && (
-        <div className={`grid gap-3 md:gap-4 mt-4 ${task.options.length === 2 ? 'grid-cols-2' : task.options.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        <div className={`grid gap-3 md:gap-4 mt-4 ${task.options.length === 2 ? 'grid-cols-2' : task.options.length === 3 ? 'grid-cols-3' : task.options.some((o) => String(o).length > 14) ? 'grid-cols-1' : 'grid-cols-2'}`}>
           {task.options.map((opt) => {
             const isPicked = picked !== null && String(picked) === String(opt)
             const isAnswer = String(opt) === String(task.answer)
@@ -172,7 +181,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
               else color = 'bg-slate-300'
             } else if (feedback === 'retry' && isPicked) color = 'bg-rose-400'
             const label = typeof opt === 'number' ? fmt(opt) : String(opt)
-            const big = label.length <= 3
+            const big = label.length <= 3 || task.stor
             return (
               <button
                 key={String(opt)}
@@ -248,6 +257,39 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
         <div className="mt-4">
           <TapLine line={task.line} picked={picked} answer={done ? task.answer : null} disabled={done || feedback === 'retry'} onPick={(v) => submit(v)} />
         </div>
+      )}
+
+      {task.form === 'skriv' && !done && (
+        <form
+          className={`mt-4 max-w-sm mx-auto ${feedback === 'retry' ? 'animate-shake' : ''}`}
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (input.trim()) submit(input)
+          }}
+        >
+          {task.hørOrd && (
+            <div className="text-center mb-3">
+              <button type="button" onClick={() => speech.speak(`${task.hørOrd}. ${task.hørOrd}.`)} className="kid-btn bg-violet-500 text-white px-5 py-3 text-lg font-extrabold">
+                🔊 Hør ordet igjen
+              </button>
+            </div>
+          )}
+          <input
+            type="text"
+            autoFocus
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            disabled={feedback === 'retry'}
+            placeholder="skriv her"
+            className="w-full text-center rounded-2xl border-4 border-slate-200 px-4 py-3 text-3xl font-extrabold text-slate-700 focus:border-sky-400 outline-none tracking-wide"
+          />
+          <button type="submit" disabled={!input.trim() || feedback === 'retry'} className="kid-btn bg-emerald-500 text-white w-full py-3 text-2xl font-extrabold mt-3 disabled:opacity-50">
+            ✓ Ferdig
+          </button>
+        </form>
       )}
 
       {task.form === 'tastatur' && !done && (

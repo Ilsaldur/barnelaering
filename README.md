@@ -20,44 +20,49 @@ npm run preview
 
 ## Slik er appen bygd
 
-Forsiden er «Hvem skal spille?» (profiler), deretter velger barnet et **tema**
-med en **nivåstige** (`src/data/topics.js`). Alt innhold er data:
+Forsiden er «Hvem skal spille?» (profiler under én voksen), deretter **Dagens økt**:
+tre oppdragskort der barnet velger to. To oppdrag gir et stempel i ukestripen.
+Resten er fri lek: Eventyrkartet (mattestigen), Lesestigen, Nøttehula, Samlingen,
+Hagen og noen temaer (klokke, former, farger, geografi).
 
-- `src/data/topics.js` – temaer og nivåer (telling, pluss/minus, gange, klokke, ord …)
-- `src/data/levels.js` – quiz-banker (farger, former, bokstaver, motsetninger, brøk)
-- `src/data/ord.js` – ordlista til «Ord og bilder»
-- `src/data/eventyr.js` – stedene på Eventyrkartet
-- `src/data/countries.js` – land, flagg og hovedsteder
+### Nivået følger barnet
+
+- **Mattestigen**: 38 nivåer i fem verdener (`src/data/matte/nivaer.js`), hvert nivå én
+  smal ferdighet. **Lesestigen**: 16 nivåer i seks områder (`src/data/lesing/nivaer.js`).
+- Et oppdrag er åtte oppgaver (fem fra eget nivå, to repetisjon, én fra neste), to forsøk
+  per oppgave, løsning med forklaring etter andre feil. Bare første forsøk uten hjelp teller.
+- 7–8 riktige to ganger på rad gir nivå opp. 0–4 gir hjelp neste gang, uten melding.
+  8 av 8 to ganger gir sjefsoppgave. Regler i `src/lib/matte/stige.js`, oppdrag i
+  `src/lib/matte/oppdrag.js` (felles for alle stiger).
+- Plasseringstest første gang: 8–12 oppgaver, tre opp ved riktig, to ned ved feil.
+- Tiervenner og gangetabell øves som kort i fem bokser (`src/lib/matte/kort.js`).
+
+### Innhold som data (redigér fritt)
+
+- `src/data/matte/nivaer.js` – nivåer, oppgavetyper og parametre
+- `src/data/lesing/nivaer.js` og `src/data/lesing/innhold.js` – lesenivåer, ordlister,
+  setninger, tekster, rettskriving, språk (merket UTKAST til de er gjennomlest)
+- `src/data/kort.js`, `src/data/kostymer.js`, `src/data/historier.js` – samlekort,
+  kostymer til reven og historiebiter mellom verdenene
+- `src/data/topics.js`, `src/data/levels.js`, `src/data/countries.js`, `src/data/ord.js`
 
 ### Regler som gjelder overalt
 
-- En runde er åtte oppgaver, uten gjentakelser (`src/lib/round.js`).
-- Stjerner etter resultat: 0–3 riktige gir ingen, 4–5 gir én, 6–7 gir to, 8 gir tre
-  (`src/lib/scoring.js`). Konfetti bare fra to stjerner.
-- Feilsvar ligner ekte feil: ti for mye/lite, nabotabellen i gange, én for mye/lite
-  i telling (`src/lib/distractors.js`). Aldri negative tall.
-- Tallinja og tellebildene ligger bak en «Hjelp»-knapp og viser aldri fasit.
-- Opplesing går gjennom én funksjon, `speech.speak()` i `src/speech.js`. Egne
-  lydopptak kan kobles på med `speech.setProvider(fn)`.
-- Voksensiden og nullstilling ligger bak en voksensperre (hold inne tre sekunder
-  og skriv årstallet), `src/components/AdultGate.jsx`.
+- Stjerner etter resultat: 0–3 riktige gir ingen, 4–5 én, 6–7 to, 8 tre (`src/lib/scoring.js`).
+  Konfetti bare fra to stjerner. Ingen tidspress, ingen straff, ingen rekker som ryker.
+- Feilsvar ligner ekte feil (`src/lib/distractors.js`). Aldri negative tall uten grunn.
+- Hjelp (tellebilder, tallinje, tierblokker, rutenett) ligger bak en Hjelp-knapp og viser
+  aldri fasit.
+- Opplesing går gjennom én funksjon, `speech.speak()` i `src/speech.js`. Egne lydopptak kan
+  kobles på med `speech.setProvider(fn)`.
+- Voksensiden ligger bak en voksensperre (hold inne tre sekunder og skriv årstallet).
 
-### Aktivitetsmotorer
+### Profiler og synk
 
-Aktivitetene deler noen få gjenbrukbare «motorer» (`src/activities/engines.js`),
-som hver tilpasses per nivå via en `config`:
-
-- **`quiz`** – flervalgsquiz drevet av data (telling, farger, former, bokstaver, brøk …).
-  Svar kan vises som bilder (`pictureOptions`, `optionPictures`) og leses opp (`readOptions`).
-- **`math`** – regnestykker (`ops`, `max`, `mulFactors`, `divMax`), med hjelp bak knapp.
-- **`clock`** – analog klokke; `minutes` velger hele/halve/kvarter/5-min.
-- **`geography`** – land og flagg, låst til `region` (Norden/Europa/verden).
-- **`words`** / **`patterns`** – ord-bilde-kobling og mønster/sortering.
-
-### 🗺️ Eventyrkart
-
-Fem steder (`src/activities/AdventureMap.jsx`). Et sted gir stjerner én gang, og
-bare når alle svarene er riktige. Fullførte steder huskes i profilen.
+Én voksen logger inn med e-postlenke (Supabase, registrering stengt). Barna er profiler
+med kallenavn og figur. Fremgangen (`src/lib/profil.js`) lagres lokalt først og synkes
+når det er nett; en kø i localStorage tømmes når nettet er tilbake. Fletting gjør at
+ingenting går tapt.
 
 ### Tester
 
@@ -65,18 +70,16 @@ bare når alle svarene er riktige. Fullførte steder huskes i profilen.
 npm test
 ```
 
-Enhetstester for oppgavegeneratorer, feilsvar, stjerneregler og klokkespråk, pluss
-en røyktest som rendrer alle skjermer og nivåer (`src/**/__tests__/`).
+Enhetstester for alle oppgavegeneratorer, nivåregler, plassering, kortbokser, dagens økt,
+samlekort og fletting, pluss en røyktest som rendrer alle skjermer og oppgavetyper.
 
 ## Teknisk
 
-- **Lyd** lages i nettleseren med Web Audio API (`src/sound.js`) – ingen lydfiler.
-- **Opplesing** med Web Speech API (`src/speech.js`), norsk stemme når den finnes.
-- **Profiler og fremgang** håndteres med React Context + localStorage, og synkes til
-  Supabase når en voksen er logget inn (`src/StarContext.jsx`).
-- **Navigasjon** er enkel state i `src/App.jsx` (ingen ekstra router).
+- React 18, Vite, Tailwind. Ingen router: navigasjon er state i `src/App.jsx`.
+- Lyd med Web Audio (`src/sound.js`), opplesing med Web Speech (`src/speech.js`).
+- Web-app-manifest og ikoner i `public/`, så appen kan legges på Hjem-skjermen.
 
-Planen for videre arbeid ligger i `docs/plan.md`.
+Planen og loggen per etappe ligger i `docs/`.
 
 ## Veikart: lagring og kontoer
 
