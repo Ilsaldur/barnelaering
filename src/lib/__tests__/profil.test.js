@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { emptyData, normalize, mergeData, weakestTypes, minutesLastWeek, todayKey } from '../profil.js'
+import { emptyData, normalize, mergeData, weakestTypes, minutesLastWeek, todayKey, effectiveAutoSpeak } from '../profil.js'
 
 describe('normalize', () => {
   it('fyller ut en gammel profil uten å miste stjerner', () => {
@@ -93,5 +93,29 @@ describe('statistikk', () => {
   })
   it('todayKey', () => {
     expect(todayKey(new Date(2026, 10, 5))).toBe('2026-11-05')
+  })
+})
+
+describe('opplesing (etappe B)', () => {
+  it('aldri rørt: på til barnet er på nivå 8 i lesing', () => {
+    const d = emptyData()
+    expect(effectiveAutoSpeak(d)).toBe(true)
+    d.fag.lesing = { ...d.fag.lesing, plassert: true, nivaa: 5 }
+    expect(effectiveAutoSpeak(d)).toBe(true)
+    d.fag.lesing = { ...d.fag.lesing, plassert: true, nivaa: 8 }
+    expect(effectiveAutoSpeak(d)).toBe(false)
+  })
+  it('valgt av voksen: valget gjelder uansett nivå', () => {
+    const d = emptyData()
+    d.settings = { ...d.settings, autoSpeak: false, autoSpeakSet: true }
+    expect(effectiveAutoSpeak(d)).toBe(false)
+    d.fag.lesing = { ...d.fag.lesing, plassert: true, nivaa: 12 }
+    d.settings = { ...d.settings, autoSpeak: true, autoSpeakSet: true }
+    expect(effectiveAutoSpeak(d)).toBe(true)
+  })
+  it('gamle profiler uten autoSpeakSet regnes som aldri rørt', () => {
+    const d = normalize({ settings: { autoSpeak: false } })
+    expect(d.settings.autoSpeakSet).toBe(false)
+    expect(effectiveAutoSpeak(d)).toBe(true)
   })
 })

@@ -5,7 +5,7 @@
 | Etappe | Status | Sist oppdatert |
 |--------|--------|----------------|
 | A – Nivåmotoren | Ferdig og pushet. Se `docs/etappeA.md`. | 2026-11-06 |
-| B – Opplesing | Ikke startet | |
+| B – Opplesing | Ferdig og pushet. Se `docs/etappeB.md`. | 2026-11-06 |
 | C – «Lær først»-kort | Ikke startet | |
 | D – Tre spor i lesing | Ikke startet | |
 | E – Synkronisering, konto og småfeil | Ikke startet | |

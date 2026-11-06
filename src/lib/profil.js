@@ -22,6 +22,7 @@ export function emptyFag() {
 export function emptySettings() {
   return {
     autoSpeak: false,
+    autoSpeakSet: false, // true når en voksen (eller profilskjemaet) har valgt
     fast: null, // 'matte' | 'lesing' | null – fast oppdrag i «Dagens økt»
     oppdragPerDag: 2,
     fagblanding: ['matte', 'lesing', 'overraskelse'],
@@ -160,6 +161,16 @@ export function mergeData(rawA, rawB) {
     out.kostymeT = b.kostymeT
   }
   return out
+}
+
+// Skal oppgavene leses opp automatisk? Er innstillingen aldri rørt, leses det
+// opp for barn som ikke er plassert i lesing eller står under nivå 8.
+export function effectiveAutoSpeak(data) {
+  const s = data?.settings || {}
+  if (s.autoSpeakSet) return !!s.autoSpeak
+  const lesing = data?.fag?.lesing
+  if (!lesing || !lesing.plassert || !lesing.nivaa) return true
+  return lesing.nivaa < 8
 }
 
 // ---- Statistikk brukt på voksensiden -----------------------------------------

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { TopBar, Mascot, BigButton } from '../components/ui.jsx'
-import { SpeakButton, useAutoSpeak, AutoSpeakToggle } from '../components/Speak.jsx'
+import { SpeakButton, AutoSpeakToggle } from '../components/Speak.jsx'
 import Keypad, { parseAnswer } from '../components/Keypad.jsx'
 import { Visual, Help } from '../components/TaskVisual.jsx'
 import AnalogClock from '../components/AnalogClock.jsx'
@@ -64,7 +64,14 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
   const lang = task.lang || 'nb-NO'
   const readOptions = task.form === 'valg' && task.readOptions && !task.optionsLang
   const spokenFull = readOptions ? `${spoken} Er det ${task.options.slice(0, -1).join(', ')} eller ${task.options[task.options.length - 1]}?` : spoken
-  useAutoSpeak(spokenFull, [task], lang)
+  // Oppgaver som ikke kan løses uten lyd (kreverLyd) leses alltid opp.
+  useEffect(() => {
+    if (!spokenFull) return
+    if (task.kreverLyd) speech.speak(spokenFull, { lang })
+    else speech.auto(spokenFull, { lang })
+    return () => speech.stop()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task])
   const [klokke, setKlokke] = useState({ h: 12, m: 0 })
 
   useEffect(() => {

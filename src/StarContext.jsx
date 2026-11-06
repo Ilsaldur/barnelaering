@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, useCallback } f
 import { sound } from './sound.js'
 import { speech } from './speech.js'
 import { supabase } from './lib/supabase.js'
-import { emptyData, normalize, mergeData, todayKey } from './lib/profil.js'
+import { emptyData, normalize, mergeData, todayKey, effectiveAutoSpeak } from './lib/profil.js'
 
 // Profil- og fremgangssystem for hele appen.
 //  - En voksen logger inn (e-postlenke). Barna er profiler under den voksne.
@@ -157,11 +157,17 @@ export function StarProvider({ children }) {
     refreshChildren()
   }, [refreshChildren, authReady])
 
+  // kanLese: svaret på «Kan barnet lese selv?». Nei → opplesing på.
   const addChild = useCallback(
-    async (name, emoji) => {
+    async (name, emoji, kanLese = null) => {
       if (!supabase || !session) return null
       const { data: row, error } = await supabase.from('children').insert({ user_id: session.user.id, name, emoji }).select().single()
       if (error) return null
+      if (kanLese !== null) {
+        const d = normalize({})
+        d.settings = { ...d.settings, autoSpeak: !kanLese, autoSpeakSet: true, updatedAt: Date.now() }
+        saveJSON(dataKey(row.id), d)
+      }
       await refreshChildren()
       return row
     },
@@ -343,15 +349,16 @@ export function StarProvider({ children }) {
   }, [data, profile, markDirty])
 
   // ---- Opplesing følger profilen -------------------------------------------
+  // Er innstillingen aldri rørt, bestemmer lesenivået (se effectiveAutoSpeak).
+  const autoNow = effectiveAutoSpeak(data)
   useEffect(() => {
     if (!profile) return
-    speech.setAuto(!!data.settings?.autoSpeak)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.id])
+    speech.setAuto(autoNow)
+  }, [profile?.id, autoNow])
 
   useEffect(() => {
     return speech.onAutoChange((on) => {
-      setData((d) => (d.settings?.autoSpeak === on ? d : { ...d, settings: { ...d.settings, autoSpeak: on, updatedAt: Date.now() } }))
+      setData((d) => (d.settings?.autoSpeak === on && d.settings?.autoSpeakSet ? d : { ...d, settings: { ...d.settings, autoSpeak: on, autoSpeakSet: true, updatedAt: Date.now() } }))
     })
   }, [])
 

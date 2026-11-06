@@ -36,6 +36,7 @@ export const GEN_LESING = {
     return {
       type: 'lyd_finn_bokstav',
       form: 'valg',
+      kreverLyd: true,
       prompt: 'Hvilken bokstav hører du?',
       spoken: `Hvilken bokstav sier ${b.lyd}? Som i ${b.ord}.`,
       visual: { kind: 'ikon', emoji: b.emoji },
@@ -136,6 +137,7 @@ export const GEN_LESING = {
     return {
       type: 'vanlig_ord',
       form: 'valg',
+      kreverLyd: true,
       prompt: 'Hvilket ord hører du?',
       spoken: `Finn ordet: ${w}. ${w}.`,
       visual: { kind: 'ikon', emoji: '👂' },
@@ -183,6 +185,7 @@ export const GEN_LESING = {
     return {
       type: `skriv_${gruppe}`,
       form: 'skriv',
+      kreverLyd: true,
       prompt: 'Skriv ordet du hører.',
       spoken: `Skriv ordet: ${o.ord}. ${o.ord}.`,
       visual: { kind: 'ikon', emoji: o.emoji },

@@ -169,6 +169,7 @@ function NewPasswordForm({ onDone }) {
 function NewChildForm({ onCreate, onCancel }) {
   const [name, setName] = useState('')
   const [emoji, setEmoji] = useState(AVATARS[0])
+  const [kanLese, setKanLese] = useState(null) // null | true | false
   const [busy, setBusy] = useState(false)
 
   return (
@@ -190,12 +191,21 @@ function NewChildForm({ onCreate, onCancel }) {
           </button>
         ))}
       </div>
+      <p className="text-center font-extrabold text-slate-700 mb-2">Kan barnet lese selv?</p>
+      <div className="flex gap-2 justify-center mb-4">
+        <button onClick={() => setKanLese(true)} className={`kid-btn px-5 py-3 text-lg font-extrabold ${kanLese === true ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600'}`}>
+          📖 Ja
+        </button>
+        <button onClick={() => setKanLese(false)} className={`kid-btn px-5 py-3 text-lg font-extrabold ${kanLese === false ? 'bg-violet-500 text-white' : 'bg-slate-100 text-slate-600'}`}>
+          🔊 Nei, les opp for meg
+        </button>
+      </div>
       <div className="flex gap-2">
         <button
-          disabled={!name.trim() || busy}
+          disabled={!name.trim() || kanLese === null || busy}
           onClick={async () => {
             setBusy(true)
-            await onCreate(name.trim(), emoji)
+            await onCreate(name.trim(), emoji, kanLese)
             setBusy(false)
           }}
           className="kid-btn bg-emerald-500 text-white flex-1 py-3 text-xl font-extrabold disabled:opacity-50"
@@ -263,8 +273,8 @@ export default function Family({ onPicked, onPrivacy }) {
 
       {showNewChild && (
         <NewChildForm
-          onCreate={async (name, emoji) => {
-            const row = await addChild(name, emoji)
+          onCreate={async (name, emoji, kanLese) => {
+            const row = await addChild(name, emoji, kanLese)
             setShowNewChild(false)
             if (row) pick({ id: row.id, name: row.name, emoji: row.emoji })
           }}

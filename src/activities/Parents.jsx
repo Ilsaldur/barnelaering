@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase.js'
 import { speech } from '../speech.js'
 import { TOPICS, recommendedIndex, topicProgress } from '../progress.js'
 import { topicById } from '../data/topics.js'
-import { emptyData, recentRounds, minutesLastWeek, weakestTypes, FAG, todayKey } from '../lib/profil.js'
+import { emptyData, recentRounds, minutesLastWeek, weakestTypes, FAG, todayKey, effectiveAutoSpeak } from '../lib/profil.js'
 import { ukestripe } from '../lib/dagen.js'
 import { FAG_LABELS, typeLabel } from '../lib/labels.js'
 import { MAKS_NIVAA, nivaaNavn } from '../data/stiger.js'
@@ -222,13 +222,14 @@ function ChildPanel({ child, data, update, isActive }) {
           <div>
             <p className="font-bold text-slate-600 mb-2">Automatisk opplesing</p>
             <div className="flex gap-2">
-              <Chip active={!!s.autoSpeak} onClick={() => setSettings({ autoSpeak: true })}>
+              <Chip active={effectiveAutoSpeak(d)} onClick={() => setSettings({ autoSpeak: true, autoSpeakSet: true })}>
                 🔊 På
               </Chip>
-              <Chip active={!s.autoSpeak} onClick={() => setSettings({ autoSpeak: false })}>
+              <Chip active={!effectiveAutoSpeak(d)} onClick={() => setSettings({ autoSpeak: false, autoSpeakSet: true })}>
                 🔇 Av
               </Chip>
             </div>
+            {!s.autoSpeakSet && <p className="text-xs text-slate-400 mt-1">Ikke valgt ennå: reven leser opp til barnet er på nivå 8 i lesing.</p>}
             {!speech.supported() && <p className="text-xs text-slate-400 mt-1">Denne enheten har ingen stemme. Innstillingen følger barnet til andre enheter.</p>}
           </div>
           <div>
