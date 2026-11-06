@@ -197,7 +197,7 @@ export const GEN_SLOTT_ROM = {
     const v = pick(['tideler', 'pluss', 'penger'], rng)
     if (v === 'tideler') {
       const t = randInt(1, 9, rng)
-      return tast({ type: 'desimal', prompt: `${t} tideler skrives som desimaltall: ?`, spoken: `${t} tideler. Hvordan skrives det som desimaltall?`, explain: `${t} tideler er ${fmt(t / 10)}.`, allowDecimal: true }, t / 10)
+      return tast({ type: 'desimal', prompt: `${tall(t, 'tidel', 'tideler')} skrives som desimaltall: ?`, spoken: `${tall(t, 'tidel', 'tideler')}. Hvordan skrives det som desimaltall?`, explain: `${tall(t, 'tidel', 'tideler')} er ${fmt(t / 10)}.`, allowDecimal: true }, t / 10)
     }
     if (v === 'pluss') {
       const a = randInt(10, 60, rng) / 10
@@ -213,7 +213,7 @@ export const GEN_SLOTT_ROM = {
   areal_omkrets: (_, rng) => {
     const l = randInt(2, 9, rng)
     const b = randInt(1, 6, rng)
-    if (rng() < 0.5) return tast({ type: 'areal', prompt: `Et rektangel er ${l} ruter langt og ${b} ruter bredt. Hva er arealet?`, spoken: `Et rektangel er ${l} ruter langt og ${b} ruter bredt. Hva er arealet?`, visual: { kind: 'rektangel', l, b }, explain: `Areal er lengde ganger bredde: ${l} × ${b} = ${l * b} ruter.` }, l * b)
+    if (rng() < 0.5) return tast({ type: 'areal', prompt: `Et rektangel er ${tall(l, 'rute', 'ruter')} langt og ${tall(b, 'rute', 'ruter')} bredt. Hva er arealet?`, spoken: `Et rektangel er ${tall(l, 'rute', 'ruter')} langt og ${tall(b, 'rute', 'ruter')} bredt. Hva er arealet?`, visual: { kind: 'rektangel', l, b }, explain: `Areal er lengde ganger bredde: ${l} × ${b} = ${l * b} ruter.` }, l * b)
     return tast({ type: 'omkrets', prompt: `Et rektangel er ${l} cm langt og ${b} cm bredt. Hva er omkretsen?`, spoken: `Et rektangel er ${l} centimeter langt og ${b} centimeter bredt. Hva er omkretsen?`, visual: { kind: 'rektangel', l, b }, explain: `Omkretsen er rundt hele: ${l} + ${b} + ${l} + ${b} = ${2 * (l + b)} cm.` }, 2 * (l + b), { unit: 'cm' })
   },
   koordinater: (_, rng) => {

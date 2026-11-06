@@ -9,6 +9,7 @@ import { useStars } from '../StarContext.jsx'
 import { sound } from '../sound.js'
 import { speech } from '../speech.js'
 import { buildMission, buildBoss, oppgaveTilPlassering, huskOppgaver, oppdragLengde } from '../lib/matte/oppdrag.js'
+import { medPunktum } from '../lib/tekst.js'
 import { applyResult, applyBoss, settNivaa } from '../lib/matte/stige.js'
 import { oppdaterBoks } from '../lib/matte/kort.js'
 import { startPlassering, stegPlassering, maksOppgaver } from '../lib/matte/plassering.js'
@@ -70,7 +71,7 @@ export default function Stige({ cfg, go }) {
     updateFag(cfg.id, nf)
     addStars(events.stars, { correct: res.correct, total: res.total, fag: cfg.id, nivaa: mission.nivaa, oppdrag: true })
     const kort = delUtKort(nyeKort({ eier: data.kort, nivaa: cfg.kortPerNivaa ? mission.nivaa : 0, levelUp: events.levelUp, stars: events.stars }))
-    setResult({ ...res, stars: events.stars, levelUp: events.levelUp, levelDown: events.levelDown, nyttNivaa: nf.nivaa, boss: events.boss, kort, replay: !!mission.replay })
+    setResult({ ...res, stars: events.stars, levelUp: events.levelUp, levelDown: events.levelDown, toppKlart: !!events.toppKlart, nyttNivaa: nf.nivaa, boss: events.boss, kort, replay: !!mission.replay })
     setView('resultat')
   }
 
@@ -91,7 +92,7 @@ export default function Stige({ cfg, go }) {
     if (view === 'plassert' && plassert) {
       const d = cfg.nivaer[plassert.nivaa - 1]
       const o = cfg.omraadeFor(plassert.nivaa)
-      const msg = `Du starter på nivå ${plassert.nivaa}: ${d.tittel}.`
+      const msg = medPunktum(`Du starter på nivå ${plassert.nivaa}: ${d.tittel}`)
       return (
         <div className="animate-pop-in">
           <Confetti show />
@@ -160,8 +161,15 @@ export default function Stige({ cfg, go }) {
         onAgain={() => setView('hub')}
         againLabel={`${cfg.emoji} Til ${(cfg.kartTittel || cfg.tittel).toLowerCase()}`}
         onHome={go}
+        melding={result.sjefPassed === false ? 'Sjefsoppgaven var vanskelig denne gangen. Du fortsetter der du var, og mister ingenting.' : result.sjefPassed === true ? 'Du klarte sjefsoppgaven! 👑' : null}
         before={
           <>
+            {result.toppKlart && (
+              <div data-testid="topp-klart" className="bg-amber-100 text-amber-700 rounded-2xl px-5 py-3 font-extrabold text-lg flex items-center gap-2">
+                <span className="text-3xl">🏆</span>
+                <span>Du har klart hele stigen! Nivå {MAKS} er det høyeste, og du har klart det to ganger.</span>
+              </div>
+            )}
             {result.levelUp && (
               <div className="bg-amber-100 text-amber-700 rounded-2xl px-5 py-3 font-extrabold text-lg flex items-center gap-2">
                 <span className="text-3xl">🎉</span>
@@ -177,7 +185,7 @@ export default function Stige({ cfg, go }) {
               </div>
             )}
             {result.sjefPassed === true && <div className="bg-amber-100 text-amber-700 rounded-2xl px-5 py-3 font-extrabold text-lg">👑 Du klarte sjefsoppgaven og hoppet til nivå {result.nyttNivaa}!</div>}
-            {result.sjefPassed === false && <div className="bg-sky-100 text-sky-700 rounded-2xl px-5 py-3 font-extrabold text-lg">Godt forsøk! Du fortsetter der du var, og får nytt tilbud neste gang du klarer alle {result.total === 5 ? 'fem' : 'åtte'}.</div>}
+            {result.sjefPassed === false && <div className="bg-sky-100 text-sky-700 rounded-2xl px-5 py-3 font-extrabold text-lg">Godt forsøk! Du fortsetter der du var, og får nytt tilbud neste gang du klarer alle {oppdragLengde(STIGE, state.nivaa) === 5 ? 'fem' : 'åtte'}.</div>}
             {result.kort?.length > 0 && (
               <div className="bg-white rounded-2xl px-5 py-3 shadow flex flex-wrap items-center justify-center gap-3">
                 <span className="font-extrabold text-slate-600">{result.kort.length === 1 ? 'Nytt samlekort!' : 'Nye samlekort!'}</span>
@@ -235,7 +243,10 @@ export default function Stige({ cfg, go }) {
           </BigButton>
           {cfg.ekstra}
         </div>
-        <p className="text-center text-sm font-bold text-slate-500 mt-3">{oppdragLengde(STIGE, state.nivaa) === 5 ? 'Fem oppgaver, to forsøk på hver. Alle fem riktige gir tilbud om sjefsoppgave.' : 'Åtte oppgaver, to forsøk på hver. Alle åtte riktige gir tilbud om sjefsoppgave.'} Trykk på et nivå du har passert for å øve mer.</p>
+        <p className="text-center text-sm font-bold text-slate-500 mt-3">
+          {oppdragLengde(STIGE, state.nivaa) === 5 ? 'Fem oppgaver, to forsøk på hver.' : 'Åtte oppgaver, to forsøk på hver.'}{' '}
+          {state.nivaa >= MAKS ? 'Du er på toppnivået – her er det bare å øve videre!' : `Alle ${oppdragLengde(STIGE, state.nivaa) === 5 ? 'fem' : 'åtte'} riktige gir tilbud om sjefsoppgave.`} Trykk på et nivå du har passert for å øve mer.
+        </p>
       </div>
       {cfg.hubEkstra}
       <Kart matte={state} onStart={startOppdrag} onReplay={startReplay} nivaer={cfg.nivaer} verdener={cfg.verdener} ikoner={cfg.ikoner} />

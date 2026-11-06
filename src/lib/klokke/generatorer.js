@@ -126,7 +126,7 @@ export const GEN_KLOKKE = {
       emne: `${h12(h)}:${m}`,
       form: 'still',
       prompt: `Still klokka på ${klokkespraak(h, m)}.`,
-      spoken: `Still klokka på ${klokkespraak(h, m)}. Dra den korte viseren til timen og den lange til minuttene.`,
+      spoken: `Still klokka på ${klokkespraak(h, m)}. Sett den lange viseren på minuttene og den korte på timen.`,
       answer: { h: h12(h), m },
       step,
       explain: `${klokkeSetning(h, m)}: den korte viseren ${m >= 30 ? `mellom ${h12(h)} og ${neste(h)}` : `på ${h12(h)}`}, den lange på ${m === 0 ? '12' : m / 5}.`,

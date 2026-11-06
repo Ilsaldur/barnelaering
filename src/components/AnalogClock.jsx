@@ -1,9 +1,13 @@
 import { useRef, useState } from 'react'
-import { timeFraVinkel } from '../lib/klokke/vinkel.js'
+import { rundVinkel, timeVinkel } from '../lib/klokke/vinkel.js'
 
 // Analog klokke. Med `interactive` kan viserne dras med finger eller mus;
 // `step` er hvor mange minutter minuttviseren hopper i (5, 15, 30 eller 60).
-export default function AnalogClock({ hour, minute, onChange, interactive = true, size = 280, step = 5, className = '' }) {
+// `hourDeg` (valgfri) tegner den korte viseren på en gitt vinkel, uavhengig av
+// minuttene – det brukes i «Still klokka», der barnet setter den selv.
+// `fasit` ({ h, m }) tegner en svak, riktig timeviser (etter svar).
+// onChange(hour, minute, { hourDeg }) kalles når en viser slippes.
+export default function AnalogClock({ hour, minute, hourDeg = null, fasit = null, onChange, interactive = true, size = 280, step = 5, className = '' }) {
   const ref = useRef(null)
   const [active, setActive] = useState(null) // 'hour' | 'minute'
 
@@ -11,7 +15,7 @@ export default function AnalogClock({ hour, minute, onChange, interactive = true
   const cy = size / 2
   const r = size / 2 - 10
   const minuteAngle = minute * 6
-  const hourAngle = (hour % 12) * 30 + minute * 0.5
+  const hourAngle = hourDeg != null ? hourDeg : (hour % 12) * 30 + minute * 0.5
 
   function handAt(angleDeg, length) {
     const rad = ((angleDeg - 90) * Math.PI) / 180
@@ -26,9 +30,10 @@ export default function AnalogClock({ hour, minute, onChange, interactive = true
     if (deg < 0) deg += 360
     if (active === 'minute') {
       const m = (Math.round(deg / (6 * step)) * step) % 60
-      onChange?.(hour, m)
+      onChange?.(hour, m, { hourDeg: hourAngle, viser: 'minute' })
     } else if (active === 'hour') {
-      onChange?.(timeFraVinkel(deg, minute), minute)
+      const d = rundVinkel(deg)
+      onChange?.(hour, minute, { hourDeg: d, viser: 'hour' })
     }
   }
 
@@ -40,7 +45,7 @@ export default function AnalogClock({ hour, minute, onChange, interactive = true
     <svg
       ref={ref}
       viewBox={`0 0 ${size} ${size}`}
-      className={`mx-auto touch-none select-none ${className || 'w-64 h-64 md:w-80 md:h-80'}`}
+      className={`mx-auto touch-none select-none ${className || 'w-full max-w-[16rem] md:max-w-[20rem] h-auto'}`}
       onPointerMove={(e) => interactive && active && pointerToTime(e)}
       onPointerUp={() => setActive(null)}
       onPointerLeave={() => setActive(null)}
@@ -61,6 +66,10 @@ export default function AnalogClock({ hour, minute, onChange, interactive = true
           </text>
         )
       })}
+      {fasit && (() => {
+        const t = handAt(timeVinkel(fasit.h, fasit.m), r * 0.55)
+        return <line data-testid="fasit-timeviser" x1={cx} y1={cy} x2={t.x} y2={t.y} stroke="#22c55e" strokeWidth={size * 0.043} strokeLinecap="round" strokeDasharray={`${size * 0.03} ${size * 0.02}`} opacity={0.7} />
+      })()}
       <line x1={cx} y1={cy} x2={hourTip.x} y2={hourTip.y} stroke="#6366f1" strokeWidth={size * 0.043} strokeLinecap="round" />
       <line x1={cx} y1={cy} x2={minTip.x} y2={minTip.y} stroke="#ec4899" strokeWidth={size * 0.028} strokeLinecap="round" />
       {interactive && <circle cx={hourTip.x} cy={hourTip.y} r={grip} fill="#6366f1" opacity={active === 'hour' ? 0.5 : 0.85} onPointerDown={() => setActive('hour')} style={{ cursor: 'grab' }} />}

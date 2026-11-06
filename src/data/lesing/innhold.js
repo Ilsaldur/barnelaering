@@ -38,7 +38,7 @@ export const LYDRETTE_ORD = [
   { ord: 'is', emoji: '🍦' },
   { ord: 'sol', emoji: '☀️' },
   { ord: 'ost', emoji: '🧀' },
-  { ord: 'sel', emoji: '🦭' },
+  { ord: 'ris', emoji: '🍚' },
   { ord: 'elv', emoji: '🏞️' },
   { ord: 'avis', emoji: '📰' },
   { ord: 'vase', emoji: '🏺' },
@@ -200,7 +200,7 @@ export const TEKSTER = [
   {
     id: 'skolevei',
     tittel: 'Veien til skolen',
-    tekst: 'Hver morgen går Jon til skolen sammen med naboen Lea. De går forbi en bakeri som lukter boller. Så krysser de veien ved lysene. De venter alltid på grønn mann. Ved skolen står læreren og vinker. Jon og Lea liker best fredagene, for da har de gym.',
+    tekst: 'Hver morgen går Jon til skolen sammen med naboen Lea. De går forbi et bakeri som lukter boller. Så krysser de veien ved lysene. De venter alltid på grønn mann. Ved skolen står læreren og vinker. Jon og Lea liker best fredagene, for da har de gym.',
     sporsmaal: [
       { q: 'Hvem går Jon til skolen med?', alternativer: ['Naboen Lea', 'Mamma', 'Læreren', 'Broren sin'], svar: 'Naboen Lea', type: 'fakta' },
       { q: 'Hva venter de på ved lysene?', alternativer: ['Grønn mann', 'Bussen', 'Læreren', 'En bil'], svar: 'Grønn mann', type: 'fakta' },
@@ -277,7 +277,7 @@ export const RETTSKRIVING = {
     { ord: 'øy', emoji: '🏝️', feil: ['øi', 'øj', 'oy'] },
     { ord: 'hai', emoji: '🦈', feil: ['hæi', 'haj', 'hay'] },
     { ord: 'hei', emoji: '👋', feil: ['hæi', 'hej', 'hæj'] },
-    { ord: 'stein', emoji: '🪨', feil: ['stæin', 'stain', 'stejn'] },
+    { ord: 'seil', emoji: '⛵', feil: ['sæil', 'sejl', 'seyl'] },
     { ord: 'rein', emoji: '🦌', feil: ['ræin', 'rain', 'rejn'] },
     { ord: 'mai', emoji: '🌷', feil: ['mæi', 'maj', 'may'] },
     { ord: 'høy', emoji: '🌾', feil: ['høi', 'høj', 'hoy'] },

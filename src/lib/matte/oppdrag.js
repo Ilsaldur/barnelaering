@@ -63,14 +63,18 @@ export function nivaaForType(type, stige = MATTE_STIGE) {
 // generatorer til vi treffer typen; ellers en vanlig oppgave fra nivået.
 function lagOppgaveAvType(nivaaId, type, rng, stige = MATTE_STIGE) {
   const def = nivaaDef(nivaaId, stige)
+  // Generatoren som har typen i navnet først; den kan likevel gi en annen
+  // variant (velg_regneart gir også tekst_ett_steg), så vi prøver til typen
+  // stemmer. Finnes ingen slik generator, prøves nivåets andre generatorer.
   const direkte = def.typer.find((t) => t.type === type)
-  if (direkte) return lagOppgave(nivaaId, rng, direkte, stige)
-  for (let i = 0; i < 30; i++) {
-    const t = trekkType(def, rng)
+  let sist = null
+  for (let i = 0; i < 40; i++) {
+    const t = direkte || trekkType(def, rng)
     const task = stige.gen(t.type, t.param, rng)
-    if (task.type === type) return { ...task, nivaa: nivaaId, svarform: def.svar, hjelpAlltid: !!def.hjelpAlltid }
+    sist = { ...task, nivaa: nivaaId, svarform: def.svar, hjelpAlltid: !!def.hjelpAlltid }
+    if (task.type === type) return sist
   }
-  return lagOppgave(nivaaId, rng, {}, stige)
+  return direkte ? sist : lagOppgave(nivaaId, rng, {}, stige)
 }
 
 // ---- Nøkkel og husk-liste -----------------------------------------------------

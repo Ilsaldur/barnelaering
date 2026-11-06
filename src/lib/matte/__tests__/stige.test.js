@@ -184,7 +184,7 @@ describe('plasseringstest (A1)', () => {
     let s = startPlassering({ start: 13, tak: 23, maks: 38, trapp: TRAPP_MATTE })
     s = stegPlassering(s, false) // 13
     expect(s.pos).toBe(6)
-    expect(s.tak).toBe(15)
+    expect(s.tak).toBe(13) // taket er nivået barnet falt fra (runde 4, P2)
     s = stegPlassering(s, true)
     s = stegPlassering(s, true) // besto 6
     expect(s.pos).toBe(8)

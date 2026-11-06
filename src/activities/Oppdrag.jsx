@@ -14,6 +14,7 @@ import { sound } from '../sound.js'
 import { speech } from '../speech.js'
 import { fmt } from '../lib/matte/felles.js'
 import LaerKort from '../components/LaerKort.jsx'
+import { startKlokke, settTime, settMinutt, stillRiktig, stiltTid, timeviserTekst } from '../lib/klokke/vinkel.js'
 
 // Tallinje å trykke på: bare noen tall står skrevet, barnet finner plassen.
 function TapLine({ line, picked, answer, disabled, onPick }) {
@@ -77,7 +78,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
     return () => speech.stop()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task])
-  const [klokke, setKlokke] = useState({ h: 12, m: 0 })
+  const [klokke, setKlokke] = useState(startKlokke()) // { m, timeDeg }
 
   useEffect(() => {
     setAttempt(1)
@@ -88,7 +89,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
     setUsedHelp(false)
     setResult(null)
     setSeq([])
-    setKlokke({ h: 12, m: 0 })
+    setKlokke(startKlokke())
   }, [task, hjelpStart])
 
   const answerText =
@@ -117,7 +118,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
     if (task.form === 'sorter') return Array.isArray(value) && value.length === task.answer.length && value.every((v, i) => v === task.answer[i])
     if (task.form === 'tallinje') return Number(value) === task.answer
     if (task.form === 'skriv') return String(value).trim().toLowerCase().replace(/\s+/g, ' ') === String(task.answer).trim().toLowerCase()
-    if (task.form === 'still') return value.h % 12 === task.answer.h % 12 && value.m === task.answer.m
+    if (task.form === 'still') return stillRiktig(value, task.answer)
     return String(value) === String(task.answer)
   }
 
@@ -172,7 +173,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
 
       {task.visual && (
         <div className="my-3">
-          <Visual visual={task.visual} />
+          <Visual visual={task.visual} avslort={done} />
         </div>
       )}
 
@@ -251,14 +252,15 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
             } else if (feedback === 'retry' && isPicked) color = 'bg-rose-400'
             const label = typeof opt === 'number' ? fmt(opt) : String(opt)
             const big = label.length <= 3 || task.stor
+            const lang = label.length > 10
             return (
               <button
                 key={String(opt)}
                 disabled={laast}
                 onClick={() => submit(opt)}
-                className={`kid-btn ${color} text-white py-5 md:py-6 relative ${big ? 'text-4xl md:text-5xl' : 'text-2xl md:text-3xl'} ${done && isAnswer ? 'animate-bouncey' : ''} ${feedback === 'retry' && isPicked ? 'animate-shake' : ''}`}
+                className={`kid-btn ${color} text-white py-5 md:py-6 px-2 relative min-w-0 break-words [overflow-wrap:anywhere] ${big ? 'text-4xl md:text-5xl' : lang ? 'text-xl md:text-3xl' : 'text-2xl md:text-3xl'} ${done && isAnswer ? 'animate-bouncey' : ''} ${feedback === 'retry' && isPicked ? 'animate-shake' : ''}`}
               >
-                {task.optionFlagg ? <Flagg kode={String(opt)} navn={task.optionFlagg[opt]} className="w-24 md:w-32 mx-auto" /> : label}
+                {task.optionFlagg ? <Flagg kode={String(opt)} navn={task.optionFlagg[opt]} avslort={done} className="w-24 md:w-32 mx-auto" /> : label}
                 {task.optionsLang && (
                   <span
                     role="button"
@@ -296,11 +298,24 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
 
       {task.form === 'still' && (
         <div className="mt-2">
-          <AnalogClock hour={klokke.h} minute={klokke.m} step={task.step || 5} interactive={!laast} onChange={(h, m) => setKlokke({ h, m })} />
+          <AnalogClock
+            hour={stiltTid(klokke).h}
+            minute={klokke.m}
+            hourDeg={klokke.timeDeg}
+            fasit={done && feedback !== 'right' ? task.answer : null}
+            step={task.step || 5}
+            interactive={!laast}
+            onChange={(h, m, info) => setKlokke((k) => (info?.viser === 'hour' ? settTime(k, info.hourDeg) : settMinutt(k, m)))}
+          />
           {done ? (
-            <div className="flex justify-center gap-6 mt-2 text-sm font-bold text-slate-500">
-              <span>Du: {klokke.h}:{String(klokke.m).padStart(2, '0')}</span>
-              <span className="text-emerald-600">Riktig: {answerText}</span>
+            <div className="flex flex-col items-center gap-1 mt-2 text-sm font-bold text-slate-500">
+              <div className="flex justify-center gap-6">
+                <span data-testid="stilt-tid">
+                  Du: {stiltTid(klokke).h}:{String(klokke.m).padStart(2, '0')}
+                </span>
+                <span className="text-emerald-600">Riktig: {answerText}</span>
+              </div>
+              {feedback !== 'right' && <p className="text-slate-500">Den korte viseren skal stå {timeviserTekst(task.answer)} (grønn stiplet).</p>}
             </div>
           ) : (
             <div className="flex justify-center mt-3">

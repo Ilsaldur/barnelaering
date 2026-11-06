@@ -123,9 +123,9 @@ function Tiervenner({ a }) {
 
 function Brok({ deler, farget }) {
   return (
-    <div className="flex gap-1 mx-auto w-max">
+    <div className="flex gap-1 mx-auto w-full max-w-md">
       {Array.from({ length: deler }).map((_, i) => (
-        <span key={i} className={`w-8 h-16 md:w-10 md:h-20 border-2 border-slate-500 ${i < farget ? 'bg-fuchsia-400' : 'bg-white'}`} />
+        <span key={i} className={`flex-1 min-w-0 h-14 md:h-20 border-2 border-slate-500 ${i < farget ? 'bg-fuchsia-400' : 'bg-white'}`} />
       ))}
     </div>
   )
@@ -172,7 +172,7 @@ function Koordinater({ points, size }) {
   const cell = 32
   const w = (size + 1) * cell
   return (
-    <svg viewBox={`-28 -10 ${w + 40} ${w + 36}`} className="w-72 h-72 md:w-80 md:h-80 mx-auto">
+    <svg viewBox={`-28 -10 ${w + 40} ${w + 36}`} className="w-full max-w-[18rem] md:max-w-[20rem] h-auto mx-auto">
       {Array.from({ length: size + 1 }).map((_, i) => (
         <g key={i}>
           <line x1={i * cell} y1={0} x2={i * cell} y2={size * cell} stroke="#cbd5e1" strokeWidth="1" />
@@ -238,7 +238,7 @@ function Grid({ grid, cols, boxes = false }) {
   )
 }
 
-export function Visual({ visual }) {
+export function Visual({ visual, avslort = true }) {
   if (!visual) return null
   switch (visual.kind) {
     case 'fingre': {
@@ -250,11 +250,11 @@ export function Visual({ visual }) {
     case 'flagg':
       return (
         <div className="text-center">
-          <Flagg kode={visual.kode} navn={visual.navn} className="w-40 md:w-56 mx-auto" />
+          <Flagg kode={visual.kode} navn={visual.navn} avslort={avslort} className="w-40 md:w-56 mx-auto" />
         </div>
       )
     case 'klokke':
-      return <AnalogClock hour={visual.h} minute={visual.m} interactive={false} className="w-56 h-56 md:w-72 md:h-72" />
+      return <AnalogClock hour={visual.h} minute={visual.m} interactive={false} className="w-full max-w-[14rem] md:max-w-[18rem] h-auto" />
     case 'digital':
       return (
         <div className="text-center">

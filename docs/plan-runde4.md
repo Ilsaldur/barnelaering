@@ -6,10 +6,10 @@
 |--------|--------|----------------|
 | L – Gjentakelser (viktigst) | Ferdig og pushet. Se `docs/etappeL.md`. | 2026-11-06 |
 | M – Mer innhold der bunken er liten | Ferdig og pushet. Se `docs/etappeM.md`. Nytt innhold er UTKAST. | 2026-11-06 |
-| N – Mobil og tallinje | Ikke startet. | |
-| O – Still klokka | Ikke startet. | |
-| P – Flagg, plassering og småfeil | Ikke startet. | |
-| Q – Korrektur | Ikke startet. | |
+| N – Mobil og tallinje | Ferdig og pushet. Se `docs/etappeN.md`. | 2026-11-07 |
+| O – Still klokka | Ferdig og pushet. Se `docs/etappeO.md`. | 2026-11-07 |
+| P – Flagg, plassering og småfeil | Ferdig og pushet. Se `docs/etappeP.md`. | 2026-11-07 |
+| Q – Korrektur | Ferdig og pushet. Se `docs/etappeQ.md`. | 2026-11-07 |
 
 ---
 
