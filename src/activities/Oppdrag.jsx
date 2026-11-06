@@ -3,6 +3,9 @@ import { TopBar, Mascot, BigButton } from '../components/ui.jsx'
 import { SpeakButton, useAutoSpeak, AutoSpeakToggle } from '../components/Speak.jsx'
 import Keypad, { parseAnswer } from '../components/Keypad.jsx'
 import { Visual, Help } from '../components/TaskVisual.jsx'
+import AnalogClock from '../components/AnalogClock.jsx'
+import VerdensKart from '../components/VerdensKart.jsx'
+import { landById } from '../data/geo/land.js'
 import { useStars } from '../StarContext.jsx'
 import { sound } from '../sound.js'
 import { speech } from '../speech.js'
@@ -58,9 +61,11 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
   const [seq, setSeq] = useState([]) // sortering: valgt rekkefølge
 
   const spoken = task.spoken || task.prompt
-  const readOptions = task.form === 'valg' && task.readOptions
+  const lang = task.lang || 'nb-NO'
+  const readOptions = task.form === 'valg' && task.readOptions && !task.optionsLang
   const spokenFull = readOptions ? `${spoken} Er det ${task.options.slice(0, -1).join(', ')} eller ${task.options[task.options.length - 1]}?` : spoken
-  useAutoSpeak(spokenFull, [task])
+  useAutoSpeak(spokenFull, [task], lang)
+  const [klokke, setKlokke] = useState({ h: 12, m: 0 })
 
   useEffect(() => {
     setAttempt(1)
@@ -71,9 +76,25 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
     setUsedHelp(hjelpStart && !!task.hjelp)
     setResult(null)
     setSeq([])
+    setKlokke({ h: 12, m: 0 })
   }, [task, hjelpStart])
 
-  const answerText = task.form === 'santusant' ? (task.answer ? 'Sant' : 'Usant') : Array.isArray(task.answer) ? task.answer.join(', ') : typeof task.answer === 'number' ? fmt(task.answer) : String(task.answer)
+  const answerText =
+    task.form === 'santusant'
+      ? task.answer
+        ? 'Sant'
+        : 'Usant'
+      : task.form === 'still'
+        ? `${task.answer.h}:${String(task.answer.m).padStart(2, '0')}`
+        : task.form === 'kart'
+          ? landById(task.answer)?.navn || ''
+          : task.form === 'valgklokke'
+            ? (task.options.find((o) => o.value === task.answer) && `${task.options.find((o) => o.value === task.answer).h}:${String(task.options.find((o) => o.value === task.answer).m).padStart(2, '0')}`) || ''
+            : Array.isArray(task.answer)
+              ? task.answer.join(', ')
+              : typeof task.answer === 'number'
+                ? fmt(task.answer)
+                : String(task.answer)
 
   function isCorrect(value) {
     if (task.form === 'tastatur') {
@@ -84,6 +105,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
     if (task.form === 'sorter') return Array.isArray(value) && value.length === task.answer.length && value.every((v, i) => v === task.answer[i])
     if (task.form === 'tallinje') return Number(value) === task.answer
     if (task.form === 'skriv') return String(value).trim().toLowerCase().replace(/\s+/g, ' ') === String(task.answer).trim().toLowerCase()
+    if (task.form === 'still') return value.h % 12 === task.answer.h % 12 && value.m === task.answer.m
     return String(value) === String(task.answer)
   }
 
@@ -130,7 +152,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
       )}
       <div className="flex items-start justify-center gap-2 mb-3">
         <p className={`text-center font-extrabold text-slate-700 ${task.prompt.length > 40 ? 'text-xl md:text-2xl' : 'text-4xl md:text-5xl'}`}>{task.prompt}</p>
-        <SpeakButton text={spokenFull} />
+        <SpeakButton text={spokenFull} lang={lang} />
       </div>
 
       {task.visual && (
@@ -141,8 +163,8 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
 
       {task.hørOrd && task.form !== 'skriv' && !done && (
         <div className="text-center my-2">
-          <button type="button" onClick={() => speech.speak(`${task.hørOrd}. ${task.hørOrd}.`)} className="kid-btn bg-violet-500 text-white px-5 py-3 text-lg font-extrabold">
-            🔊 Hør ordet
+          <button type="button" onClick={() => speech.speak(`${task.hørOrd}. ${task.hørOrd}.`, { lang })} className="kid-btn bg-violet-500 text-white px-5 py-3 text-lg font-extrabold">
+            🔊 Hør {task.lang ? 'igjen' : 'ordet'}
           </button>
         </div>
       )}
@@ -187,9 +209,22 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
                 key={String(opt)}
                 disabled={done || feedback === 'retry'}
                 onClick={() => submit(opt)}
-                className={`kid-btn ${color} text-white py-5 md:py-6 ${big ? 'text-4xl md:text-5xl' : 'text-2xl md:text-3xl'} ${done && isAnswer ? 'animate-bouncey' : ''} ${feedback === 'retry' && isPicked ? 'animate-shake' : ''}`}
+                className={`kid-btn ${color} text-white py-5 md:py-6 relative ${big ? 'text-4xl md:text-5xl' : 'text-2xl md:text-3xl'} ${done && isAnswer ? 'animate-bouncey' : ''} ${feedback === 'retry' && isPicked ? 'animate-shake' : ''}`}
               >
                 {label}
+                {task.optionsLang && (
+                  <span
+                    role="button"
+                    aria-label="Hør"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      speech.speak(label, { lang: task.optionsLang })
+                    }}
+                    className="absolute top-1 right-2 text-base opacity-80 hover:opacity-100"
+                  >
+                    🔊
+                  </span>
+                )}
               </button>
             )
           })}
@@ -209,6 +244,48 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
               </button>
             )
           })}
+        </div>
+      )}
+
+      {task.form === 'still' && (
+        <div className="mt-2">
+          <AnalogClock hour={klokke.h} minute={klokke.m} step={task.step || 5} interactive={!done && feedback !== 'retry'} onChange={(h, m) => setKlokke({ h, m })} />
+          {done ? (
+            <div className="flex justify-center gap-6 mt-2 text-sm font-bold text-slate-500">
+              <span>Du: {klokke.h}:{String(klokke.m).padStart(2, '0')}</span>
+              <span className="text-emerald-600">Riktig: {answerText}</span>
+            </div>
+          ) : (
+            <div className="flex justify-center mt-3">
+              <button type="button" disabled={feedback === 'retry'} onClick={() => submit(klokke)} className="kid-btn bg-emerald-500 text-white px-8 py-3 text-2xl font-extrabold disabled:opacity-50">
+                ✓ Ferdig
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {task.form === 'valgklokke' && (
+        <div className="grid grid-cols-2 gap-3 md:gap-4 mt-4">
+          {task.options.map((opt) => {
+            const isPicked = picked !== null && picked === opt.value
+            const isAnswer = opt.value === task.answer
+            let ring = 'ring-4 ring-transparent'
+            if (done) ring = isAnswer ? 'ring-4 ring-emerald-500' : isPicked ? 'ring-4 ring-rose-400' : 'ring-4 ring-transparent opacity-50'
+            else if (feedback === 'retry' && isPicked) ring = 'ring-4 ring-rose-400'
+            return (
+              <button key={opt.value} disabled={done || feedback === 'retry'} onClick={() => submit(opt.value)} className={`rounded-3xl bg-white p-2 shadow hover:scale-105 transition-transform ${ring} ${done && isAnswer ? 'animate-bouncey' : ''}`}>
+                <AnalogClock hour={opt.h} minute={opt.m} interactive={false} size={200} className="w-32 h-32 md:w-40 md:h-40" />
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {task.form === 'kart' && (
+        <div className="mt-3">
+          <VerdensKart region={task.region} picked={picked} answer={done ? task.answer : null} disabled={done || feedback === 'retry'} onPick={(id) => submit(id)} />
+          {picked && !done && feedback === 'retry' && <p className="text-center text-sm font-bold text-slate-500 mt-1">Du trykket på {landById(picked)?.navn || 'et annet land'}.</p>}
         </div>
       )}
 

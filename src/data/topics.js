@@ -129,18 +129,6 @@ function missingGen(maxN) {
 
 export const TOPICS = [
   {
-    id: 'klokke',
-    title: 'Klokka',
-    emoji: '🕐',
-    color: 'bg-indigo-500',
-    levels: [
-      { sub: 'Hele timer', engine: 'clock', config: { title: 'Hele timer', minutes: 'whole' } },
-      { sub: 'Hele og halve timer', engine: 'clock', config: { title: 'Hele og halve', minutes: 'half' } },
-      { sub: 'Kvarter', engine: 'clock', config: { title: 'Kvarter', minutes: 'quarter' } },
-      { sub: 'Til 5 minutter', engine: 'clock', config: { title: 'Til 5 minutter', minutes: 'five' } },
-    ],
-  },
-  {
     id: 'former',
     title: 'Former og mønster',
     emoji: '🔺',
@@ -158,17 +146,6 @@ export const TOPICS = [
     levels: [
       { sub: 'Grunnfarger', engine: 'quiz', config: { ...COLORS, bank: COLORS.bank.slice(0, 8) } },
       { sub: 'Alle farger', engine: 'quiz', config: { ...COLORS } },
-    ],
-  },
-  {
-    id: 'geografi',
-    title: 'Land og flagg',
-    emoji: '🌍',
-    color: 'bg-teal-500',
-    levels: [
-      { sub: 'Norden', engine: 'geography', config: { region: 'norden' } },
-      { sub: 'Europa', engine: 'geography', config: { region: 'europa' } },
-      { sub: 'Hele verden', engine: 'geography', config: { region: 'verden' } },
     ],
   },
 ]

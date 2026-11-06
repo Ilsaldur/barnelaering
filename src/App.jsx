@@ -9,9 +9,9 @@ import Noettehula from './activities/Noettehula.jsx'
 import LeseStige from './activities/LeseStige.jsx'
 import Personvern from './activities/Personvern.jsx'
 import Samling from './activities/Samling.jsx'
-import Clock from './activities/Clock.jsx'
-import Geography from './activities/Geography.jsx'
-import { recommendedIndex } from './progress.js'
+import KlokkeStige from './activities/KlokkeStige.jsx'
+import GeoStige from './activities/GeoStige.jsx'
+import EngelskStige from './activities/EngelskStige.jsx'
 import Garden from './activities/Garden.jsx'
 import Parents from './activities/Parents.jsx'
 import Family from './activities/Family.jsx'
@@ -27,7 +27,7 @@ const MATTE_BG = 'from-sky-400 via-indigo-400 to-fuchsia-400'
 function AppInner() {
   // Enkel navigasjon uten router.
   const [nav, setNav] = useState({ view: 'home' })
-  const { profile, setActiveLevel, signOutProfile, best } = useStars()
+  const { profile, setActiveLevel, signOutProfile } = useStars()
 
   const goHome = () => setNav({ view: 'home' })
   const openTopic = (topicId) => setNav({ view: 'topic', topicId })
@@ -41,7 +41,7 @@ function AppInner() {
     else if (nav.view === 'matte') setActiveLevel({ fag: 'matte' })
     else if (nav.view === 'lesing') setActiveLevel({ fag: 'lesing' })
     else if (nav.view === 'noetter') setActiveLevel({ fag: 'nott', oppdrag: !!nav.oppdrag })
-    else if (nav.view === 'dagens') setActiveLevel({ fag: nav.fag, oppdrag: true, topicId: nav.fag, levelIndex: nav.levelIndex })
+    else if (['klokke', 'geografi', 'engelsk'].includes(nav.view)) setActiveLevel({ fag: nav.view })
     else setActiveLevel(null)
   }, [nav, setActiveLevel])
 
@@ -93,19 +93,15 @@ function AppInner() {
     ) : (
       <div className="text-white font-bold p-8 text-center">Ukjent nivå 🤔</div>
     )
-  } else if (nav.view === 'dagens') {
-    // Dagens økt: klokke eller geografi på anbefalt nivå, teller som oppdrag.
-    bg = TOPIC_BG
-    const topic = topicById(nav.fag)
-    const lvl = topic?.levels[nav.levelIndex]
-    content =
-      nav.fag === 'klokke' && lvl ? (
-        <Clock go={goHome} config={lvl.config} />
-      ) : nav.fag === 'geografi' && lvl ? (
-        <Geography go={goHome} config={lvl.config} />
-      ) : (
-        <div className="text-white font-bold p-8 text-center">Ukjent oppdrag 🤔</div>
-      )
+  } else if (nav.view === 'klokke') {
+    bg = 'from-sky-400 via-indigo-400 to-violet-400'
+    content = <KlokkeStige go={goHome} />
+  } else if (nav.view === 'geografi') {
+    bg = 'from-emerald-400 via-teal-400 to-sky-400'
+    content = <GeoStige go={goHome} />
+  } else if (nav.view === 'engelsk') {
+    bg = 'from-rose-400 via-pink-400 to-indigo-400'
+    content = <EngelskStige go={goHome} />
   } else if (nav.view === 'matte') {
     bg = MATTE_BG
     content = <MatteStige go={goHome} onNoetter={() => setNav({ view: 'noetter' })} />
@@ -136,12 +132,10 @@ function AppInner() {
         onMatte={() => setNav({ view: 'matte' })}
         onNoetter={() => setNav({ view: 'noetter' })}
         onLesing={() => setNav({ view: 'lesing' })}
+        onFag={(fag) => setNav({ view: fag })}
         onDagens={(fag) => {
           if (fag === 'nott') return setNav({ view: 'noetter', oppdrag: true })
-          if (fag === 'lesing') return setNav({ view: 'lesing' })
-          const topic = topicById(fag)
-          const idx = topic ? Math.max(0, recommendedIndex(topic, best)) : 0
-          setNav({ view: 'dagens', fag, levelIndex: idx })
+          setNav({ view: fag })
         }}
       />
     )

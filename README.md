@@ -22,13 +22,14 @@ npm run preview
 
 Forsiden er «Hvem skal spille?» (profiler under én voksen), deretter **Dagens økt**:
 tre oppdragskort der barnet velger to. To oppdrag gir et stempel i ukestripen.
-Resten er fri lek: Eventyrkartet (mattestigen), Lesestigen, Nøttehula, Samlingen,
-Hagen og noen temaer (klokke, former, farger, geografi).
+Resten er fri lek: Eventyrkartet (mattestigen), Lesestigen, Klokkestigen, Geografistigen,
+Engelskstigen, Nøttehula, Samlingen, Hagen, former og farger.
 
 ### Nivået følger barnet
 
-- **Mattestigen**: 38 nivåer i fem verdener (`src/data/matte/nivaer.js`), hvert nivå én
-  smal ferdighet. **Lesestigen**: 16 nivåer i seks områder (`src/data/lesing/nivaer.js`).
+- Fem stiger, alle som data: **matte** (38 nivåer, `src/data/matte/nivaer.js`), **lesing** (16,
+  `src/data/lesing/nivaer.js`), **klokke** (8), **geografi** (9, med kart fra Natural Earth i
+  `src/data/geo/`) og **engelsk** (7). Én felles skjerm, `src/activities/Stige.jsx`.
 - Et oppdrag er åtte oppgaver (fem fra eget nivå, to repetisjon, én fra neste), to forsøk
   per oppgave, løsning med forklaring etter andre feil. Bare første forsøk uten hjelp teller.
 - 7–8 riktige to ganger på rad gir nivå opp. 0–4 gir hjelp neste gang, uten melding.

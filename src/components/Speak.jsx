@@ -3,7 +3,7 @@ import { speech } from '../speech.js'
 import { sound } from '../sound.js'
 
 // 🔊-knapp som leser opp en tekst.
-export function SpeakButton({ text, size = 'text-2xl md:text-3xl', className = '' }) {
+export function SpeakButton({ text, lang, size = 'text-2xl md:text-3xl', className = '' }) {
   if (!speech.supported() || !text) return null
   return (
     <button
@@ -11,7 +11,7 @@ export function SpeakButton({ text, size = 'text-2xl md:text-3xl', className = '
       onClick={(e) => {
         e.stopPropagation()
         sound.click()
-        speech.speak(text)
+        speech.speak(text, { lang })
       }}
       className={`${size} hover:scale-110 active:scale-95 transition-transform ${className}`}
       title="Les høyt"
@@ -23,10 +23,10 @@ export function SpeakButton({ text, size = 'text-2xl md:text-3xl', className = '
 }
 
 // Les opp teksten automatisk når den endrer seg (hvis automatisk opplesing er på).
-export function useAutoSpeak(text, deps = []) {
+export function useAutoSpeak(text, deps = [], lang) {
   useEffect(() => {
     if (!text) return
-    speech.auto(text)
+    speech.auto(text, { lang })
     return () => speech.stop()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)

@@ -10,13 +10,13 @@
 | 3 – Mattestigen | Kode ferdig og pushet. Se `docs/etappe3.md`. | 2026-11-06 |
 | 4 – Dagens økt, kart og belønning | Kode ferdig og pushet. Se `docs/etappe4.md`. | 2026-11-06 |
 | 5 – Lesestigen | Kode ferdig og pushet. Innholdet i `src/data/lesing/innhold.js` er UTKAST og må leses gjennom. Se `docs/etappe5.md`. | 2026-11-06 |
-| 6 – Klokke, geografi og engelsk | Ikke startet | |
+| 6 – Klokke, geografi og engelsk | Kode ferdig og pushet. Engelsk-innhold er UTKAST. Se `docs/etappe6.md`. | 2026-11-06 |
 
 Arbeidsgren: `adaptiv-laering` (ikke push til `main` uten OK).
 
 Viktige funn for en ny økt:
 - Kjør `npm test` (Vitest) og `npm run build` før hver etappe avsluttes. Delt logikk ligger i `src/lib/` (rng, scoring, distractors, round, profil, dagen, samling, matte/*, lesing/*).
-- Stigene er data: `src/data/matte/nivaer.js` (38 nivåer) og `src/data/lesing/nivaer.js` (16 nivåer). Oppdragsbygger og nivåregler er felles (`src/lib/matte/oppdrag.js`, `src/lib/matte/stige.js`) og tar en `stige` ({ nivaer, gen }).
+- Stigene er data: `src/data/matte/nivaer.js` (38), `src/data/lesing/nivaer.js` (16), `src/data/klokke/nivaer.js` (8), `src/data/geo/nivaer.js` (9), `src/data/engelsk/nivaer.js` (7). Oppdragsbygger og nivåregler er felles (`src/lib/matte/oppdrag.js`, `src/lib/matte/stige.js`), og `src/activities/Stige.jsx` er én felles skjermkomponent som hvert fag konfigurerer.
 - Det finnes to utgaver av appen. Produksjon på Vercel kjører commit `2d5b097` (klassetrinn + Eventyrkart). Lokal `main` har en upushet commit `da2fcc1` (profiler, Supabase, temastiger, voksenside, opplesing, hage) som slettet Eventyrkartet. Se `docs/etappe0.md`.
 - Supabase-prosjektet `selmas-skole` (eu-north-1) finnes med tabellene `children` og `progress`, RLS på, ingen rader.
 - Vercel-prosjektet `selmasskole` har nå `VITE_SUPABASE_URL` og `VITE_SUPABASE_ANON_KEY` (lagt inn av Jon 2026-11-06). Registrering er åpen med e-postbekreftelse; appen bruker e-post og passord.

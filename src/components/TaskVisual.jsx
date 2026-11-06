@@ -1,4 +1,6 @@
 import { NumberLine } from './ui.jsx'
+import AnalogClock from './AnalogClock.jsx'
+import VerdensKart from './VerdensKart.jsx'
 
 // Tegner det visuelle i en oppgave (visual) og hjelpen bak Hjelp-knappen (hjelp).
 // Alle «kind»-verdiene lages av generatorene i src/lib/matte/.
@@ -238,6 +240,16 @@ function Grid({ grid, cols, boxes = false }) {
 export function Visual({ visual }) {
   if (!visual) return null
   switch (visual.kind) {
+    case 'klokke':
+      return <AnalogClock hour={visual.h} minute={visual.m} interactive={false} className="w-56 h-56 md:w-72 md:h-72" />
+    case 'digital':
+      return (
+        <div className="text-center">
+          <span className="inline-block bg-slate-800 text-emerald-300 rounded-2xl px-8 py-3 text-5xl md:text-6xl font-extrabold tabular-nums tracking-widest shadow-inner">{visual.tekst}</span>
+        </div>
+      )
+    case 'kart':
+      return <VerdensKart region={visual.region} highlight={visual.highlight} disabled />
     case 'kvadrat':
       return (
         <div className="text-center">

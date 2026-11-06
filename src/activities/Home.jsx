@@ -11,10 +11,11 @@ const KORT_INFO = {
   klokke: { navn: 'Klokka', emoji: '🕐', farge: 'bg-sky-500' },
   geografi: { navn: 'Geografi', emoji: '🌍', farge: 'bg-teal-500' },
   nott: { navn: 'Tenkenøtt', emoji: '🌰', farge: 'bg-amber-600' },
+  engelsk: { navn: 'Engelsk', emoji: '🇬🇧', farge: 'bg-rose-500' },
 }
 
 // Barnets forside: «Dagens økt» øverst, fri lek under.
-export default function Home({ topics, onPick, onSamling, onGarden, onParents, onSwitchProfile, onMatte, onLesing, onNoetter, onDagens }) {
+export default function Home({ topics, onPick, onSamling, onGarden, onParents, onSwitchProfile, onMatte, onLesing, onNoetter, onDagens, onFag }) {
   const { profile, onLine, session, fag, data, settings } = useStars()
   const matte = fag?.matte
   const lesing = fag?.lesing
@@ -95,6 +96,7 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
                 {k.overraskelse && <span className="text-xs opacity-90">{info.emoji} {info.navn}</span>}
                 {k.fag === 'matte' && matte?.nivaa && <span className="text-xs opacity-90">nivå {matte.nivaa}</span>}
                 {k.fag === 'lesing' && lesing?.nivaa && <span className="text-xs opacity-90">nivå {lesing.nivaa}</span>}
+                {['klokke', 'geografi', 'engelsk'].includes(k.fag) && fag?.[k.fag]?.nivaa && <span className="text-xs opacity-90">nivå {fag[k.fag].nivaa}</span>}
               </button>
             )
           })}
@@ -118,6 +120,19 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
             <span className="block text-xs md:text-sm opacity-90">{lesing?.nivaa ? `Nivå ${lesing.nivaa} av 16` : 'Finn nivået ditt'}</span>
           </span>
         </button>
+        {[
+          { id: 'klokke', navn: 'Klokkestigen', emoji: '🕐', farge: 'bg-sky-500', maks: 8 },
+          { id: 'geografi', navn: 'Geografistigen', emoji: '🌍', farge: 'bg-teal-500', maks: 9 },
+          { id: 'engelsk', navn: 'Engelskstigen', emoji: '🇬🇧', farge: 'bg-rose-500', maks: 7 },
+        ].map((f) => (
+          <button key={f.id} onClick={() => { sound.click(); onFag(f.id) }} className={`kid-btn ${f.farge} text-white p-4 flex items-center gap-3 hover:scale-[1.02]`}>
+            <span className="text-4xl">{f.emoji}</span>
+            <span className="text-left">
+              <span className="block text-lg md:text-xl font-extrabold">{f.navn}</span>
+              <span className="block text-xs md:text-sm opacity-90">{fag?.[f.id]?.nivaa ? `Nivå ${fag[f.id].nivaa} av ${f.maks}` : 'Finn nivået ditt'}</span>
+            </span>
+          </button>
+        ))}
         <button onClick={() => { sound.click(); onNoetter() }} className="kid-btn bg-amber-700 text-white p-4 flex items-center gap-3 hover:scale-[1.02]">
           <span className="text-4xl">🌰</span>
           <span className="text-left">
