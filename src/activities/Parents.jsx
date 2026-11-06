@@ -10,6 +10,7 @@ import { emptyData, recentRounds, minutesLastWeek, weakestTypes, FAG, todayKey }
 import { ukestripe } from '../lib/dagen.js'
 import { FAG_LABELS, typeLabel } from '../lib/labels.js'
 import { MAKS_NIVAA, nivaaNavn } from '../data/stiger.js'
+import { settNivaa } from '../lib/matte/stige.js'
 
 // Voksensiden: per barn – nivå per fag, oppdrag og minutter siste uke, de tre
 // oppgavetypene barnet bommer mest på, og innstillinger. Bak voksensperren.
@@ -130,7 +131,7 @@ function ChildPanel({ child, data, update, isActive }) {
   const setNivaa = (fag, nivaa) =>
     update((cur) => ({
       ...cur,
-      fag: { ...cur.fag, [fag]: { ...cur.fag[fag], nivaa, plassert: true, paaRad: 0, perfektRad: 0, hjelpNeste: false, updatedAt: Date.now() } },
+      fag: { ...cur.fag, [fag]: { ...settNivaa(cur.fag[fag], nivaa), updatedAt: Date.now() } },
     }))
   const toggleFag = (f) => {
     const cur = s.fagblanding || []

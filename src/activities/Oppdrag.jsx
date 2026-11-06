@@ -49,7 +49,7 @@ function TapLine({ line, picked, answer, disabled, onPick }) {
 // Én oppgave: to forsøk, Hjelp-knapp, løsning med forklaring etter andre feil.
 // onAnswer({ ok, forste, hjelp }) kalles når oppgaven er ferdig (riktig eller etter to feil).
 // Bare første forsøk uten hjelp teller mot nivået; det regner den som kaller ut.
-export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index, total, fag = 'matte' }) {
+export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index, total, fag = 'matte', noHelp = false, placement = false }) {
   const { recordAttempt } = useStars()
   const [attempt, setAttempt] = useState(1)
   const [input, setInput] = useState('')
@@ -114,7 +114,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
     setPicked(value)
     const ok = isCorrect(value)
     const forste = attempt === 1
-    recordAttempt({ fag, nivaa: task.nivaa, type: task.type, ok, forste, hjelp: usedHelp })
+    recordAttempt({ fag, nivaa: task.nivaa, type: task.type, ok, forste, hjelp: usedHelp, plassering: placement || undefined })
     if (ok) {
       sound.correct()
       speech.auto('Riktig!')
@@ -140,7 +140,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
   }
 
   const done = feedback === 'right' || feedback === 'solution'
-  const canHelp = !!task.hjelp
+  const canHelp = !!task.hjelp && !noHelp
 
   return (
     <div className="bg-white/95 rounded-3xl p-5 md:p-8 shadow-xl">
@@ -402,13 +402,13 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
 
 // Kjører en liste oppgaver og samler resultatet.
 // onDone({ correct, total, perTask, missedTypes })
-export default function Oppdrag({ tasks, title, hjelpStart = false, onDone, onHome, fag = 'matte', attempts = 2 }) {
+export default function Oppdrag({ tasks, title, hjelpStart = false, onDone, onHome, fag = 'matte', attempts = 2, noHelp = false }) {
   const [i, setI] = useState(0)
   const [perTask, setPerTask] = useState([])
   const task = tasks[i]
 
   function next(res) {
-    const entry = { type: task.type, nivaa: task.nivaa, kortId: task.kortId, ...res, counts: !!(res.ok && res.forste && !res.hjelp) }
+    const entry = { type: task.type, nivaa: task.nivaa, tag: task.tag, kortId: task.kortId, ...res, counts: !!(res.ok && res.forste && !res.hjelp) }
     const all = [...perTask, entry]
     if (i + 1 >= tasks.length) {
       const correct = all.filter((r) => r.counts).length
@@ -426,7 +426,7 @@ export default function Oppdrag({ tasks, title, hjelpStart = false, onDone, onHo
       <div className="bg-white/80 rounded-full h-5 overflow-hidden mb-4 shadow-inner">
         <div className="bg-amber-400 h-full transition-all duration-300" style={{ width: `${(i / tasks.length) * 100}%` }} />
       </div>
-      <TaskCard key={i} task={task} index={i} total={tasks.length} onDone={next} hjelpStart={hjelpStart} fag={fag} attempts={attempts} />
+      <TaskCard key={i} task={task} index={i} total={tasks.length} onDone={next} hjelpStart={hjelpStart} fag={fag} attempts={attempts} noHelp={noHelp} />
     </div>
   )
 }

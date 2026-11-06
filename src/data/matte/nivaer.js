@@ -14,7 +14,7 @@ export const VERDENER = [
 ]
 
 const N = (id, verden, tittel, typer, extra = {}) => ({ id, verden, tittel, typer, svar: id <= 6 ? 'valg' : 'tastatur', ...extra })
-const T = (type, param = {}, vekt = 1) => ({ type, param, vekt })
+const T = (type, param = {}, vekt = 1, ikkePlassering = false) => ({ type, param, vekt, ikkePlassering })
 
 export const NIVAER = [
   // Trylleskogen – trykk på svaret, alt leses opp
@@ -33,7 +33,7 @@ export const NIVAER = [
   N(11, 'hav', 'Pluss og minus innenfor 20 uten tierovergang', [T('pluss_uten_overgang_20', {}), T('minus_uten_overgang_20', {})], { trinn: '1. trinn' }),
   N(12, 'hav', 'Pluss med tierovergang', [T('pluss_tierovergang', {})], { trinn: '1.–2. trinn' }),
   N(13, 'hav', 'Minus med tierovergang', [T('minus_tierovergang', {})], { trinn: '1.–2. trinn' }),
-  N(14, 'hav', 'Partall og oddetall, telle med 2, 5 og 10', [T('partall_oddetall', { max: 100 }), T('telle_med', { steps: [2, 5, 10], max: 100 })], { trinn: '2. trinn' }),
+  N(14, 'hav', 'Partall og oddetall, telle med 2, 5 og 10', [T('partall_oddetall', { max: 100 }, 1, true), T('telle_med', { steps: [2, 5, 10], max: 100 })], { trinn: '2. trinn' }),
 
   // Det høye fjellet
   N(15, 'fjell', 'Tall til 100: tiere og enere, tallinja, større og mindre', [T('tiere_enere_100', {}), T('tallinje_100', {}), T('storre_mindre_100', {}), T('tallinje_plasser', { from: 0, to: 100, step: 5, labelEvery: 10 }), T('sorter_tall', { max: 100, min: 10, n: 4 })], { trinn: '2. trinn' }),

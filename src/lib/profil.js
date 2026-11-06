@@ -9,11 +9,12 @@ export function emptyFag() {
     nivaa: null, // null = ikke plassert ennå
     plassert: false,
     paaRad: 0, // oppdrag på rad med 7–8 riktige
-    perfektRad: 0, // oppdrag på rad med 8 av 8
+    svakRad: 0, // oppdrag på rad med 0–4 riktige
     hjelpNeste: false, // neste oppdrag får hjelp på og henter fra nivået under
     beste: {}, // nivåId -> beste stjerner (0–3) på første forsøk
     bokser: {}, // kort-id -> { boks: 1–5, t }
-    svake: {}, // oppgavetype -> { bom, til (dato) }
+    svake: {}, // oppgavetype -> { bom, riktig } (bom-lista)
+    sjef: null, // ikke i bruk lenger (sjefsoppgaven tilbys direkte)
     updatedAt: 0,
   }
 }
@@ -71,7 +72,13 @@ export function normalize(raw) {
   d.kostymer = d.kostymer || []
   d.historier = d.historier || []
   const fag = {}
-  for (const f of FAG) fag[f] = { ...emptyFag(), ...((d.fag || {})[f] || {}) }
+  for (const f of FAG) {
+    const g = { ...emptyFag(), ...((d.fag || {})[f] || {}) }
+    delete g.perfektRad
+    // Gamle bom-lister hadde { bom, til }; nå { bom, riktig }.
+    g.svake = Object.fromEntries(Object.entries(g.svake || {}).map(([k, v]) => [k, { bom: v.bom || 1, riktig: v.riktig || 0 }]))
+    fag[f] = g
+  }
   d.fag = fag
   return d
 }
@@ -102,14 +109,9 @@ function mergeFag(a, b) {
       if (!out.bokser[k] || (v.t || 0) > (out.bokser[k].t || 0)) out.bokser[k] = v
     }
   }
-  out.svake = {}
-  for (const src of [a.svake || {}, b.svake || {}]) {
-    for (const [k, v] of Object.entries(src)) {
-      const cur = out.svake[k]
-      if (!cur) out.svake[k] = v
-      else out.svake[k] = { bom: Math.max(cur.bom || 0, v.bom || 0), til: cur.til > v.til ? cur.til : v.til }
-    }
-  }
+  // Bom-lista og rekkene følger nivået: siden som sist ble endret vinner.
+  out.svake = { ...(newest.svake || {}) }
+  out.sjef = newest.sjef || null
   return out
 }
 

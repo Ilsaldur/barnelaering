@@ -12,7 +12,7 @@ export const OMRAADER = [
 ]
 
 const N = (id, verden, tittel, typer, extra = {}) => ({ id, verden, tittel, typer, svar: 'valg', lengde: 8, ...extra })
-const T = (type, param = {}, vekt = 1) => ({ type, param, vekt })
+const T = (type, param = {}, vekt = 1, ikkePlassering = false) => ({ type, param, vekt, ikkePlassering })
 
 export const NIVAER_LESING = [
   // Lyder og bokstaver – rekkefølgen i s o l e v a t b ø m å j r d u g n p y h f k æ
@@ -34,9 +34,9 @@ export const NIVAER_LESING = [
   N(12, 'rettskriving', 'Dobbel konsonant', [T('skriv_ord', { gruppe: 'dobbel_konsonant' }, 2), T('riktig_skrevet', { gruppe: 'dobbel_konsonant' }, 1)], { trinn: '2.–3. trinn', svar: 'skriv' }),
   N(13, 'rettskriving', 'Stum h og g, sammensatte ord', [T('skriv_ord', { gruppe: 'stum_h_g' }), T('skriv_ord', { gruppe: 'sammensatte' }), T('riktig_skrevet', { gruppe: 'sammensatte' })], { trinn: '3. trinn', svar: 'skriv' }),
   // Språk
-  N(14, 'sprak', 'Ordklasser: substantiv, verb og adjektiv', [T('ordklasse', {}, 2), T('finn_ordklasse', {}, 1)], { trinn: '3. trinn' }),
-  N(15, 'sprak', 'Bøying: entall og flertall, nåtid og fortid', [T('boying', {})], { trinn: '3. trinn' }),
-  N(16, 'sprak', 'Motsetninger og tegnsetting', [T('motsetning', {}), T('tegnsetting', {}), T('stor_bokstav', {})], { trinn: '3.–4. trinn' }),
+  N(14, 'sprak', 'Ordklasser: substantiv, verb og adjektiv', [T('ordklasse', {}, 2, true), T('finn_ordklasse', {}, 1, true)], { trinn: '3. trinn' }),
+  N(15, 'sprak', 'Bøying: entall og flertall, nåtid og fortid', [T('boying', {}, 1, true)], { trinn: '3. trinn' }),
+  N(16, 'sprak', 'Motsetninger og tegnsetting', [T('motsetning', {}), T('tegnsetting', {}, 1, true), T('stor_bokstav', {}, 1, true)], { trinn: '3.–4. trinn' }),
 ]
 
 export const MAKS_LESING = NIVAER_LESING.length

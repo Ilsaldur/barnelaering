@@ -1,40 +1,51 @@
-// Plasseringstest første gang et fag åpnes: 8–12 oppgaver. Start litt under
-// det som er vanlig, gå tre nivåer opp ved riktig svar og to ned ved feil.
+// Plasseringstest første gang et fag åpnes.
+//
+//  - Valget på startskjermen bestemmer startnivå og tak (første nivå i neste
+//    verden, eller toppnivået).
+//  - Hvert nivå prøves med to oppgaver, ett forsøk, uten hjelp.
+//  - Begge riktige: to nivåer opp (aldri over taket). Begge riktige på taket:
+//    plasser på taket.
+//  - Minst én feil: stopp, og plasser ett nivå over det siste nivået barnet besto.
+//  - Feil allerede på startnivået: to nivåer ned og prøv der. Består barnet et
+//    nivå, plasseres det ett nivå over. Bommer det på nivå 1, plasseres det på 1.
 
-export const PLASSERING_MIN = 8
-export const PLASSERING_MAKS = 12
+export const OPPGAVER_PER_NIVAA = 2
 
-// Startnivå per startverden (litt under der verdenen «egentlig» begynner).
+// Startnivå og tak per startverden i matte.
 export const START_NIVAA = { skog: 1, hav: 6, fjell: 13, slott: 21, rom: 29 }
+export const TAK_NIVAA = { skog: 7, hav: 15, fjell: 23, slott: 31, rom: 38 }
 
-export function startPlassering(startverden = 'skog', maks = 38) {
-  const start = Math.min(maks, Math.max(1, START_NIVAA[startverden] ?? 1))
-  return { pos: start, steg: [], ferdig: false, nivaa: null, maks }
+export function startPlassering({ start = 1, tak = 38, maks = 38 } = {}) {
+  const t = Math.min(maks, Math.max(1, tak))
+  const s = Math.min(t, Math.max(1, start))
+  return { start: s, tak: t, maks, pos: s, retning: null, paaNivaa: 0, sisteBestaatt: null, steg: [], ferdig: false, nivaa: null }
 }
 
 export function stegPlassering(state, ok) {
+  if (state.ferdig) return state
   const steg = [...state.steg, { nivaa: state.pos, ok }]
-  let pos = ok ? state.pos + 3 : state.pos - 2
-  pos = Math.min(state.maks, Math.max(1, pos))
-  const next = { ...state, pos, steg }
-  const n = steg.length
-  // Ferdig når vi har minst 8 svar og retningen har snudd (eller vi er i tak/bunn), senest etter 12.
-  const snudd = n >= 2 && steg[n - 1].ok !== steg[n - 2].ok
-  const kant = (ok && state.pos === state.maks) || (!ok && state.pos === 1)
-  if (n >= PLASSERING_MAKS || (n >= PLASSERING_MIN && (snudd || kant))) {
-    next.ferdig = true
-    next.nivaa = sluttNivaa(steg, state.maks)
+  const next = { ...state, steg }
+  const L = state.pos
+
+  if (!ok) {
+    // Bommet på dette nivået.
+    if (state.retning === 'ned' || (state.retning === null && L === state.start && state.sisteBestaatt === null)) {
+      if (L <= 1) return { ...next, ferdig: true, nivaa: 1 }
+      return { ...next, retning: 'ned', pos: Math.max(1, L - 2), paaNivaa: 0 }
+    }
+    return { ...next, ferdig: true, nivaa: Math.min(state.tak, (state.sisteBestaatt ?? L - 1) + 1) }
   }
-  return next
+
+  const paaNivaa = state.paaNivaa + 1
+  if (paaNivaa < OPPGAVER_PER_NIVAA) return { ...next, paaNivaa }
+
+  // Besto nivået (begge riktige).
+  if (state.retning === 'ned') return { ...next, ferdig: true, nivaa: Math.min(state.tak, L + 1), sisteBestaatt: L }
+  if (L >= state.tak) return { ...next, ferdig: true, nivaa: state.tak, sisteBestaatt: L }
+  return { ...next, retning: 'opp', pos: Math.min(state.tak, L + 2), paaNivaa: 0, sisteBestaatt: L }
 }
 
-// Sluttnivå: det høyeste nivået barnet klarte blant de siste fire svarene,
-// ellers det laveste nivået barnet bommet på, minus ett. Alltid minst 1.
-export function sluttNivaa(steg, maks = 38) {
-  const siste = steg.slice(-4)
-  const klarte = siste.filter((s) => s.ok).map((s) => s.nivaa)
-  if (klarte.length) return Math.min(maks, Math.max(1, Math.max(...klarte)))
-  const bommet = steg.filter((s) => !s.ok).map((s) => s.nivaa)
-  if (bommet.length) return Math.max(1, Math.min(...bommet) - 1)
-  return 1
+// Høyeste antall oppgaver en test kan ta (til framdriftsviseren).
+export function maksOppgaver(state) {
+  return Math.max(8, Math.ceil((state.tak - state.start) / 2 + 1) * OPPGAVER_PER_NIVAA)
 }
