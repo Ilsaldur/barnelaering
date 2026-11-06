@@ -6,6 +6,7 @@ const START = [
   { id: 'ord', navn: 'Jeg lærer de første engelske ordene', emoji: '🇬🇧', nivaa: 1, farge: 'bg-rose-500' },
   { id: 'dyr', navn: 'Jeg kan farger, tall og noen dyr', emoji: '🐱', nivaa: 3, farge: 'bg-amber-500' },
   { id: 'setninger', navn: 'Jeg kan mange ord og vil lese setninger', emoji: '💬', nivaa: 5, farge: 'bg-indigo-500' },
+  { id: 'lese', navn: 'Jeg leser engelsk og vil skrive selv', emoji: '📖', nivaa: 8, farge: 'bg-emerald-500' },
 ]
 
 export default function EngelskStige({ go }) {
