@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, useCallback } f
 import { sound } from './sound.js'
 import { speech } from './speech.js'
 import { supabase } from './lib/supabase.js'
-import { emptyData, normalize, mergeData, todayKey } from './lib/profil.js'
+import { emptyData, normalize, mergeData, todayKey, effectiveAutoSpeak, nullstiltData } from './lib/profil.js'
 
 // Profil- og fremgangssystem for hele appen.
 //  - En voksen logger inn (e-postlenke). Barna er profiler under den voksne.
@@ -157,11 +157,17 @@ export function StarProvider({ children }) {
     refreshChildren()
   }, [refreshChildren, authReady])
 
+  // kanLese: svaret på «Kan barnet lese selv?». Nei → opplesing på.
   const addChild = useCallback(
-    async (name, emoji) => {
+    async (name, emoji, kanLese = null) => {
       if (!supabase || !session) return null
       const { data: row, error } = await supabase.from('children').insert({ user_id: session.user.id, name, emoji }).select().single()
       if (error) return null
+      if (kanLese !== null) {
+        const d = normalize({})
+        d.settings = { ...d.settings, autoSpeak: !kanLese, autoSpeakSet: true, updatedAt: Date.now() }
+        saveJSON(dataKey(row.id), d)
+      }
       await refreshChildren()
       return row
     },
@@ -265,20 +271,6 @@ export function StarProvider({ children }) {
     [scheduleFlush],
   )
 
-  // Når nettet eller fanen kommer tilbake: send det som ligger i kø.
-  useEffect(() => {
-    if (onLine) scheduleFlush(300)
-    else setSyncState(session ? 'frakoblet' : 'lokal')
-  }, [onLine, session, scheduleFlush])
-
-  useEffect(() => {
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') scheduleFlush(300)
-    }
-    document.addEventListener('visibilitychange', onVisible)
-    return () => document.removeEventListener('visibilitychange', onVisible)
-  }, [scheduleFlush])
-
   // Hent sky-utgaven av en profil og flett den med den lokale.
   const pullAndMerge = useCallback(async (profileId) => {
     const local = loadLocalData(profileId)
@@ -289,6 +281,37 @@ export function StarProvider({ children }) {
     saveJSON(dataKey(profileId), merged)
     return merged
   }, [])
+
+  // Hent og flett for den aktive profilen (når nettet eller fanen kommer tilbake).
+  const profileRef = useRef(null)
+  profileRef.current = profile
+  const refreshFromCloud = useCallback(async () => {
+    const p = profileRef.current
+    if (!p || p.local || !supabase || !sessionRef.current) return
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return
+    const merged = await pullAndMerge(p.id)
+    setData((cur) => {
+      if (profileRef.current?.id !== p.id) return cur
+      const m = mergeData(cur, merged)
+      saveJSON(dataKey(p.id), m)
+      return m
+    })
+  }, [pullAndMerge])
+
+  // Når nettet eller fanen kommer tilbake: hent fra skyen og send det som ligger i kø.
+  useEffect(() => {
+    if (onLine) {
+      refreshFromCloud().finally(() => scheduleFlush(300))
+    } else setSyncState(session ? 'frakoblet' : 'lokal')
+  }, [onLine, session, scheduleFlush, refreshFromCloud])
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshFromCloud().finally(() => scheduleFlush(300))
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [scheduleFlush, refreshFromCloud])
 
   const selectProfile = useCallback(
     async (p) => {
@@ -343,15 +366,16 @@ export function StarProvider({ children }) {
   }, [data, profile, markDirty])
 
   // ---- Opplesing følger profilen -------------------------------------------
+  // Er innstillingen aldri rørt, bestemmer lesenivået (se effectiveAutoSpeak).
+  const autoNow = effectiveAutoSpeak(data)
   useEffect(() => {
     if (!profile) return
-    speech.setAuto(!!data.settings?.autoSpeak)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.id])
+    speech.setAuto(autoNow)
+  }, [profile?.id, autoNow])
 
   useEffect(() => {
     return speech.onAutoChange((on) => {
-      setData((d) => (d.settings?.autoSpeak === on ? d : { ...d, settings: { ...d.settings, autoSpeak: on, updatedAt: Date.now() } }))
+      setData((d) => (d.settings?.autoSpeak === on && d.settings?.autoSpeakSet ? d : { ...d, settings: { ...d.settings, autoSpeak: on, autoSpeakSet: true, updatedAt: Date.now() } }))
     })
   }, [])
 
@@ -445,6 +469,11 @@ export function StarProvider({ children }) {
     setData((d) => ({ ...d, kostyme: id, kostymeT: Date.now() }))
   }, [])
 
+  // «Lær først»-kort sett.
+  const markLaerkort = useCallback((id) => {
+    setData((d) => (d.laerkort.includes(id) ? d : { ...d, laerkort: [...d.laerkort, id] }))
+  }, [])
+
   // Historiebit sett.
   const markHistorie = useCallback((id) => {
     setData((d) => (d.historier.includes(id) ? d : { ...d, historier: [...d.historier, id] }))
@@ -484,12 +513,7 @@ export function StarProvider({ children }) {
   }, [])
 
   const reset = useCallback(() => {
-    setData((d) => {
-      const fresh = emptyData()
-      fresh.settings = { ...d.settings, updatedAt: Date.now() }
-      for (const f of Object.keys(fresh.fag)) fresh.fag[f].updatedAt = Date.now()
-      return fresh
-    })
+    setData((d) => nullstiltData(d))
   }, [])
 
   // ---- Andre barn (voksensiden) ---------------------------------------------
@@ -569,6 +593,7 @@ export function StarProvider({ children }) {
         buyKostyme,
         setKostyme,
         markHistorie,
+        markLaerkort,
         familyStars,
         loadFamily,
         // Eventyrkartet

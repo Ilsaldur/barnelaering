@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
 import { TopBar, Mascot, BigButton } from '../components/ui.jsx'
-import { SpeakButton, useAutoSpeak, AutoSpeakToggle } from '../components/Speak.jsx'
+import { SpeakButton, AutoSpeakToggle } from '../components/Speak.jsx'
 import Keypad, { parseAnswer } from '../components/Keypad.jsx'
 import { Visual, Help } from '../components/TaskVisual.jsx'
 import AnalogClock from '../components/AnalogClock.jsx'
 import VerdensKart from '../components/VerdensKart.jsx'
 import { landById } from '../data/geo/land.js'
+import { laerkortForType, stegForType } from '../data/laerkort.js'
+import { Visual as KortVisual, Help as KortHelp } from '../components/TaskVisual.jsx'
 import { useStars } from '../StarContext.jsx'
 import { sound } from '../sound.js'
 import { speech } from '../speech.js'
 import { fmt } from '../lib/matte/felles.js'
+import LaerKort from '../components/LaerKort.jsx'
 
 // Tallinje å trykke på: bare noen tall står skrevet, barnet finner plassen.
 function TapLine({ line, picked, answer, disabled, onPick }) {
@@ -49,7 +52,7 @@ function TapLine({ line, picked, answer, disabled, onPick }) {
 // Én oppgave: to forsøk, Hjelp-knapp, løsning med forklaring etter andre feil.
 // onAnswer({ ok, forste, hjelp }) kalles når oppgaven er ferdig (riktig eller etter to feil).
 // Bare første forsøk uten hjelp teller mot nivået; det regner den som kaller ut.
-export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index, total, fag = 'matte' }) {
+export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index, total, fag = 'matte', noHelp = false, placement = false, practice = false, onLaer = null }) {
   const { recordAttempt } = useStars()
   const [attempt, setAttempt] = useState(1)
   const [input, setInput] = useState('')
@@ -64,7 +67,14 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
   const lang = task.lang || 'nb-NO'
   const readOptions = task.form === 'valg' && task.readOptions && !task.optionsLang
   const spokenFull = readOptions ? `${spoken} Er det ${task.options.slice(0, -1).join(', ')} eller ${task.options[task.options.length - 1]}?` : spoken
-  useAutoSpeak(spokenFull, [task], lang)
+  // Oppgaver som ikke kan løses uten lyd (kreverLyd) leses alltid opp.
+  useEffect(() => {
+    if (!spokenFull) return
+    if (task.kreverLyd) speech.speak(spokenFull, { lang })
+    else speech.auto(spokenFull, { lang })
+    return () => speech.stop()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task])
   const [klokke, setKlokke] = useState({ h: 12, m: 0 })
 
   useEffect(() => {
@@ -114,7 +124,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
     setPicked(value)
     const ok = isCorrect(value)
     const forste = attempt === 1
-    recordAttempt({ fag, nivaa: task.nivaa, type: task.type, ok, forste, hjelp: usedHelp })
+    if (!practice) recordAttempt({ fag, nivaa: task.nivaa, type: task.type, ok, forste, hjelp: usedHelp, plassering: placement || undefined })
     if (ok) {
       sound.correct()
       speech.auto('Riktig!')
@@ -133,14 +143,15 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
       }, 1200)
     } else {
       sound.wrong()
-      speech.auto(`Svaret er ${answerText}. ${task.explain || ''}`)
+      const ks = stegForType(fag, task.type)
+      speech.auto(`Svaret er ${answerText}. ${ks ? ks.steg.tekst : task.explain || ''}`)
       setFeedback('solution')
       setResult({ ok: false, forste: false, hjelp: usedHelp })
     }
   }
 
   const done = feedback === 'right' || feedback === 'solution'
-  const canHelp = !!task.hjelp
+  const canHelp = !!task.hjelp && !noHelp
 
   return (
     <div className="bg-white/95 rounded-3xl p-5 md:p-8 shadow-xl">
@@ -165,6 +176,22 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
         <div className="text-center my-2">
           <button type="button" onClick={() => speech.speak(`${task.hørOrd}. ${task.hørOrd}.`, { lang })} className="kid-btn bg-violet-500 text-white px-5 py-3 text-lg font-extrabold">
             🔊 Hør {task.lang ? 'igjen' : 'ordet'}
+          </button>
+        </div>
+      )}
+
+      {onLaer && !done && laerkortForType(fag, task.type) && (
+        <div className="text-center my-2">
+          <button
+            type="button"
+            onClick={() => {
+              sound.click()
+              setUsedHelp(true)
+              onLaer(laerkortForType(fag, task.type))
+            }}
+            className="kid-btn bg-violet-100 text-violet-700 text-base px-4 py-2"
+          >
+            📚 Lær
           </button>
         </div>
       )}
@@ -384,12 +411,37 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
       {done && (
         <div className="mt-5 flex flex-col items-center gap-3">
           <Mascot mood={feedback === 'right' ? 'cheer' : 'oops'} message={feedback === 'right' ? (result?.forste && !result?.hjelp ? 'Riktig! 🎉' : 'Riktig! 👍') : `Svaret er ${answerText}${task.unit ? ' ' + task.unit : ''}.`} size="text-5xl" />
-          {feedback === 'solution' && task.explain && (
-            <div className="flex items-start gap-2 bg-amber-50 rounded-2xl px-4 py-3 max-w-lg">
-              <p className="text-slate-600 font-semibold text-base md:text-lg">{task.explain}</p>
-              <SpeakButton text={task.explain} size="text-xl" />
-            </div>
-          )}
+          {feedback === 'solution' && (() => {
+            const ks = stegForType(fag, task.type)
+            if (ks) {
+              return (
+                <div className="bg-violet-50 rounded-2xl px-4 py-3 max-w-lg w-full">
+                  <p className="text-xs font-extrabold text-violet-500 mb-1">📚 {ks.kort.tittel}</p>
+                  {ks.steg.figur?.visual && (
+                    <div className="mb-2">
+                      <KortVisual visual={ks.steg.figur.visual} />
+                    </div>
+                  )}
+                  {ks.steg.figur?.hjelp && (
+                    <div className="mb-2 bg-sky-50 rounded-xl p-2">
+                      <KortHelp hjelp={ks.steg.figur.hjelp} />
+                    </div>
+                  )}
+                  <div className="flex items-start gap-2">
+                    <p className="text-slate-700 font-semibold text-base md:text-lg flex-1">{ks.steg.tekst}</p>
+                    <SpeakButton text={ks.steg.tekst} size="text-xl" />
+                  </div>
+                  {task.explain && <p className="text-sm text-slate-500 font-semibold mt-2">{task.explain}</p>}
+                </div>
+              )
+            }
+            return task.explain ? (
+              <div className="flex items-start gap-2 bg-amber-50 rounded-2xl px-4 py-3 max-w-lg">
+                <p className="text-slate-600 font-semibold text-base md:text-lg">{task.explain}</p>
+                <SpeakButton text={task.explain} size="text-xl" />
+              </div>
+            ) : null
+          })()}
           <BigButton color="bg-amber-500" onClick={() => onDone(result)}>
             {index != null && index + 1 >= total ? '🏁 Se resultat' : '➡️ Neste'}
           </BigButton>
@@ -402,13 +454,14 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
 
 // Kjører en liste oppgaver og samler resultatet.
 // onDone({ correct, total, perTask, missedTypes })
-export default function Oppdrag({ tasks, title, hjelpStart = false, onDone, onHome, fag = 'matte', attempts = 2 }) {
+export default function Oppdrag({ tasks, title, hjelpStart = false, onDone, onHome, fag = 'matte', attempts = 2, noHelp = false, stige = null }) {
   const [i, setI] = useState(0)
   const [perTask, setPerTask] = useState([])
+  const [laer, setLaer] = useState(null)
   const task = tasks[i]
 
   function next(res) {
-    const entry = { type: task.type, nivaa: task.nivaa, kortId: task.kortId, ...res, counts: !!(res.ok && res.forste && !res.hjelp) }
+    const entry = { type: task.type, nivaa: task.nivaa, tag: task.tag, kortId: task.kortId, ...res, counts: !!(res.ok && res.forste && !res.hjelp) }
     const all = [...perTask, entry]
     if (i + 1 >= tasks.length) {
       const correct = all.filter((r) => r.counts).length
@@ -426,7 +479,8 @@ export default function Oppdrag({ tasks, title, hjelpStart = false, onDone, onHo
       <div className="bg-white/80 rounded-full h-5 overflow-hidden mb-4 shadow-inner">
         <div className="bg-amber-400 h-full transition-all duration-300" style={{ width: `${(i / tasks.length) * 100}%` }} />
       </div>
-      <TaskCard key={i} task={task} index={i} total={tasks.length} onDone={next} hjelpStart={hjelpStart} fag={fag} attempts={attempts} />
+      {laer && <LaerKort kort={laer} stige={stige} modus="laer" fag={fag} onDone={() => setLaer(null)} />}
+      <TaskCard key={i} task={task} index={i} total={tasks.length} onDone={next} hjelpStart={hjelpStart} fag={fag} attempts={attempts} noHelp={noHelp} onLaer={stige ? (k) => setLaer(k) : null} />
     </div>
   )
 }

@@ -23,6 +23,7 @@ export const GEN_ENGELSK = {
     return {
       type: 'hor_finn_bilde',
       form: 'valg',
+      kreverLyd: true,
       prompt: `Hvilket bilde er «${w.en}»?`,
       spoken: w.en,
       lang: 'en-GB',

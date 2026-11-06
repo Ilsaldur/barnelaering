@@ -43,4 +43,8 @@ describe('dagens økt', () => {
     expect(nottGrad(20)).toBe(2)
     expect(nottGrad(35)).toBe(3)
   })
+  it('fast lesing teller alle tre sporene', () => {
+    const s = { ...emptySettings(), fast: 'lesing' }
+    expect(dagStatus({ dager: { '2026-11-06': { oppdrag: 2, fag: { skrive: 1, matte: 1 } } }, settings: s, dayKey: '2026-11-06' }).ferdig).toBe(true)
+  })
 })

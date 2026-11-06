@@ -52,13 +52,13 @@ function pair(rng, { aMin, aMax, bMin, bMax, carry, op }) {
 export const GEN_HAV_FJELL = {
   // Nivå 7–8: pluss og minus innenfor 10 med tastatur, ukjent på ulike plasser.
   pluss_innen_10: ({ max = 10 }, rng) => {
-    const a = randInt(0, max, rng)
-    const b = randInt(0, max - a, rng)
+    const a = randInt(1, max - 1, rng)
+    const b = randInt(1, max - a, rng)
     return plussTask('pluss_innen_10', a, b, rng, { explain: `${a} + ${b} = ${a + b}. Tell ${b} videre fra ${a}.` })
   },
   pluss_apen: ({ max = 10 }, rng) => {
-    const c = randInt(1, max, rng)
-    const a = randInt(0, c, rng)
+    const c = randInt(2, max, rng)
+    const a = randInt(1, c - 1, rng)
     const b = c - a
     const hole = rng() < 0.5 ? 0 : 1
     const { text, spoken } = apen(a, 'add', b, c, hole)
@@ -68,13 +68,13 @@ export const GEN_HAV_FJELL = {
     )
   },
   minus_innen_10: ({ max = 10 }, rng) => {
-    const a = randInt(1, max, rng)
-    const b = randInt(0, a, rng)
+    const a = randInt(2, max, rng)
+    const b = randInt(1, a - 1, rng)
     return minusTask('minus_innen_10', a, b, rng, { explain: `${a} − ${b} = ${a - b}. Tell ${b} bakover fra ${a}.` })
   },
   minus_apen: ({ max = 10 }, rng) => {
-    const a = randInt(1, max, rng)
-    const b = randInt(0, a, rng)
+    const a = randInt(2, max, rng)
+    const b = randInt(1, a - 1, rng)
     const c = a - b
     const { text, spoken } = apen(a, 'sub', b, c, 1)
     return tast({ type: 'minus_apen', prompt: text, spoken: `${spoken}. Hva er det ukjente tallet?`, hjelp: { kind: 'tallinje', from: 0, to: 20, start: a }, explain: `${a} − ${c} = ${b}, så ${a} − ${b} = ${c}.` }, b)
@@ -82,7 +82,7 @@ export const GEN_HAV_FJELL = {
 
   // Nivå 9: tiervenner og dobling.
   tiervenner: ({ a: fixed } = {}, rng) => {
-    const a = fixed != null ? fixed : randInt(0, 10, rng)
+    const a = fixed != null ? fixed : randInt(1, 9, rng)
     const { text, spoken } = apen(a, 'add', 10 - a, 10, 1)
     return tast(
       { type: 'tiervenner', kortId: `tiervenner:${a}`, prompt: text, spoken: `${a} pluss hva er 10?`, hjelp: { kind: 'tiervenner', a }, explain: `${a} og ${10 - a} er tiervenner: ${a} + ${10 - a} = 10.` },
@@ -235,9 +235,11 @@ export const GEN_HAV_FJELL = {
     const [a, b] = pair(rng, { aMin: 11, aMax: 89, bMin: 2, bMax: 9, carry: true, op })
     if (op === 'add') {
       const til = 10 - (a % 10)
+      if (b === til) return plussTask('tosifret_ensifret_med', a, b, rng, { explain: `${a} + ${b} fyller akkurat opp til neste tier: ${a + b}.` })
       return plussTask('tosifret_ensifret_med', a, b, rng, { explain: `Fyll opp til neste tier: ${a} + ${til} = ${a + til}, og så ${b - til} til: ${a + b}.` })
     }
     const ned = a % 10
+    if (ned === 0) return minusTask('tosifret_ensifret_med', a, b, rng, { explain: `Ta en hel tier: ${a} − 10 = ${a - 10}, og så ${10 - b} tilbake: ${a - b}.` })
     return minusTask('tosifret_ensifret_med', a, b, rng, { explain: `Gå ned til tieren: ${a} − ${ned} = ${a - ned}, og så ${b - ned} til: ${a - b}.` })
   },
   tosifret_tosifret_uten: (_, rng) => {

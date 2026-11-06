@@ -29,7 +29,7 @@ import { NIVAER_ENGELSK } from '../data/engelsk/nivaer.js'
 import { genKlokke } from '../lib/klokke/generatorer.js'
 import { genGeo } from '../lib/geo/generatorer.js'
 import { genEngelsk } from '../lib/engelsk/generatorer.js'
-import { NIVAER_LESING } from '../data/lesing/nivaer.js'
+import { NIVAER_LESING, NIVAER_SKRIVE, NIVAER_SPRAK } from '../data/lesing/nivaer.js'
 import { genLesing } from '../lib/lesing/generatorer.js'
 import Noettehula from '../activities/Noettehula.jsx'
 import Oppdrag, { TaskCard } from '../activities/Oppdrag.jsx'
@@ -47,7 +47,9 @@ describe('alle skjermer rendrer uten feil', () => {
     expect(home).toContain('Dagens økt')
     expect(home).toContain('Eventyrkartet')
     expect(wrap(<Samling go={noop} onGarden={noop} />)).toContain('Familiekisten')
-    expect(wrap(<Kart matte={{ ...emptyFag(), nivaa: 12, beste: { 7: 3 } }} onStart={noop} onReplay={noop} />)).toContain('Det blå havet')
+    const kart = wrap(<Kart matte={{ ...emptyFag(), nivaa: 12, beste: { 7: 3 } }} onStart={noop} onReplay={noop} />)
+    expect(kart).toContain('Det blå havet')
+    expect(kart).toContain('<polyline')
     expect(renderToString(<Historie historie={HISTORIER[0]} verden={VERDENER[0]} onDone={noop} />)).toContain('Trylleskogen')
     expect(wrap(<Parents go={noop} onSwitchProfile={noop} />)).toContain('Hold inne')
     expect(wrap(<Garden go={noop} />)).toContain('Hagebutikken')
@@ -81,9 +83,10 @@ describe('alle skjermer rendrer uten feil', () => {
   it('mattestigen: plassering, nøttehula og alle oppgavetyper rendrer', () => {
     expect(wrap(<MatteStige go={noop} onNoetter={noop} />)).toContain('Hvor vil du begynne')
     expect(wrap(<Noettehula go={noop} />)).toContain('Nøttehula')
-    expect(wrap(<LeseStige go={noop} />)).toContain('Hva passer best')
+    expect(wrap(<LeseStige go={noop} />)).toContain('Skrive riktig')
+    expect(wrap(<LeseStige go={noop} start="lesing" />)).toContain('Hva passer best')
     const rngL = seeded(31)
-    for (const n of NIVAER_LESING) {
+    for (const n of [...NIVAER_LESING, ...NIVAER_SKRIVE, ...NIVAER_SPRAK]) {
       for (const t of n.typer) {
         const task = { ...genLesing(t.type, t.param, rngL), nivaa: n.id }
         expect(wrap(<TaskCard task={task} onDone={noop} index={0} total={8} fag="lesing" />).length, `lesing ${n.id}/${t.type}`).toBeGreaterThan(300)

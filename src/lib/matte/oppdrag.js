@@ -1,6 +1,7 @@
 // Bygger ett oppdrag: åtte oppgaver i ett fag – fem fra eget nivå, to
-// repetisjon fra tidligere nivåer og én fra neste nivå, lett før vanskelig.
-// Med hjelp på (etter et svakt oppdrag) hentes halvparten fra nivået under.
+// repetisjon fra de fem siste nivåene under, og én smakebit fra neste nivå,
+// lett før vanskelig. Med hjelp på (etter et svakt oppdrag) hentes halvparten
+// fra nivået under. Ingen oppgave kommer fra et nivå over barnets nivå + 1.
 import { gen as genMatte } from './generatorer.js'
 import { NIVAER as NIVAER_MATTE } from '../../data/matte/nivaer.js'
 import { kortstokk, trekkKort } from './kort.js'
@@ -15,14 +16,16 @@ function nivaaDef(id, stige = MATTE_STIGE) {
 }
 
 // Trekk en oppgavetype fra et nivå, vektet.
-function trekkType(def, rng) {
-  const total = def.typer.reduce((s, t) => s + (t.vekt || 1), 0)
+function trekkType(def, rng, filter = null) {
+  const typer = filter ? def.typer.filter(filter) : def.typer
+  const liste = typer.length ? typer : def.typer
+  const total = liste.reduce((s, t) => s + (t.vekt || 1), 0)
   let r = rng() * total
-  for (const t of def.typer) {
+  for (const t of liste) {
     r -= t.vekt || 1
     if (r <= 0) return t
   }
-  return def.typer[def.typer.length - 1]
+  return liste[liste.length - 1]
 }
 
 function lagOppgave(nivaaId, rng, { type, param } = {}, stige = MATTE_STIGE) {
@@ -69,6 +72,7 @@ export function buildMission(fag, { rng = Math.random, stige = MATTE_STIGE, leng
   const antEget = L >= 8 ? 5 : Math.max(1, L - 2)
   const antRep = L >= 8 ? 2 : 1
   const antUnder = Math.floor(L / 2)
+  const repFra = Math.max(1, nivaa - 5)
 
   if (hjelp && nivaa > 1) {
     for (let i = 0; i < antUnder; i++) plan.push({ nivaa: under, tag: 'under' })
@@ -76,24 +80,29 @@ export function buildMission(fag, { rng = Math.random, stige = MATTE_STIGE, leng
     plan.push({ nivaa: neste > nivaa ? neste : nivaa, tag: 'neste' })
   } else {
     for (let i = 0; i < antEget; i++) plan.push({ nivaa, tag: 'eget' })
-    for (let i = 0; i < antRep; i++) plan.push({ nivaa: nivaa > 1 ? randInt(1, nivaa - 1, rng) : nivaa, tag: 'rep' })
+    for (let i = 0; i < antRep; i++) plan.push({ nivaa: nivaa > 1 ? randInt(repFra, nivaa - 1, rng) : nivaa, tag: 'rep' })
     plan.push({ nivaa: neste > nivaa ? neste : nivaa, tag: 'neste' })
   }
 
   // Svake typer erstatter repetisjonsplassene (og under-plasser i hjelpemodus).
-  const svake = shuffle(activeWeakTypes(fag), rng)
+  // Aldri en type som hører hjemme over barnets nivå.
+  const svake = shuffle(
+    activeWeakTypes(fag).filter((t) => {
+      const n = nivaaForType(t, stige)
+      return n != null && n <= nivaa
+    }),
+    rng,
+  )
   let svakIdx = 0
   for (const p of plan) {
     if (svakIdx >= svake.length) break
     if (p.tag === 'rep' || (hjelp && p.tag === 'under' && svakIdx < 2)) {
       const type = svake[svakIdx++]
       const n = nivaaForType(type, stige)
-      if (n) {
-        p.nivaa = n
-        p.type = type
-        p.param = nivaaDef(n, stige).typer.find((t) => t.type === type)?.param || {}
-        p.tag = 'svak'
-      }
+      p.nivaa = n
+      p.type = type
+      p.param = nivaaDef(n, stige).typer.find((t) => t.type === type)?.param || {}
+      p.tag = 'svak'
     }
   }
 
@@ -118,22 +127,49 @@ export function buildMission(fag, { rng = Math.random, stige = MATTE_STIGE, leng
 
   let tasks = plan.map((p) => ({ ...lagOppgave(p.nivaa, rng, p, stige), tag: p.tag, kortId: p.kortId || undefined }))
   tasks = unike(tasks, (n, r) => lagOppgave(n, r, {}, stige), rng)
-  // Lett før vanskelig: etter nivå.
   tasks.sort((a, b) => a.nivaa - b.nivaa)
   return { nivaa, hjelp, tasks: tasks.slice(0, L), kortIds }
 }
 
-// Sjefsoppgave: fem oppgaver fra målnivået (to–tre nivåer høyere).
-export function buildBoss(target, { rng = Math.random, stige = MATTE_STIGE } = {}) {
-  const fra = Math.max(1, target - 1)
-  const plan = [fra, target, target, target, target]
+// Sjefsoppgave: fem oppgaver fra nivåene mellom barnets nivå og målet –
+// én fra nivået rett over og to fra hvert av de to neste. Færre nivåer igjen:
+// oppgavene fordeles på de som finnes.
+export function buildBoss(nivaa, target, { rng = Math.random, stige = MATTE_STIGE } = {}) {
+  const MAKS = stige.nivaer.length
+  const maal = Math.min(MAKS, target)
+  const nivaaer = []
+  for (let n = nivaa + 1; n <= maal; n++) nivaaer.push(n)
+  let fordeling
+  if (nivaaer.length >= 3) fordeling = [1, 2, 2]
+  else if (nivaaer.length === 2) fordeling = [2, 3]
+  else fordeling = [5]
+  const plan = []
+  nivaaer.slice(0, fordeling.length).forEach((n, i) => {
+    for (let k = 0; k < fordeling[i]; k++) plan.push(n)
+  })
   let tasks = plan.map((n) => ({ ...lagOppgave(n, rng, {}, stige), tag: 'sjef' }))
   tasks = unike(tasks, (n, r) => lagOppgave(n, r, {}, stige), rng)
   tasks.sort((a, b) => a.nivaa - b.nivaa)
-  return { target, tasks: tasks.slice(0, SJEF_LENGDE) }
+  return { target: maal, tasks: tasks.slice(0, SJEF_LENGDE) }
 }
 
-// Én oppgave fra et gitt nivå (til plasseringstesten).
+// Oppgave til plasseringstesten: aldri sant/usant, aldri typer som krever
+// fagord barnet ikke har lært (merket `ikkePlassering` i nivådataene).
+export function oppgaveTilPlassering(nivaaId, rng = Math.random, stige = MATTE_STIGE) {
+  const MAKS = stige.nivaer.length
+  const id = Math.min(MAKS, Math.max(1, nivaaId))
+  const def = nivaaDef(id, stige)
+  for (let i = 0; i < 40; i++) {
+    const t = trekkType(def, rng, (x) => !x.ikkePlassering)
+    const task = stige.gen(t.type, t.param, rng)
+    if (task.form === 'santusant' || task.type === 'fakta_mening') continue
+    return { ...task, nivaa: id, svarform: def.svar, hjelpAlltid: false, hjelp: undefined, tag: 'plassering' }
+  }
+  const task = lagOppgave(id, rng, {}, stige)
+  return { ...task, hjelp: undefined, tag: 'plassering' }
+}
+
+// Én oppgave fra et gitt nivå (fri bruk, f.eks. «Prøv selv»).
 export function oppgaveFraNivaa(nivaaId, rng = Math.random, stige = MATTE_STIGE) {
   const MAKS = stige.nivaer.length
   return lagOppgave(Math.min(MAKS, Math.max(1, nivaaId)), rng, {}, stige)

@@ -3,6 +3,7 @@
 import { randInt, pick, shuffle } from '../rng.js'
 import { registerTypeLabels } from '../labels.js'
 import { BOKSTAVER, LYDRETTE_ORD, VANLIGE_ORD, SETNINGER, TEKSTER, RETTSKRIVING, ORDKLASSER, ORDKLASSE_NAVN, BOYING, MOTSETNINGER, TEGNSETTING, STOR_BOKSTAV } from '../../data/lesing/innhold.js'
+import { teksterAvType } from '../../data/lesing/tekster2.js'
 
 function valgFra(answer, pool, n, rng) {
   const others = shuffle(
@@ -36,6 +37,7 @@ export const GEN_LESING = {
     return {
       type: 'lyd_finn_bokstav',
       form: 'valg',
+      kreverLyd: true,
       prompt: 'Hvilken bokstav hører du?',
       spoken: `Hvilken bokstav sier ${b.lyd}? Som i ${b.ord}.`,
       visual: { kind: 'ikon', emoji: b.emoji },
@@ -136,6 +138,7 @@ export const GEN_LESING = {
     return {
       type: 'vanlig_ord',
       form: 'valg',
+      kreverLyd: true,
       prompt: 'Hvilket ord hører du?',
       spoken: `Finn ordet: ${w}. ${w}.`,
       visual: { kind: 'ikon', emoji: '👂' },
@@ -177,12 +180,35 @@ export const GEN_LESING = {
       tekstId: t.id,
     }
   },
+  // Lengre tekster (Lese 10–12): slutning, ordforråd, hovedtanke.
+  tekst2: ({ type = 'slutning' }, rng) => {
+    const pool = teksterAvType(type)
+    const t = pick(pool, rng)
+    const q = pick(t.sporsmaal, rng)
+    const forklaring = {
+      slutning: 'Svaret står ikke rett i teksten. Let etter spor og tenk: hva må være sant?',
+      ordforraad: 'Les setningen rundt ordet en gang til. Ordene omkring forteller hva det betyr.',
+      hovedtanke: 'Hovedtanken er det hele teksten handler om, ikke én detalj.',
+    }[type]
+    return {
+      type: `tekst_${type}`,
+      form: 'valg',
+      prompt: q.q,
+      spoken: `${t.tittel}. ${t.tekst} Spørsmål: ${q.q}`,
+      visual: { kind: 'tekst', tittel: t.tittel, tekst: t.tekst },
+      answer: q.svar,
+      options: shuffle(q.alternativer, rng),
+      explain: `${forklaring} Riktig svar: «${q.svar}».`,
+      tekstId: t.id,
+    }
+  },
   // Skriv ordet du hører.
   skriv_ord: ({ gruppe = 'diftonger' }, rng) => {
     const o = pick(RETTSKRIVING[gruppe] || RETTSKRIVING.diftonger, rng)
     return {
       type: `skriv_${gruppe}`,
       form: 'skriv',
+      kreverLyd: true,
       prompt: 'Skriv ordet du hører.',
       spoken: `Skriv ordet: ${o.ord}. ${o.ord}.`,
       visual: { kind: 'ikon', emoji: o.emoji },
@@ -316,6 +342,9 @@ registerTypeLabels({
   setning_bilde: 'Lese korte setninger',
   tekst_sporsmaal: 'Lese og forstå',
   fakta_mening: 'Fakta eller mening',
+  tekst_slutning: 'Lese mellom linjene',
+  tekst_ordforraad: 'Ordforråd',
+  tekst_hovedtanke: 'Hovedtanken i teksten',
   skriv_diftonger: 'Diftonger',
   skriv_kj_skj: 'Kj og skj',
   skriv_dobbel_konsonant: 'Dobbel konsonant',

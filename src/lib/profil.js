@@ -1,19 +1,20 @@
 // Barnets fremgang som ren data: tom profil, normalisering av gamle
 // lagringer og fletting av to utgaver (lokal og sky) uten å miste noe.
 
-export const DATA_VERSION = 2
-export const FAG = ['matte', 'lesing', 'klokke', 'geografi', 'engelsk']
+export const DATA_VERSION = 3
+export const FAG = ['matte', 'lesing', 'skrive', 'sprak', 'klokke', 'geografi', 'engelsk']
 
 export function emptyFag() {
   return {
     nivaa: null, // null = ikke plassert ennå
     plassert: false,
     paaRad: 0, // oppdrag på rad med 7–8 riktige
-    perfektRad: 0, // oppdrag på rad med 8 av 8
+    svakRad: 0, // oppdrag på rad med 0–4 riktige
     hjelpNeste: false, // neste oppdrag får hjelp på og henter fra nivået under
     beste: {}, // nivåId -> beste stjerner (0–3) på første forsøk
     bokser: {}, // kort-id -> { boks: 1–5, t }
-    svake: {}, // oppgavetype -> { bom, til (dato) }
+    svake: {}, // oppgavetype -> { bom, riktig } (bom-lista)
+    sjef: null, // ikke i bruk lenger (sjefsoppgaven tilbys direkte)
     updatedAt: 0,
   }
 }
@@ -21,6 +22,7 @@ export function emptyFag() {
 export function emptySettings() {
   return {
     autoSpeak: false,
+    autoSpeakSet: false, // true når en voksen (eller profilskjemaet) har valgt
     fast: null, // 'matte' | 'lesing' | null – fast oppdrag i «Dagens økt»
     oppdragPerDag: 2,
     fagblanding: ['matte', 'lesing', 'overraskelse'],
@@ -46,6 +48,8 @@ export function emptyData() {
     kostyme: null, // kostyme reven har på
     kostymeT: 0,
     historier: [], // historiebiter barnet har sett
+    laerkort: [], // «Lær først»-kort barnet har sett
+    nullstiltT: 0, // når profilen sist ble nullstilt (nyeste vinner ved synk)
   }
 }
 
@@ -56,9 +60,45 @@ export function todayKey(d = new Date()) {
   return `${y}-${m}-${day}`
 }
 
+// Lesing ble delt i tre spor (v3): Lese 1–9 (nå 1–12), Skrive riktig 1–4
+// (gamle 10–13) og Språk 1–3 (gamle 14–16). Stjerner følger nivåene.
+export function migrerLesingSpor(fag) {
+  const l = { ...emptyFag(), ...(fag.lesing || {}) }
+  const skrive = { ...emptyFag(), ...(fag.skrive || {}) }
+  const sprak = { ...emptyFag(), ...(fag.sprak || {}) }
+  const n = l.nivaa || 0
+  const beste = l.beste || {}
+  const flytt = (fra, til, mal) => {
+    for (const [k, v] of Object.entries(beste)) {
+      const nk = Number(k)
+      if (nk >= fra && nk <= til) {
+        mal.beste = { ...mal.beste, [nk - fra + 1]: Math.max(mal.beste?.[nk - fra + 1] || 0, v) }
+        delete beste[k]
+      }
+    }
+  }
+  flytt(10, 13, skrive)
+  flytt(14, 16, sprak)
+  l.beste = beste
+  if (n >= 14) {
+    sprak.nivaa = n - 13
+    sprak.plassert = true
+    skrive.nivaa = Math.max(skrive.nivaa || 0, 1)
+    skrive.plassert = true
+    l.nivaa = 9
+  } else if (n >= 10) {
+    skrive.nivaa = n - 9
+    skrive.plassert = true
+    l.nivaa = 9
+  }
+  const t = Date.now()
+  return { lesing: { ...l, updatedAt: Math.max(l.updatedAt || 0, t) }, skrive: { ...skrive, updatedAt: Math.max(skrive.updatedAt || 0, t) }, sprak: { ...sprak, updatedAt: Math.max(sprak.updatedAt || 0, t) } }
+}
+
 // Gjør en lagret (kanskje gammel) profil komplett.
 export function normalize(raw) {
   const d = { ...emptyData(), ...(raw || {}) }
+  const gammelVersjon = (raw && raw.v) || 0
   d.v = DATA_VERSION
   d.best = d.best || {}
   d.garden = d.garden || []
@@ -70,9 +110,17 @@ export function normalize(raw) {
   d.kort = d.kort || []
   d.kostymer = d.kostymer || []
   d.historier = d.historier || []
+  d.laerkort = d.laerkort || []
   const fag = {}
-  for (const f of FAG) fag[f] = { ...emptyFag(), ...((d.fag || {})[f] || {}) }
+  for (const f of FAG) {
+    const g = { ...emptyFag(), ...((d.fag || {})[f] || {}) }
+    delete g.perfektRad
+    // Gamle bom-lister hadde { bom, til }; nå { bom, riktig }.
+    g.svake = Object.fromEntries(Object.entries(g.svake || {}).map(([k, v]) => [k, { bom: v.bom || 1, riktig: v.riktig || 0 }]))
+    fag[f] = g
+  }
   d.fag = fag
+  if (gammelVersjon < 3 && raw?.fag?.lesing) Object.assign(d.fag, migrerLesingSpor(raw.fag))
   return d
 }
 
@@ -102,14 +150,9 @@ function mergeFag(a, b) {
       if (!out.bokser[k] || (v.t || 0) > (out.bokser[k].t || 0)) out.bokser[k] = v
     }
   }
-  out.svake = {}
-  for (const src of [a.svake || {}, b.svake || {}]) {
-    for (const [k, v] of Object.entries(src)) {
-      const cur = out.svake[k]
-      if (!cur) out.svake[k] = v
-      else out.svake[k] = { bom: Math.max(cur.bom || 0, v.bom || 0), til: cur.til > v.til ? cur.til : v.til }
-    }
-  }
+  // Bom-lista og rekkene følger nivået: siden som sist ble endret vinner.
+  out.svake = { ...(newest.svake || {}) }
+  out.sjef = newest.sjef || null
   return out
 }
 
@@ -119,7 +162,11 @@ function mergeFag(a, b) {
 export function mergeData(rawA, rawB) {
   const a = normalize(rawA)
   const b = normalize(rawB)
+  // Er den ene siden nullstilt etter den andre, vinner den for alt. Ellers
+  // (samme tidspunkt, vanligvis 0) flettes som før.
+  if ((a.nullstiltT || 0) !== (b.nullstiltT || 0)) return (a.nullstiltT || 0) > (b.nullstiltT || 0) ? a : b
   const out = emptyData()
+  out.nullstiltT = a.nullstiltT || 0
   out.stars = Math.max(a.stars, b.stars)
   out.spent = Math.max(a.spent, b.spent)
 
@@ -150,6 +197,7 @@ export function mergeData(rawA, rawB) {
   out.kort = [...new Set([...a.kort, ...b.kort])]
   out.kostymer = [...new Set([...a.kostymer, ...b.kostymer])]
   out.historier = [...new Set([...a.historier, ...b.historier])]
+  out.laerkort = [...new Set([...a.laerkort, ...b.laerkort])]
   if ((a.kostymeT || 0) >= (b.kostymeT || 0)) {
     out.kostyme = a.kostyme
     out.kostymeT = a.kostymeT
@@ -158,6 +206,26 @@ export function mergeData(rawA, rawB) {
     out.kostymeT = b.kostymeT
   }
   return out
+}
+
+// Skal oppgavene leses opp automatisk? Er innstillingen aldri rørt, leses det
+// opp for barn som ikke er plassert i lesing eller står under nivå 8.
+export function effectiveAutoSpeak(data) {
+  const s = data?.settings || {}
+  if (s.autoSpeakSet) return !!s.autoSpeak
+  const lesing = data?.fag?.lesing
+  if (!lesing || !lesing.plassert || !lesing.nivaa) return true
+  return lesing.nivaa < 8
+}
+
+// En nullstilt profil: alt borte, innstillingene beholdt, og tidspunktet satt så
+// gamle data fra en annen enhet ikke kommer tilbake ved synk.
+export function nullstiltData(gammel, now = Date.now()) {
+  const fresh = emptyData()
+  fresh.settings = { ...(gammel?.settings || fresh.settings), updatedAt: now }
+  for (const f of Object.keys(fresh.fag)) fresh.fag[f].updatedAt = now
+  fresh.nullstiltT = now
+  return fresh
 }
 
 // ---- Statistikk brukt på voksensiden -----------------------------------------

@@ -6,10 +6,11 @@ import { supabase } from '../lib/supabase.js'
 import { speech } from '../speech.js'
 import { TOPICS, recommendedIndex, topicProgress } from '../progress.js'
 import { topicById } from '../data/topics.js'
-import { emptyData, recentRounds, minutesLastWeek, weakestTypes, FAG, todayKey } from '../lib/profil.js'
+import { emptyData, recentRounds, minutesLastWeek, weakestTypes, FAG, todayKey, effectiveAutoSpeak, nullstiltData } from '../lib/profil.js'
 import { ukestripe } from '../lib/dagen.js'
 import { FAG_LABELS, typeLabel } from '../lib/labels.js'
 import { MAKS_NIVAA, nivaaNavn } from '../data/stiger.js'
+import { settNivaa } from '../lib/matte/stige.js'
 
 // Voksensiden: per barn – nivå per fag, oppdrag og minutter siste uke, de tre
 // oppgavetypene barnet bommer mest på, og innstillinger. Bak voksensperren.
@@ -130,7 +131,7 @@ function ChildPanel({ child, data, update, isActive }) {
   const setNivaa = (fag, nivaa) =>
     update((cur) => ({
       ...cur,
-      fag: { ...cur.fag, [fag]: { ...cur.fag[fag], nivaa, plassert: true, paaRad: 0, perfektRad: 0, hjelpNeste: false, updatedAt: Date.now() } },
+      fag: { ...cur.fag, [fag]: { ...settNivaa(cur.fag[fag], nivaa), updatedAt: Date.now() } },
     }))
   const toggleFag = (f) => {
     const cur = s.fagblanding || []
@@ -221,13 +222,14 @@ function ChildPanel({ child, data, update, isActive }) {
           <div>
             <p className="font-bold text-slate-600 mb-2">Automatisk opplesing</p>
             <div className="flex gap-2">
-              <Chip active={!!s.autoSpeak} onClick={() => setSettings({ autoSpeak: true })}>
+              <Chip active={effectiveAutoSpeak(d)} onClick={() => setSettings({ autoSpeak: true, autoSpeakSet: true })}>
                 🔊 På
               </Chip>
-              <Chip active={!s.autoSpeak} onClick={() => setSettings({ autoSpeak: false })}>
+              <Chip active={!effectiveAutoSpeak(d)} onClick={() => setSettings({ autoSpeak: false, autoSpeakSet: true })}>
                 🔇 Av
               </Chip>
             </div>
+            {!s.autoSpeakSet && <p className="text-xs text-slate-400 mt-1">Ikke valgt ennå: reven leser opp til barnet er på nivå 8 i lesing.</p>}
             {!speech.supported() && <p className="text-xs text-slate-400 mt-1">Denne enheten har ingen stemme. Innstillingen følger barnet til andre enheter.</p>}
           </div>
           <div>
@@ -335,12 +337,7 @@ function ChildPanel({ child, data, update, isActive }) {
               color="bg-rose-500"
               className="!text-lg !py-2 !px-4"
               onClick={() => {
-                update((cur) => {
-                  const fresh = emptyData()
-                  fresh.settings = { ...cur.settings, updatedAt: Date.now() }
-                  for (const f of Object.keys(fresh.fag)) fresh.fag[f].updatedAt = Date.now()
-                  return fresh
-                })
+                update((cur) => nullstiltData(cur))
                 setConfirmReset(false)
               }}
             >

@@ -31,7 +31,7 @@ export default function Personvern({ go }) {
 
         <section>
           <h2 className="text-lg font-extrabold mb-1">Informasjonskapsler</h2>
-          <p className="font-semibold">Appen bruker ikke sporingskapsler. Den lagrer innloggingen og fremgangen lokalt i nettleseren (localStorage) for at du skal slippe å logge inn hver gang og for at appen skal virke uten nett.</p>
+          <p className="font-semibold">Appen bruker ikke sporingskapsler. Den lagrer innloggingen og fremgangen lokalt i nettleseren (localStorage) for at du skal slippe å logge inn hver gang, og den lagrer selve appen på enheten (service worker) så den starter uten nett etter første besøk.</p>
         </section>
 
         <section>

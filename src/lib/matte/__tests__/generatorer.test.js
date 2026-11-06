@@ -89,4 +89,44 @@ describe('oppgavegeneratorer', () => {
     expect(t.answer).toBe(42)
     expect(t.kortId).toMatch(/gange:(6x7|7x6)/)
   })
+
+  it('fra nivå 7: ingen trivielle oppgaver med 0 (10 + 0, 0 + ? = 10)', () => {
+    const rng = seeded(77)
+    for (const type of ['pluss_innen_10', 'pluss_apen', 'minus_innen_10', 'minus_apen', 'tiervenner']) {
+      for (let i = 0; i < 200; i++) {
+        const t = gen(type, { max: 10 }, rng)
+        const tall = (t.prompt.match(/\d+/g) || []).map(Number)
+        expect(tall, `${type}: ${t.prompt}`).not.toContain(0)
+        expect(t.answer, `${type}: ${t.prompt}`).not.toBe(0)
+        if (type === 'tiervenner') expect(t.answer).toBeLessThan(10)
+      }
+    }
+  })
+  it('20 − 8 forklares via tieren', () => {
+    const rng = seeded(1)
+    let sett = false
+    for (let i = 0; i < 2000 && !sett; i++) {
+      const t = gen('tosifret_ensifret_med', {}, rng)
+      if (t.prompt.includes('−') && t.prompt.match(/^(\d+)0 −/)) {
+        expect(t.explain).toMatch(/− 10 = \d+, og så \d+ tilbake/)
+        expect(t.explain).not.toMatch(/− 0 =/)
+        sett = true
+      }
+    }
+    expect(sett).toBe(true)
+    for (let i = 0; i < 500; i++) {
+      const t = gen('tosifret_ensifret_med', {}, rng)
+      expect(t.explain).not.toMatch(/− 0 =|\+ 0 =|og så 0 til/)
+    }
+  })
+  it('nivå 2 blander telling, terning, fingre og flest', () => {
+    const n = NIVAER[1]
+    expect(n.typer.map((t) => t.type).sort()).toEqual(['fingre', 'mer_mindre_mengder', 'tell', 'terning'])
+    const rng = seeded(2)
+    for (let i = 0; i < 50; i++) {
+      const t = gen('fingre', { min: 1, max: 10 }, rng)
+      expect(t.visual.kind).toBe('fingre')
+      expect(t.options).toContain(t.answer)
+    }
+  })
 })

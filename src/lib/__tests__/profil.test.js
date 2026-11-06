@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { emptyData, normalize, mergeData, weakestTypes, minutesLastWeek, todayKey } from '../profil.js'
+import { emptyData, normalize, mergeData, weakestTypes, minutesLastWeek, todayKey, effectiveAutoSpeak, nullstiltData } from '../profil.js'
 
 describe('normalize', () => {
   it('fyller ut en gammel profil uten å miste stjerner', () => {
@@ -8,7 +8,7 @@ describe('normalize', () => {
     expect(d.best.pluss[0]).toBe(3)
     expect(d.fag.matte.nivaa).toBe(null)
     expect(d.settings.oppdragPerDag).toBe(2)
-    expect(d.v).toBe(2)
+    expect(d.v).toBe(3)
   })
 })
 
@@ -93,5 +93,52 @@ describe('statistikk', () => {
   })
   it('todayKey', () => {
     expect(todayKey(new Date(2026, 10, 5))).toBe('2026-11-05')
+  })
+})
+
+describe('opplesing (etappe B)', () => {
+  it('aldri rørt: på til barnet er på nivå 8 i lesing', () => {
+    const d = emptyData()
+    expect(effectiveAutoSpeak(d)).toBe(true)
+    d.fag.lesing = { ...d.fag.lesing, plassert: true, nivaa: 5 }
+    expect(effectiveAutoSpeak(d)).toBe(true)
+    d.fag.lesing = { ...d.fag.lesing, plassert: true, nivaa: 8 }
+    expect(effectiveAutoSpeak(d)).toBe(false)
+  })
+  it('valgt av voksen: valget gjelder uansett nivå', () => {
+    const d = emptyData()
+    d.settings = { ...d.settings, autoSpeak: false, autoSpeakSet: true }
+    expect(effectiveAutoSpeak(d)).toBe(false)
+    d.fag.lesing = { ...d.fag.lesing, plassert: true, nivaa: 12 }
+    d.settings = { ...d.settings, autoSpeak: true, autoSpeakSet: true }
+    expect(effectiveAutoSpeak(d)).toBe(true)
+  })
+  it('gamle profiler uten autoSpeakSet regnes som aldri rørt', () => {
+    const d = normalize({ settings: { autoSpeak: false } })
+    expect(d.settings.autoSpeakSet).toBe(false)
+    expect(effectiveAutoSpeak(d)).toBe(true)
+  })
+})
+
+describe('nullstilling og synk (etappe E)', () => {
+  it('nullstill på enhet A, flett med gamle data fra B: fortsatt nullstilt', () => {
+    const gammel = normalize({ stars: 40, kort: ['dyr-elg'], fag: { matte: { nivaa: 20, plassert: true, updatedAt: 500 } } })
+    const a = nullstiltData(gammel, 1000)
+    expect(a.stars).toBe(0)
+    expect(a.nullstiltT).toBe(1000)
+    const m = mergeData(a, gammel)
+    expect(m.stars).toBe(0)
+    expect(m.kort).toEqual([])
+    expect(m.fag.matte.nivaa).toBe(null)
+    expect(m.nullstiltT).toBe(1000)
+    expect(mergeData(gammel, a).stars).toBe(0)
+  })
+  it('samme nullstillingstidspunkt: flettes som før', () => {
+    const a = normalize({ stars: 5 })
+    const b = normalize({ stars: 9 })
+    expect(mergeData(a, b).stars).toBe(9)
+    const c = nullstiltData(a, 7)
+    const d = { ...nullstiltData(b, 7), stars: 3 }
+    expect(mergeData(c, d).stars).toBe(3)
   })
 })

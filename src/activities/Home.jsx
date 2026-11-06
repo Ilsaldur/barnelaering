@@ -117,7 +117,7 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
           <span className="text-4xl">📖</span>
           <span className="text-left">
             <span className="block text-lg md:text-xl font-extrabold">Lesestigen</span>
-            <span className="block text-xs md:text-sm opacity-90">{lesing?.nivaa ? `Nivå ${lesing.nivaa} av 16` : 'Finn nivået ditt'}</span>
+            <span className="block text-xs md:text-sm opacity-90">{lesing?.nivaa ? `Lese nivå ${lesing.nivaa} av 12` : 'Tre spor: lese, skrive, språk'}</span>
           </span>
         </button>
         {[

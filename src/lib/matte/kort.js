@@ -7,7 +7,7 @@ export const BOKSER = 5
 const VEKT = { 1: 8, 2: 4, 3: 2, 4: 1, 5: 0.4 }
 
 export function tiervennerKort() {
-  return Array.from({ length: 11 }, (_, a) => ({ id: `tiervenner:${a}`, type: 'tiervenner', param: { a } }))
+  return Array.from({ length: 9 }, (_, i) => ({ id: `tiervenner:${i + 1}`, type: 'tiervenner', param: { a: i + 1 } }))
 }
 
 export function gangeKort(tabeller) {
