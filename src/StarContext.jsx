@@ -452,6 +452,11 @@ export function StarProvider({ children }) {
     setData((d) => ({ ...d, kostyme: id, kostymeT: Date.now() }))
   }, [])
 
+  // «Lær først»-kort sett.
+  const markLaerkort = useCallback((id) => {
+    setData((d) => (d.laerkort.includes(id) ? d : { ...d, laerkort: [...d.laerkort, id] }))
+  }, [])
+
   // Historiebit sett.
   const markHistorie = useCallback((id) => {
     setData((d) => (d.historier.includes(id) ? d : { ...d, historier: [...d.historier, id] }))
@@ -576,6 +581,7 @@ export function StarProvider({ children }) {
         buyKostyme,
         setKostyme,
         markHistorie,
+        markLaerkort,
         familyStars,
         loadFamily,
         // Eventyrkartet

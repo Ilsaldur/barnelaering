@@ -15,13 +15,15 @@ import { startPlassering, stegPlassering, maksOppgaver } from '../lib/matte/plas
 import { starsFor } from '../lib/scoring.js'
 import { nyeKort } from '../lib/samling.js'
 import { kortById } from '../data/kort.js'
+import { laerkortForNivaa } from '../data/laerkort.js'
+import LaerKort from '../components/LaerKort.jsx'
 
 // Én felles stige for alle fag. `cfg` beskriver faget:
 //   id, tittel, nivaer, verdener, gen, omraadeFor(id),
 //   start: [{ id, navn, emoji, nivaa, tak, farge }], kortPerNivaa (bool),
 //   historieFor(verdenId), ekstra (knapper på hub), hubEkstra, ikoner(n), kartTittel
 export default function Stige({ cfg, go }) {
-  const { fag, updateFag, addStars, updateSettings, profile, data, giKort, markHistorie } = useStars()
+  const { fag, updateFag, addStars, updateSettings, profile, data, giKort, markHistorie, markLaerkort } = useStars()
   const state = fag[cfg.id]
   const STIGE = { nivaer: cfg.nivaer, gen: cfg.gen }
   const MAKS = cfg.nivaer.length
@@ -125,7 +127,15 @@ export default function Stige({ cfg, go }) {
 
   if (view === 'oppdrag' && mission) {
     const o = cfg.omraadeFor(mission.nivaa)
-    return <Oppdrag tasks={mission.tasks} title={`${mission.replay ? 'Om igjen: nivå' : 'Nivå'} ${mission.nivaa} ${o.emoji}`} hjelpStart={mission.hjelp} onDone={ferdigOppdrag} onHome={go} fag={cfg.id} />
+    // «Lær først» første gang barnet starter et oppdrag på et nivå med kort.
+    const kort = laerkortForNivaa(cfg.id, mission.nivaa)
+    const visKort = kort && !(data.laerkort || []).includes(kort.id)
+    return (
+      <>
+        {visKort && <LaerKort kort={kort} stige={STIGE} modus="forst" fag={cfg.id} onDone={() => markLaerkort(kort.id)} onSkip={() => markLaerkort(kort.id)} />}
+        <Oppdrag tasks={mission.tasks} title={`${mission.replay ? 'Om igjen: nivå' : 'Nivå'} ${mission.nivaa} ${o.emoji}`} hjelpStart={mission.hjelp} onDone={ferdigOppdrag} onHome={go} fag={cfg.id} stige={STIGE} />
+      </>
+    )
   }
   if (view === 'sjef' && mission) {
     return <Oppdrag tasks={mission.tasks} title="Sjefsoppgave 👑" onDone={ferdigSjef} onHome={go} fag={cfg.id} attempts={1} noHelp />

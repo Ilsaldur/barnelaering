@@ -48,6 +48,7 @@ export function emptyData() {
     kostyme: null, // kostyme reven har på
     kostymeT: 0,
     historier: [], // historiebiter barnet har sett
+    laerkort: [], // «Lær først»-kort barnet har sett
   }
 }
 
@@ -72,6 +73,7 @@ export function normalize(raw) {
   d.kort = d.kort || []
   d.kostymer = d.kostymer || []
   d.historier = d.historier || []
+  d.laerkort = d.laerkort || []
   const fag = {}
   for (const f of FAG) {
     const g = { ...emptyFag(), ...((d.fag || {})[f] || {}) }
@@ -153,6 +155,7 @@ export function mergeData(rawA, rawB) {
   out.kort = [...new Set([...a.kort, ...b.kort])]
   out.kostymer = [...new Set([...a.kostymer, ...b.kostymer])]
   out.historier = [...new Set([...a.historier, ...b.historier])]
+  out.laerkort = [...new Set([...a.laerkort, ...b.laerkort])]
   if ((a.kostymeT || 0) >= (b.kostymeT || 0)) {
     out.kostyme = a.kostyme
     out.kostymeT = a.kostymeT

@@ -6,7 +6,7 @@
 |--------|--------|----------------|
 | A – Nivåmotoren | Ferdig og pushet. Se `docs/etappeA.md`. | 2026-11-06 |
 | B – Opplesing | Ferdig og pushet. Se `docs/etappeB.md`. | 2026-11-06 |
-| C – «Lær først»-kort | Ikke startet | |
+| C – «Lær først»-kort | Ferdig og pushet. Kortene i `src/data/laerkort.js` er UTKAST. Se `docs/etappeC.md`. | 2026-11-06 |
 | D – Tre spor i lesing | Ikke startet | |
 | E – Synkronisering, konto og småfeil | Ikke startet | |
 
