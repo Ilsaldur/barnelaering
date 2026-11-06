@@ -25,7 +25,7 @@ import LaerKort from '../components/LaerKort.jsx'
 export default function Stige({ cfg, go }) {
   const { fag, updateFag, addStars, updateSettings, profile, data, giKort, markHistorie, markLaerkort } = useStars()
   const state = fag[cfg.id]
-  const STIGE = { nivaer: cfg.nivaer, gen: cfg.gen }
+  const STIGE = { nivaer: cfg.nivaer, gen: cfg.gen, tekstOppgaver: cfg.tekstOppgaver }
   const MAKS = cfg.nivaer.length
   const [view, setView] = useState('hub')
   const [mission, setMission] = useState(null)
@@ -84,7 +84,8 @@ export default function Stige({ cfg, go }) {
   }
 
   // ---- Plassering ----
-  if (!state.plassert || !state.nivaa) {
+  // «Du starter på nivå …» vises etter testen, også etter at nivået er lagret.
+  if ((view === 'plassert' && plassert) || !state.plassert || !state.nivaa) {
     if (view === 'plassert' && plassert) {
       const d = cfg.nivaer[plassert.nivaa - 1]
       const o = cfg.omraadeFor(plassert.nivaa)
@@ -128,14 +129,18 @@ export default function Stige({ cfg, go }) {
   if (view === 'oppdrag' && mission) {
     const o = cfg.omraadeFor(mission.nivaa)
     // «Lær først» første gang barnet starter et oppdrag på et nivå med kort.
+    // Oppdraget starter først når kortet er lukket.
     const kort = laerkortForNivaa(cfg.id, mission.nivaa)
     const visKort = kort && !(data.laerkort || []).includes(kort.id)
-    return (
-      <>
-        {visKort && <LaerKort kort={kort} stige={STIGE} modus="forst" fag={cfg.id} onDone={() => markLaerkort(kort.id)} onSkip={() => markLaerkort(kort.id)} />}
-        <Oppdrag tasks={mission.tasks} title={`${mission.replay ? 'Om igjen: nivå' : 'Nivå'} ${mission.nivaa} ${o.emoji}`} hjelpStart={mission.hjelp} onDone={ferdigOppdrag} onHome={go} fag={cfg.id} stige={STIGE} />
-      </>
-    )
+    if (visKort) {
+      return (
+        <div className="animate-pop-in">
+          <TopBar title={`Nivå ${mission.nivaa} ${o.emoji}`} onHome={go} />
+          <LaerKort kort={kort} stige={STIGE} modus="forst" fag={cfg.id} onDone={() => markLaerkort(kort.id)} onSkip={() => markLaerkort(kort.id)} />
+        </div>
+      )
+    }
+    return <Oppdrag tasks={mission.tasks} title={`${mission.replay ? 'Om igjen: nivå' : 'Nivå'} ${mission.nivaa} ${o.emoji}`} hjelpStart={mission.hjelp} onDone={ferdigOppdrag} onHome={go} fag={cfg.id} stige={STIGE} />
   }
   if (view === 'sjef' && mission) {
     return <Oppdrag tasks={mission.tasks} title="Sjefsoppgave 👑" onDone={ferdigSjef} onHome={go} fag={cfg.id} attempts={1} noHelp />
@@ -145,44 +150,55 @@ export default function Stige({ cfg, go }) {
     const nyDef = cfg.nivaer[result.nyttNivaa - 1]
     const nyO = cfg.omraadeFor(result.nyttNivaa)
     return (
-      <RoundDone correct={result.correct} total={result.total} stars={result.stars} onAgain={() => setView('hub')} againLabel={`${cfg.emoji} Til ${(cfg.kartTittel || cfg.tittel).toLowerCase()}`} onHome={go}>
-        {result.levelUp && (
-          <div className="w-full sm:w-auto bg-amber-100 text-amber-700 rounded-2xl px-5 py-3 font-extrabold text-lg flex items-center gap-2">
-            <span className="text-3xl">🎉</span>
-            <span>
-              Nivå opp! Nå er du på nivå {result.nyttNivaa}: {nyDef.tittel} {nyO.emoji}
-            </span>
-          </div>
-        )}
-        {result.levelDown && (
-          <div className="w-full sm:w-auto bg-sky-100 text-sky-700 rounded-2xl px-5 py-3 font-extrabold text-lg flex items-center gap-2">
-            <span className="text-3xl">🦊</span>
-            <span>Reven tar deg med til nivå {result.nyttNivaa} en stund, så det blir litt lettere. Det er lurt å øve der det passer!</span>
-          </div>
-        )}
-        {result.sjefPassed === true && <div className="w-full sm:w-auto bg-amber-100 text-amber-700 rounded-2xl px-5 py-3 font-extrabold text-lg">👑 Du klarte sjefsoppgaven og hoppet til nivå {result.nyttNivaa}!</div>}
-        {result.sjefPassed === false && <div className="w-full sm:w-auto bg-sky-100 text-sky-700 rounded-2xl px-5 py-3 font-extrabold text-lg">Godt forsøk! Du fortsetter der du var, og får nytt tilbud neste gang du klarer alle åtte.</div>}
-        {result.kort?.length > 0 && (
-          <div className="w-full bg-white rounded-2xl px-5 py-3 shadow flex flex-wrap items-center justify-center gap-3">
-            <span className="font-extrabold text-slate-600">{result.kort.length === 1 ? 'Nytt samlekort!' : 'Nye samlekort!'}</span>
-            {result.kort.map((k) => (
-              <span key={k.id} className="flex items-center gap-1 bg-amber-50 rounded-xl px-3 py-1 font-bold text-slate-700">
-                <span className="text-2xl">{k.emoji}</span> {k.navn}
-              </span>
-            ))}
-          </div>
-        )}
-        {result.boss && (
-          <div className="w-full sm:w-auto bg-amber-50 rounded-2xl px-5 py-3 flex flex-col items-center gap-2">
-            <p className="font-extrabold text-amber-700">Alle åtte riktige! Vil du prøve sjefsoppgaven og hoppe til nivå {result.boss}?</p>
-            <p className="text-sm font-bold text-slate-500">Fem oppgaver, ett forsøk på hver. Fire riktige gir hopp. Du mister ingenting om det ikke går.</p>
-            <BigButton color="bg-amber-500" onClick={() => startSjef(result.boss)}>
-              👑 Ja, prøv sjefsoppgaven!
-            </BigButton>
-          </div>
-        )}
+      <RoundDone
+        correct={result.correct}
+        total={result.total}
+        stars={result.stars}
+        onAgain={() => setView('hub')}
+        againLabel={`${cfg.emoji} Til ${(cfg.kartTittel || cfg.tittel).toLowerCase()}`}
+        onHome={go}
+        before={
+          <>
+            {result.levelUp && (
+              <div className="bg-amber-100 text-amber-700 rounded-2xl px-5 py-3 font-extrabold text-lg flex items-center gap-2">
+                <span className="text-3xl">🎉</span>
+                <span>
+                  Nivå opp! Nå er du på nivå {result.nyttNivaa}: {nyDef.tittel} {nyO.emoji}
+                </span>
+              </div>
+            )}
+            {result.levelDown && (
+              <div className="bg-sky-100 text-sky-700 rounded-2xl px-5 py-3 font-extrabold text-lg flex items-center gap-2">
+                <span className="text-3xl">🦊</span>
+                <span>Reven tar deg med til nivå {result.nyttNivaa} en stund, så det blir litt lettere. Det er lurt å øve der det passer!</span>
+              </div>
+            )}
+            {result.sjefPassed === true && <div className="bg-amber-100 text-amber-700 rounded-2xl px-5 py-3 font-extrabold text-lg">👑 Du klarte sjefsoppgaven og hoppet til nivå {result.nyttNivaa}!</div>}
+            {result.sjefPassed === false && <div className="bg-sky-100 text-sky-700 rounded-2xl px-5 py-3 font-extrabold text-lg">Godt forsøk! Du fortsetter der du var, og får nytt tilbud neste gang du klarer alle {result.total === 5 ? 'fem' : 'åtte'}.</div>}
+            {result.kort?.length > 0 && (
+              <div className="bg-white rounded-2xl px-5 py-3 shadow flex flex-wrap items-center justify-center gap-3">
+                <span className="font-extrabold text-slate-600">{result.kort.length === 1 ? 'Nytt samlekort!' : 'Nye samlekort!'}</span>
+                {result.kort.map((k) => (
+                  <span key={k.id} className="flex items-center gap-1 bg-amber-50 rounded-xl px-3 py-1 font-bold text-slate-700">
+                    <span className="text-2xl">{k.emoji}</span> {k.navn}
+                  </span>
+                ))}
+              </div>
+            )}
+            {result.boss && (
+              <div data-testid="sjefstilbud" className="bg-amber-50 rounded-2xl px-5 py-3 flex flex-col items-center gap-2 text-center">
+                <p className="font-extrabold text-amber-700">Alle {result.total === 5 ? 'fem' : 'åtte'} riktige! Vil du prøve sjefsoppgaven og hoppe til nivå {result.boss}?</p>
+                <p className="text-sm font-bold text-slate-500">Fem oppgaver, ett forsøk på hver. Fire riktige gir hopp. Du mister ingenting om det ikke går.</p>
+                <BigButton color="bg-amber-500" className="max-w-full" onClick={() => startSjef(result.boss)}>
+                  👑 Ja, prøv sjefsoppgaven!
+                </BigButton>
+              </div>
+            )}
+          </>
+        }
+      >
         {!result.replay && (
-          <BigButton color="bg-fuchsia-500" onClick={startOppdrag}>
+          <BigButton color="bg-fuchsia-500" className="max-w-full" onClick={startOppdrag}>
             ▶️ Nytt oppdrag
           </BigButton>
         )}
@@ -216,7 +232,7 @@ export default function Stige({ cfg, go }) {
           </BigButton>
           {cfg.ekstra}
         </div>
-        <p className="text-center text-sm font-bold text-slate-500 mt-3">{def.lengde === 5 ? 'Fem oppgaver.' : 'Åtte oppgaver, to forsøk på hver.'} Alle åtte riktige gir tilbud om sjefsoppgave. Trykk på et nivå du har passert for å øve mer.</p>
+        <p className="text-center text-sm font-bold text-slate-500 mt-3">{def.lengde === 5 ? 'Fem oppgaver, to forsøk på hver. Alle fem riktige gir tilbud om sjefsoppgave.' : 'Åtte oppgaver, to forsøk på hver. Alle åtte riktige gir tilbud om sjefsoppgave.'} Trykk på et nivå du har passert for å øve mer.</p>
       </div>
       {cfg.hubEkstra}
       <Kart matte={state} onStart={startOppdrag} onReplay={startReplay} nivaer={cfg.nivaer} verdener={cfg.verdener} ikoner={cfg.ikoner} />
@@ -234,7 +250,8 @@ function Plassering({ cfg, stige, onDone, onHome }) {
   function velg(v) {
     sound.click()
     setStart(v)
-    const s = startPlassering({ start: v.nivaa, tak: v.tak ?? cfg.nivaer.length, maks: cfg.nivaer.length })
+    const trapp = cfg.start.map((x) => ({ start: x.nivaa, tak: x.tak ?? cfg.nivaer.length }))
+    const s = startPlassering({ start: v.nivaa, tak: v.tak ?? cfg.nivaer.length, maks: cfg.nivaer.length, trapp })
     setPl(s)
     setTask(oppgaveTilPlassering(s.pos, Math.random, stige))
   }

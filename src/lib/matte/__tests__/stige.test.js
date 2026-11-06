@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { emptyFag, mergeData, emptyData } from '../../profil.js'
 import { applyResult, applyBoss, settNivaa, oppdaterSvake, activeWeakTypes, sjefMaal } from '../stige.js'
-import { startPlassering, stegPlassering, START_NIVAA, TAK_NIVAA } from '../plassering.js'
+import { startPlassering, stegPlassering, START_NIVAA, TAK_NIVAA, TRAPP_MATTE } from '../plassering.js'
 import { kortstokk, trekkKort, oppdaterBoks, boksFor } from '../kort.js'
 import { buildMission, buildBoss, oppgaveTilPlassering, oppgaveFraNivaa, nivaaForType } from '../oppdrag.js'
 import { seeded } from '../../rng.js'
@@ -111,7 +111,7 @@ describe('bom-lista (A4)', () => {
   it('feil igjen nullstiller riktig-telleren', () => {
     let svake = { a: { bom: 1, riktig: 1 } }
     svake = oppdaterSvake(svake, [{ type: 'a', tag: 'svak', nivaa: 10, ok: false, counts: false }], 10)
-    expect(svake.a).toEqual({ bom: 2, riktig: 0 })
+    expect(svake.a).toMatchObject({ bom: 2, riktig: 0 })
   })
   it('nivå satt for hånd og nedflytting tømmer lista og rekkene', () => {
     const f = settNivaa(fagAt(38, { svake: { likning: { bom: 2, riktig: 0 } }, paaRad: 1, sjef: 40 }), 2)
@@ -157,8 +157,8 @@ describe('plasseringstest (A1)', () => {
     }
     expect(s.nivaa).toBe(15)
     expect(n).toBeLessThanOrEqual(12)
-    expect(Math.max(...sett)).toBe(15)
-    expect([...new Set(sett)]).toEqual([6, 8, 10, 12, 14, 15])
+    // 14 bestått rett under taket 15: plasseringen er gitt uten prøve på taket.
+    expect([...new Set(sett)]).toEqual([6, 8, 10, 12, 14])
   })
   it('kan alt til og med 9: består 6 og 8, bommer på 10, plasseres på 9', () => {
     let s = startPlassering({ start: 6, tak: 15, maks: 38 })
@@ -180,14 +180,17 @@ describe('plasseringstest (A1)', () => {
     expect(spurt).toEqual([6, 4, 2, 1])
     expect(s.nivaa).toBe(1)
   })
-  it('bommer på start, består lavere nivå: ett over det', () => {
-    let s = startPlassering({ start: 13, tak: 23, maks: 38 })
+  it('bommer på start: ned til startnivået i verdenen under og klatrer derfra', () => {
+    let s = startPlassering({ start: 13, tak: 23, maks: 38, trapp: TRAPP_MATTE })
     s = stegPlassering(s, false) // 13
-    expect(s.pos).toBe(11)
+    expect(s.pos).toBe(6)
+    expect(s.tak).toBe(15)
     s = stegPlassering(s, true)
-    s = stegPlassering(s, true) // besto 11
+    s = stegPlassering(s, true) // besto 6
+    expect(s.pos).toBe(8)
+    s = stegPlassering(s, false) // bom på 8
     expect(s.ferdig).toBe(true)
-    expect(s.nivaa).toBe(12)
+    expect(s.nivaa).toBe(7)
   })
   it('én feil på andre oppgave stopper også', () => {
     let s = startPlassering({ start: 1, tak: 7, maks: 38 })

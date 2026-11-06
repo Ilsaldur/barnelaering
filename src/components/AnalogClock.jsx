@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { timeFraVinkel } from '../lib/klokke/vinkel.js'
 
 // Analog klokke. Med `interactive` kan viserne dras med finger eller mus;
 // `step` er hvor mange minutter minuttviseren hopper i (5, 15, 30 eller 60).
@@ -27,9 +28,7 @@ export default function AnalogClock({ hour, minute, onChange, interactive = true
       const m = (Math.round(deg / (6 * step)) * step) % 60
       onChange?.(hour, m)
     } else if (active === 'hour') {
-      let h = Math.round(deg / 30) % 12
-      if (h === 0) h = 12
-      onChange?.(h, minute)
+      onChange?.(timeFraVinkel(deg, minute), minute)
     }
   }
 

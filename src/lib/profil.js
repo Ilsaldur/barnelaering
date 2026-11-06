@@ -91,8 +91,10 @@ export function migrerLesingSpor(fag) {
     skrive.plassert = true
     l.nivaa = 9
   }
-  const t = Date.now()
-  return { lesing: { ...l, updatedAt: Math.max(l.updatedAt || 0, t) }, skrive: { ...skrive, updatedAt: Math.max(skrive.updatedAt || 0, t) }, sprak: { ...sprak, updatedAt: Math.max(sprak.updatedAt || 0, t) } }
+  // Behold tidspunktet fra den gamle lesedataen, så en enhet med gamle data
+  // ikke vinner over nivåer som er satt på en annen enhet etter oppdateringen.
+  const t = l.updatedAt || 0
+  return { lesing: { ...l, updatedAt: t }, skrive: { ...skrive, updatedAt: Math.max(skrive.updatedAt || 0, t) }, sprak: { ...sprak, updatedAt: Math.max(sprak.updatedAt || 0, t) } }
 }
 
 // Gjør en lagret (kanskje gammel) profil komplett.

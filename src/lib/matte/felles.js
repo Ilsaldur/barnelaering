@@ -5,19 +5,28 @@ import { nearDistractors, mathDistractors } from '../distractors.js'
 export { shuffle, randInt, pick, nearDistractors, mathDistractors }
 
 export const EMOJIS = [
-  { e: '🍎', navn: 'epler' },
-  { e: '🎈', navn: 'ballonger' },
-  { e: '⭐', navn: 'stjerner' },
-  { e: '🍓', navn: 'jordbær' },
-  { e: '🐠', navn: 'fisker' },
-  { e: '🌸', navn: 'blomster' },
-  { e: '🍪', navn: 'kjeks' },
-  { e: '🚗', navn: 'biler' },
-  { e: '🐶', navn: 'hunder' },
-  { e: '🐝', navn: 'bier' },
-  { e: '🦋', navn: 'sommerfugler' },
-  { e: '🍒', navn: 'kirsebær' },
+  { e: '🍎', navn: 'epler', entall: 'eple' },
+  { e: '🎈', navn: 'ballonger', entall: 'ballong' },
+  { e: '⭐', navn: 'stjerner', entall: 'stjerne' },
+  { e: '🍓', navn: 'jordbær', entall: 'jordbær' },
+  { e: '🐠', navn: 'fisker', entall: 'fisk' },
+  { e: '🌸', navn: 'blomster', entall: 'blomst' },
+  { e: '🍪', navn: 'kjeks', entall: 'kjeks' },
+  { e: '🚗', navn: 'biler', entall: 'bil' },
+  { e: '🐶', navn: 'hunder', entall: 'hund' },
+  { e: '🐝', navn: 'bier', entall: 'bie' },
+  { e: '🦋', navn: 'sommerfugler', entall: 'sommerfugl' },
+  { e: '🍒', navn: 'kirsebær', entall: 'kirsebær' },
 ]
+
+// «1 eple», «3 epler»
+export function antall(n, em) {
+  return `${n} ${n === 1 ? em.entall : em.navn}`
+}
+// «1 tier», «3 tiere»
+export function tall(n, entall, flertall) {
+  return `${n} ${n === 1 ? entall : flertall}`
+}
 
 // Norsk tallformat: komma som desimaltegn.
 export function fmt(n) {

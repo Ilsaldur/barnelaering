@@ -1,16 +1,27 @@
 // Service worker for Selmas skole: lagrer appskallet så appen starter uten nett
 // etter første besøk. Hashede filer i /assets/ caches først (de endrer seg
 // aldri), sider hentes fra nettet først med cachet index.html som reserve.
-const CACHE = 'selmas-skole-v1'
+const CACHE = 'selmas-skole-v2'
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png']
 
+// Ved installasjon: lagre skallet, og hent skriptene og stilarkene som
+// index.html peker på, så appen starter uten nett allerede etter første besøk.
+async function hentSkall() {
+  const c = await caches.open(CACHE)
+  await c.addAll(SHELL)
+  try {
+    const res = await fetch('/index.html', { cache: 'no-cache' })
+    const html = await res.text()
+    await c.put('/index.html', new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } }))
+    const filer = [...html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map((m) => m[1])
+    await Promise.all(filer.map((f) => c.add(f).catch(() => {})))
+  } catch {
+    /* uten nett ved installasjon: skallet fylles ved neste besøk */
+  }
+}
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches
-      .open(CACHE)
-      .then((c) => c.addAll(SHELL))
-      .then(() => self.skipWaiting()),
-  )
+  event.waitUntil(hentSkall().then(() => self.skipWaiting()))
 })
 
 self.addEventListener('activate', (event) => {
@@ -48,7 +59,7 @@ self.addEventListener('fetch', (event) => {
       (hit) =>
         hit ||
         fetch(req).then((res) => {
-          if (res.ok && (url.pathname.startsWith('/assets/') || SHELL.includes(url.pathname))) {
+          if (res.ok && (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/flagg/') || SHELL.includes(url.pathname))) {
             const copy = res.clone()
             caches.open(CACHE).then((c) => c.put(req, copy))
           }

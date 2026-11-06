@@ -7,7 +7,9 @@ import { celebrate, resultMessage, resultTitle } from '../lib/scoring.js'
 
 // Felles resultatskjerm etter en runde. Feirer bare ved godt resultat;
 // ved svakt resultat får barnet en vennlig oppfordring til å prøve igjen.
-export default function RoundDone({ correct, total, stars, onAgain, onHome, onNext, againLabel = '🔁 En gang til', children }) {
+// `before` legges over knapperaden (sjefstilbud, nivåmeldinger, samlekort);
+// `children` er ekstra knapper. Raden brytes over flere linjer på smale skjermer.
+export default function RoundDone({ correct, total, stars, onAgain, onHome, onNext, againLabel = '🔁 En gang til', before = null, children }) {
   const [confetti, setConfetti] = useState(false)
   const message = resultMessage(stars, correct, total)
 
@@ -35,17 +37,22 @@ export default function RoundDone({ correct, total, stars, onAgain, onHome, onNe
         <div className="my-6">
           <StarRating earned={stars} />
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        {before && (
+          <div data-testid="resultat-meldinger" className="flex flex-col items-stretch gap-3 mb-4 max-w-xl mx-auto">
+            {before}
+          </div>
+        )}
+        <div data-testid="resultat-knapper" className="flex flex-wrap gap-3 justify-center">
           {onNext && stars === 3 && (
-            <BigButton color="bg-fuchsia-500" onClick={onNext}>
+            <BigButton color="bg-fuchsia-500" className="max-w-full" onClick={onNext}>
               🚀 Neste nivå!
             </BigButton>
           )}
-          <BigButton color="bg-emerald-500" onClick={onAgain}>
+          <BigButton color="bg-emerald-500" className="max-w-full" onClick={onAgain}>
             {againLabel}
           </BigButton>
           {children}
-          <BigButton color="bg-sky-500" onClick={onHome}>
+          <BigButton color="bg-sky-500" className="max-w-full" onClick={onHome}>
             🏠 Tilbake
           </BigButton>
         </div>

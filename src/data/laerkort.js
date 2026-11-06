@@ -239,7 +239,7 @@ export const LAERKORT = [
     stegForType: { skriv_sammensatte: 2 },
     steg: [
       { tekst: 'Noen bokstaver skrives, men høres ikke. H-en i hjul, hjerte og hvit er stum.', figur: { visual: { kind: 'ordkort', tekst: 'hjul · hvit' } } },
-      { tekst: 'G-en i gjest, gjerde og deig er også stum. Ordet begynner med gj, men du hører bare j.', figur: { visual: { kind: 'ordkort', tekst: 'gjest · deig' } } },
+      { tekst: 'G-en i gjest og gjerde er også stum: ordet begynner med gj, men du hører bare j. I deig er g-en stum til slutt.', figur: { visual: { kind: 'ordkort', tekst: 'gjest · deig' } } },
       { tekst: 'Sammensatte ord er to ord som blir ett, skrevet i ett: fot + ball = fotball. Aldri mellomrom.', figur: { visual: { kind: 'ordkort', tekst: 'fot + ball = fotball' } } },
     ],
   },

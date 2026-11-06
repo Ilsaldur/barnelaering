@@ -5,6 +5,7 @@ import Keypad, { parseAnswer } from '../components/Keypad.jsx'
 import { Visual, Help } from '../components/TaskVisual.jsx'
 import AnalogClock from '../components/AnalogClock.jsx'
 import VerdensKart from '../components/VerdensKart.jsx'
+import Flagg from '../components/Flagg.jsx'
 import { landById } from '../data/geo/land.js'
 import { laerkortForType, stegForType } from '../data/laerkort.js'
 import { Visual as KortVisual, Help as KortHelp } from '../components/TaskVisual.jsx'
@@ -52,7 +53,7 @@ function TapLine({ line, picked, answer, disabled, onPick }) {
 // Én oppgave: to forsøk, Hjelp-knapp, løsning med forklaring etter andre feil.
 // onAnswer({ ok, forste, hjelp }) kalles når oppgaven er ferdig (riktig eller etter to feil).
 // Bare første forsøk uten hjelp teller mot nivået; det regner den som kaller ut.
-export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index, total, fag = 'matte', noHelp = false, placement = false, practice = false, onLaer = null }) {
+export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index, total, fag = 'matte', noHelp = false, placement = false, practice = false, onLaer = null, frosset = false }) {
   const { recordAttempt } = useStars()
   const [attempt, setAttempt] = useState(1)
   const [input, setInput] = useState('')
@@ -121,7 +122,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
   }
 
   function submit(value) {
-    if (feedback === 'right' || feedback === 'solution') return
+    if (feedback === 'right' || feedback === 'solution' || frosset) return
     setPicked(value)
     const ok = isCorrect(value)
     const forste = attempt === 1
@@ -152,6 +153,8 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
   }
 
   const done = feedback === 'right' || feedback === 'solution'
+  // Låst: ferdig, i «prøv igjen»-pausen, eller mens et kort ligger oppå.
+  const laast = done || feedback === 'retry' || frosset
   const canHelp = !!task.hjelp && !noHelp
 
   return (
@@ -170,6 +173,22 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
       {task.visual && (
         <div className="my-3">
           <Visual visual={task.visual} />
+        </div>
+      )}
+
+      {task.lesTekst && !placement && !done && (
+        <div className="text-center my-2">
+          <button
+            type="button"
+            onClick={() => {
+              sound.click()
+              setUsedHelp(true)
+              speech.speak(task.lesTekst, { lang })
+            }}
+            className="kid-btn bg-violet-100 text-violet-700 text-base px-4 py-2"
+          >
+            📖 Les teksten for meg
+          </button>
         </div>
       )}
 
@@ -235,11 +254,11 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
             return (
               <button
                 key={String(opt)}
-                disabled={done || feedback === 'retry'}
+                disabled={laast}
                 onClick={() => submit(opt)}
                 className={`kid-btn ${color} text-white py-5 md:py-6 relative ${big ? 'text-4xl md:text-5xl' : 'text-2xl md:text-3xl'} ${done && isAnswer ? 'animate-bouncey' : ''} ${feedback === 'retry' && isPicked ? 'animate-shake' : ''}`}
               >
-                {label}
+                {task.optionFlagg ? <Flagg kode={String(opt)} navn={task.optionFlagg[opt]} className="w-24 md:w-32 mx-auto" /> : label}
                 {task.optionsLang && (
                   <span
                     role="button"
@@ -267,7 +286,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
             let color = v ? 'bg-emerald-500' : 'bg-rose-500'
             if (done) color = isAnswer ? 'bg-emerald-500' : isPicked ? 'bg-rose-400' : 'bg-slate-300'
             return (
-              <button key={String(v)} disabled={done || feedback === 'retry'} onClick={() => submit(v)} className={`kid-btn ${color} text-white text-3xl md:text-4xl py-6 ${done && isAnswer ? 'animate-bouncey' : ''} ${feedback === 'retry' && isPicked ? 'animate-shake' : ''}`}>
+              <button key={String(v)} disabled={laast} onClick={() => submit(v)} className={`kid-btn ${color} text-white text-3xl md:text-4xl py-6 ${done && isAnswer ? 'animate-bouncey' : ''} ${feedback === 'retry' && isPicked ? 'animate-shake' : ''}`}>
                 {v ? '✅ Sant' : '❌ Usant'}
               </button>
             )
@@ -277,7 +296,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
 
       {task.form === 'still' && (
         <div className="mt-2">
-          <AnalogClock hour={klokke.h} minute={klokke.m} step={task.step || 5} interactive={!done && feedback !== 'retry'} onChange={(h, m) => setKlokke({ h, m })} />
+          <AnalogClock hour={klokke.h} minute={klokke.m} step={task.step || 5} interactive={!laast} onChange={(h, m) => setKlokke({ h, m })} />
           {done ? (
             <div className="flex justify-center gap-6 mt-2 text-sm font-bold text-slate-500">
               <span>Du: {klokke.h}:{String(klokke.m).padStart(2, '0')}</span>
@@ -302,7 +321,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
             if (done) ring = isAnswer ? 'ring-4 ring-emerald-500' : isPicked ? 'ring-4 ring-rose-400' : 'ring-4 ring-transparent opacity-50'
             else if (feedback === 'retry' && isPicked) ring = 'ring-4 ring-rose-400'
             return (
-              <button key={opt.value} disabled={done || feedback === 'retry'} onClick={() => submit(opt.value)} className={`rounded-3xl bg-white p-2 shadow hover:scale-105 transition-transform ${ring} ${done && isAnswer ? 'animate-bouncey' : ''}`}>
+              <button key={opt.value} disabled={laast} onClick={() => submit(opt.value)} className={`rounded-3xl bg-white p-2 shadow hover:scale-105 transition-transform ${ring} ${done && isAnswer ? 'animate-bouncey' : ''}`}>
                 <AnalogClock hour={opt.h} minute={opt.m} interactive={false} size={200} className="w-32 h-32 md:w-40 md:h-40" />
               </button>
             )
@@ -312,7 +331,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
 
       {task.form === 'kart' && (
         <div className="mt-3">
-          <VerdensKart region={task.region} picked={picked} answer={done ? task.answer : null} disabled={done || feedback === 'retry'} onPick={(id) => submit(id)} />
+          <VerdensKart region={task.region} picked={picked} answer={done ? task.answer : null} disabled={laast} onPick={(id) => submit(id)} />
           {picked && !done && feedback === 'retry' && <p className="text-center text-sm font-bold text-slate-500 mt-1">Du trykket på {landById(picked)?.navn || 'et annet land'}.</p>}
         </div>
       )}
@@ -334,7 +353,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
               return (
                 <button
                   key={i}
-                  disabled={done || used || feedback === 'retry'}
+                  disabled={laast || used}
                   onClick={() => {
                     sound.click()
                     const next = [...seq, v]
@@ -360,7 +379,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
 
       {task.form === 'tallinje' && (
         <div className="mt-4">
-          <TapLine line={task.line} picked={picked} answer={done ? task.answer : null} disabled={done || feedback === 'retry'} onPick={(v) => submit(v)} />
+          <TapLine line={task.line} picked={picked} answer={done ? task.answer : null} disabled={laast} onPick={(v) => submit(v)} />
         </div>
       )}
 
@@ -387,7 +406,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
             spellCheck={false}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            disabled={feedback === 'retry'}
+            disabled={feedback === 'retry' || frosset}
             placeholder="skriv her"
             className="w-full text-center rounded-2xl border-4 border-slate-200 px-4 py-3 text-3xl font-extrabold text-slate-700 focus:border-sky-400 outline-none tracking-wide"
           />
@@ -399,7 +418,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
 
       {task.form === 'tastatur' && !done && (
         <div className={`mt-4 ${feedback === 'retry' ? 'animate-shake' : ''}`}>
-          <Keypad value={input} onChange={setInput} onSubmit={() => submit(input)} allowNegative={!!task.allowNegative} allowDecimal={!!task.allowDecimal} disabled={feedback === 'retry'} unit={task.unit} />
+          <Keypad value={input} onChange={setInput} onSubmit={() => submit(input)} allowNegative={!!task.allowNegative} allowDecimal={!!task.allowDecimal} disabled={feedback === 'retry' || frosset} unit={task.unit} />
         </div>
       )}
 
@@ -481,7 +500,7 @@ export default function Oppdrag({ tasks, title, hjelpStart = false, onDone, onHo
         <div className="bg-amber-400 h-full transition-all duration-300" style={{ width: `${(i / tasks.length) * 100}%` }} />
       </div>
       {laer && <LaerKort kort={laer} stige={stige} modus="laer" fag={fag} onDone={() => setLaer(null)} />}
-      <TaskCard key={i} task={task} index={i} total={tasks.length} onDone={next} hjelpStart={hjelpStart} fag={fag} attempts={attempts} noHelp={noHelp} onLaer={stige ? (k) => setLaer(k) : null} />
+      <TaskCard key={i} task={task} index={i} total={tasks.length} onDone={next} hjelpStart={hjelpStart} fag={fag} attempts={attempts} noHelp={noHelp} onLaer={stige ? (k) => setLaer(k) : null} frosset={!!laer} />
     </div>
   )
 }

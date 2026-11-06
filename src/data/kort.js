@@ -16,7 +16,7 @@ export const KORT = [
   { id: 'dyr-rev', sett: 'dyr', nivaa: 3, navn: 'Rev', emoji: '🦊', fakta: 'Reven kan høre en mus under snøen.' },
   { id: 'dyr-hare', sett: 'dyr', nivaa: 4, navn: 'Hare', emoji: '🐇', fakta: 'Haren blir hvit om vinteren og brun om sommeren.' },
   { id: 'dyr-ugle', sett: 'dyr', nivaa: 5, navn: 'Hubro', emoji: '🦉', fakta: 'Hubroen er Norges største ugle og kan snu hodet nesten helt rundt.' },
-  { id: 'dyr-elg', sett: 'dyr', nivaa: 6, navn: 'Elg', emoji: '🫎', fakta: 'Elgen er skogens konge og kan bli over to meter høy.' },
+  { id: 'dyr-elg', sett: 'dyr', nivaa: 6, navn: 'Elg', emoji: '🦌', fakta: 'Elgen er skogens konge og kan bli over to meter høy.' },
   // Det blå havet (7–14): dyr i og ved havet
   { id: 'dyr-sel', sett: 'dyr', nivaa: 7, navn: 'Sel', emoji: '🦭', fakta: 'Selen kan holde pusten i over 20 minutter.' },
   { id: 'dyr-torsk', sett: 'dyr', nivaa: 8, navn: 'Torsk', emoji: '🐟', fakta: 'Torsken har en skjeggtråd under haken som den kjenner med.' },

@@ -2,6 +2,17 @@
 import { pick, shuffle } from '../rng.js'
 import { registerTypeLabels } from '../labels.js'
 import { landFor, VERDENSDELER } from '../../data/geo/land.js'
+import { storeNokPaaVerdenskart } from './topo.js'
+
+// På verdenskartet spørres det bare etter land som synes godt (minst 24 × 24
+// punkter på mobil). Små europeiske land hører til Europa-kartet.
+let storeIds = null
+function kartPool(region) {
+  const pool = landFor(region)
+  if (region !== 'verden') return pool
+  if (!storeIds) storeIds = new Set(storeNokPaaVerdenskart(pool.map((l) => l.id)))
+  return pool.filter((l) => storeIds.has(l.id))
+}
 
 function andre(pool, l, n, rng) {
   return shuffle(
@@ -21,10 +32,10 @@ export const GEN_GEO = {
       form: 'valg',
       prompt: 'Hvilket land har dette flagget?',
       spoken: 'Hvilket land har dette flagget?',
-      visual: { kind: 'ikon', emoji: l.flagg },
+      visual: { kind: 'flagg', kode: l.kode, navn: l.navn },
       answer: l.navn,
       options: shuffle([l.navn, ...feil.map((x) => x.navn)], rng),
-      explain: `${l.flagg} er flagget til ${l.navn}.`,
+      explain: `Dette er flagget til ${l.navn}.`,
       readOptions: true,
     }
   },
@@ -38,10 +49,10 @@ export const GEN_GEO = {
       form: 'valg',
       prompt: `Hvilket flagg er ${l.navn} sitt?`,
       spoken: `Hvilket flagg er ${l.navn} sitt?`,
-      answer: l.flagg,
-      options: shuffle([l.flagg, ...feil.map((x) => x.flagg)], rng),
-      explain: `${l.navn} har flagget ${l.flagg}.`,
-      stor: true,
+      answer: l.kode,
+      options: shuffle([l.kode, ...feil.map((x) => x.kode)], rng),
+      optionFlagg: Object.fromEntries([l, ...feil].map((x) => [x.kode, x.navn])),
+      explain: `Nå vet du hvordan flagget til ${l.navn} ser ut.`,
     }
   },
   // Hovedstad.
@@ -55,7 +66,7 @@ export const GEN_GEO = {
         form: 'valg',
         prompt: `Hva er hovedstaden i ${l.navn}?`,
         spoken: `Hva er hovedstaden i ${l.navn}?`,
-        visual: { kind: 'ikon', emoji: l.flagg },
+        visual: { kind: 'flagg', kode: l.kode, navn: l.navn },
         answer: l.hovedstad,
         options: shuffle([l.hovedstad, ...feil.map((x) => x.hovedstad)], rng),
         explain: `Hovedstaden i ${l.navn} er ${l.hovedstad}.`,
@@ -75,7 +86,7 @@ export const GEN_GEO = {
   },
   // Finn landet på kartet.
   finn_paa_kart: ({ region = 'norden' }, rng) => {
-    const pool = landFor(region)
+    const pool = kartPool(region)
     const l = pick(pool, rng)
     return {
       type: `kart_${region}`,
@@ -84,14 +95,14 @@ export const GEN_GEO = {
       spoken: `Trykk på ${l.navn} på kartet.`,
       region,
       answer: l.id,
-      explain: `${l.navn} ${l.flagg} er markert med grønt.`,
+      explain: `${l.navn} er markert med grønt.`,
     }
   },
   // Hvilket land er markert?
   hvilket_land: ({ region = 'norden' }, rng) => {
-    const pool = landFor(region)
+    const pool = kartPool(region)
     const l = pick(pool, rng)
-    const feil = andre(pool, l, 3, rng)
+    const feil = andre(landFor(region), l, 3, rng)
     return {
       type: `kart_${region}`,
       form: 'valg',
@@ -100,13 +111,13 @@ export const GEN_GEO = {
       visual: { kind: 'kart', region, highlight: l.id },
       answer: l.navn,
       options: shuffle([l.navn, ...feil.map((x) => x.navn)], rng),
-      explain: `Det rosa landet er ${l.navn} ${l.flagg}.`,
+      explain: `Det rosa landet er ${l.navn}.`,
       readOptions: true,
     }
   },
   // Verdensdel.
   verdensdel: (_, rng) => {
-    const pool = landFor('verden').filter((l) => l.region === 'verden' || l.region === 'norden')
+    const pool = landFor('verden').filter((l) => (l.region === 'verden' || l.region === 'norden') && !l.ikkeVerdensdel)
     const l = pick(pool, rng)
     return {
       type: 'verdensdel',

@@ -15,7 +15,7 @@ export const ORD = {
     { en: 'black', no: 'svart', emoji: '⚫' },
     { en: 'white', no: 'hvit', emoji: '⚪' },
     { en: 'brown', no: 'brun', emoji: '🟤' },
-    { en: 'pink', no: 'rosa', emoji: '🩷' },
+    { en: 'pink', no: 'rosa', emoji: '💗' },
   ],
   tall: [
     { en: 'one', no: 'én', emoji: '1️⃣' },
@@ -66,7 +66,7 @@ export const ORD = {
     { en: 'door', no: 'dør', emoji: '🚪' },
     { en: 'bed', no: 'seng', emoji: '🛏️' },
     { en: 'chair', no: 'stol', emoji: '🪑' },
-    { en: 'table', no: 'bord', emoji: '🪵' },
+    { en: 'lamp', no: 'lampe', emoji: '💡' },
     { en: 'book', no: 'bok', emoji: '📖' },
     { en: 'ball', no: 'ball', emoji: '⚽' },
     { en: 'car', no: 'bil', emoji: '🚗' },

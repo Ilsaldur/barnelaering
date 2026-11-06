@@ -36,7 +36,7 @@ export function oppdaterSvake(svake, perTask, nivaa) {
         else out[r.type] = { ...cur, riktig }
       }
     } else if (!r.ok) {
-      out[r.type] = { bom: (cur?.bom || 0) + 1, riktig: 0 }
+      out[r.type] = { bom: (cur?.bom || 0) + 1, riktig: 0, nivaa: r.nivaa ?? cur?.nivaa ?? nivaa }
     }
   }
   return out
@@ -50,8 +50,9 @@ export function applyResult(fag, { correct, total = OPPDRAG_LENGDE, nivaa, perTa
   next.beste[nivaa] = Math.max(next.beste[nivaa] || 0, events.stars)
   next.svake = oppdaterSvake(fag.svake, perTask, nivaa)
 
-  const oppGrense = Math.ceil((total * 7) / 8)
-  const sammeGrense = Math.ceil((total * 5) / 8)
+  // 8 oppgaver: 7–8 godt, 5–6 nøytralt, 0–4 svakt. 5 oppgaver: 4–5 godt, 3 nøytralt, 0–2 svakt.
+  const oppGrense = total === 5 ? 4 : Math.ceil((total * 7) / 8)
+  const sammeGrense = total === 5 ? 3 : Math.ceil((total * 5) / 8)
   if (hjelpModus && correct >= sammeGrense) {
     // Et oppdrag i hjelpemodus gir aldri paaRad + 1 og aldri sjefsoppgave.
     // Går det bra, slås hjelpemodus av.
@@ -107,7 +108,10 @@ export function settNivaa(fag, nivaa) {
   return { ...fag, nivaa, plassert: true, paaRad: 0, svakRad: 0, hjelpNeste: false, sjef: null, svake: {} }
 }
 
-// Hvilke svake typer gjelder nå (alle på lista).
+// Hvilke svake typer gjelder nå (alle på lista), med nivået bommen kom fra.
 export function activeWeakTypes(fag) {
   return Object.keys(fag.svake || {})
+}
+export function weakEntries(fag) {
+  return Object.entries(fag.svake || {}).map(([type, v]) => ({ type, nivaa: v?.nivaa ?? null }))
 }

@@ -1,6 +1,7 @@
 import { NumberLine } from './ui.jsx'
 import AnalogClock from './AnalogClock.jsx'
 import VerdensKart from './VerdensKart.jsx'
+import Flagg from './Flagg.jsx'
 
 // Tegner det visuelle i en oppgave (visual) og hjelpen bak Hjelp-knappen (hjelp).
 // Alle «kind»-verdiene lages av generatorene i src/lib/matte/.
@@ -246,6 +247,12 @@ export function Visual({ visual }) {
       const hender = n <= 5 ? [en[n]] : ['🖐️', en[n - 5]]
       return <div className="text-center text-7xl md:text-8xl tracking-widest">{hender.join(' ')}</div>
     }
+    case 'flagg':
+      return (
+        <div className="text-center">
+          <Flagg kode={visual.kode} navn={visual.navn} className="w-40 md:w-56 mx-auto" />
+        </div>
+      )
     case 'klokke':
       return <AnalogClock hour={visual.h} minute={visual.m} interactive={false} className="w-56 h-56 md:w-72 md:h-72" />
     case 'digital':

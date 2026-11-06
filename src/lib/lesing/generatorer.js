@@ -155,7 +155,8 @@ export const GEN_LESING = {
       type: 'setning_bilde',
       form: 'valg',
       prompt: s.tekst,
-      spoken: `Les setningen og finn bildet som passer. ${s.tekst}`,
+      spoken: 'Les setningen og finn bildet som passer.',
+      lesTekst: s.tekst,
       visual: null,
       answer: s.svar,
       options: shuffle([s.svar, ...s.feil], rng),
@@ -172,7 +173,8 @@ export const GEN_LESING = {
       type: q.type === 'faktamening' ? 'fakta_mening' : 'tekst_sporsmaal',
       form: 'valg',
       prompt: q.q,
-      spoken: `${t.tittel}. ${t.tekst} Spørsmål: ${q.q}`,
+      spoken: `Les teksten og svar: ${q.q}`,
+      lesTekst: `${t.tittel}. ${t.tekst}`,
       visual: { kind: 'tekst', tittel: t.tittel, tekst: t.tekst },
       answer: q.svar,
       options: shuffle(q.alternativer, rng),
@@ -194,7 +196,8 @@ export const GEN_LESING = {
       type: `tekst_${type}`,
       form: 'valg',
       prompt: q.q,
-      spoken: `${t.tittel}. ${t.tekst} Spørsmål: ${q.q}`,
+      spoken: `Les teksten og svar: ${q.q}`,
+      lesTekst: `${t.tittel}. ${t.tekst}`,
       visual: { kind: 'tekst', tittel: t.tittel, tekst: t.tekst },
       answer: q.svar,
       options: shuffle(q.alternativer, rng),
@@ -321,6 +324,43 @@ export const GEN_LESING = {
       explain: 'Stor bokstav først i setningen og i navn på folk og steder.',
     }
   },
+}
+
+// Tekstoppdrag (Lese 8–12): `antall` ulike spørsmål fra én tekst. `unntatt` er
+// tekst-id-er som ikke skal brukes (så to tekster i samme oppdrag er ulike).
+function tekstPool(type, param) {
+  if (type === 'tekst2') return teksterAvType(param.type || 'slutning')
+  const maksOrd = param.maksOrd || 80
+  const pool = TEKSTER.filter((t) => antallOrd(t.tekst) <= maksOrd && t.sporsmaal.some((q) => q.type !== 'mening'))
+  return pool.length ? pool : TEKSTER
+}
+
+export function lagTekstOppgaver(type, param = {}, antall = 3, rng = Math.random, unntatt = []) {
+  const nok = (t) => t.sporsmaal.filter((q) => q.type !== 'mening').length >= antall
+  const alle = tekstPool(type, param)
+  const pool = alle.filter((t) => !unntatt.includes(t.id) && nok(t))
+  const t = pick(pool.length ? pool : alle.filter(nok).length ? alle.filter(nok) : alle, rng)
+  const sporsmaal = shuffle(
+    t.sporsmaal.filter((q) => q.type !== 'mening'),
+    rng,
+  ).slice(0, antall)
+  const forklaring = {
+    slutning: 'Svaret står ikke rett i teksten. Let etter spor og tenk: hva må være sant?',
+    ordforraad: 'Les setningen rundt ordet en gang til. Ordene omkring forteller hva det betyr.',
+    hovedtanke: 'Hovedtanken er det hele teksten handler om, ikke én detalj.',
+  }[param.type]
+  return sporsmaal.map((q) => ({
+    type: type === 'tekst2' ? `tekst_${param.type}` : q.type === 'faktamening' ? 'fakta_mening' : 'tekst_sporsmaal',
+    form: 'valg',
+    prompt: q.q,
+    spoken: `Les teksten og svar: ${q.q}`,
+    lesTekst: `${t.tittel}. ${t.tekst}`,
+    visual: { kind: 'tekst', tittel: t.tittel, tekst: t.tekst },
+    answer: q.svar,
+    options: shuffle(q.alternativer, rng),
+    explain: forklaring ? `${forklaring} Riktig svar: «${q.svar}».` : q.type === 'faktamening' ? (q.svar === 'Fakta' ? 'Det er fakta: det kan sjekkes og er sant for alle.' : 'Det er en mening: noen kan mene noe annet.') : `Svaret står i teksten: «${q.svar}».`,
+    tekstId: t.id,
+  }))
 }
 
 export function genLesing(type, param = {}, rng = Math.random) {

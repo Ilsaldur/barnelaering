@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Stige from './Stige.jsx'
 import VerdensKart from '../components/VerdensKart.jsx'
+import Flagg from '../components/Flagg.jsx'
 import { BigButton } from '../components/ui.jsx'
 import { SpeakButton } from '../components/Speak.jsx'
 import { sound } from '../sound.js'
@@ -50,7 +51,7 @@ function Utforsk({ onClose }) {
       <div className="text-center mt-3 min-h-[4rem]">
         {l ? (
           <div className="flex items-center justify-center gap-3">
-            <span className="text-5xl">{l.flagg}</span>
+            <Flagg kode={l.kode} navn={l.navn} className="w-20" />
             <div className="text-left">
               <p className="text-2xl font-extrabold text-slate-700">{l.navn}</p>
               <p className="text-slate-500 font-bold">Hovedstad: {l.hovedstad}</p>

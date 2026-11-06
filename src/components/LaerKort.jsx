@@ -43,19 +43,21 @@ export default function LaerKort({ kort, stige, modus = 'forst', onDone, onSkip,
             <span className="font-extrabold text-slate-700">🧪 Prøv selv · {pi + 1} av {prov.length}</span>
             <span className="text-xs font-bold text-slate-400">teller ikke</span>
           </div>
-          <TaskCard
-            key={pi}
-            task={task}
-            attempts={1}
-            practice
-            fag={fag}
-            index={pi}
-            total={prov.length}
-            onDone={() => {
-              if (pi + 1 >= prov.length) onDone()
-              else setPi(pi + 1)
-            }}
-          />
+          <div className="bg-white rounded-3xl shadow-2xl">
+            <TaskCard
+              key={pi}
+              task={task}
+              attempts={1}
+              practice
+              fag={fag}
+              index={pi}
+              total={prov.length}
+              onDone={() => {
+                if (pi + 1 >= prov.length) onDone()
+                else setPi(pi + 1)
+              }}
+            />
+          </div>
         </div>
       </div>
     )
