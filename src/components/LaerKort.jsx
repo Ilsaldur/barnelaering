@@ -11,7 +11,7 @@ import { oppgaveFraNivaa } from '../lib/matte/oppdrag.js'
 // «Prøv selv» med tre oppgaver fra nivåets generator der ingenting teller.
 //   modus 'forst'  → vises før et oppdrag, med «Jeg kan dette» og «Prøv selv»
 //   modus 'laer'   → åpnet fra Lær-knappen i en oppgave, uten «Prøv selv»
-export default function LaerKort({ kort, stige, modus = 'forst', onDone, onSkip, fag }) {
+export default function LaerKort({ kort, stige, sett = [], modus = 'forst', onDone, onSkip, fag }) {
   const [i, setI] = useState(0)
   const [prov, setProv] = useState(null) // oppgaver i «Prøv selv»
   const [pi, setPi] = useState(0)
@@ -29,7 +29,8 @@ export default function LaerKort({ kort, stige, modus = 'forst', onDone, onSkip,
   function startProv() {
     sound.click()
     speech.stop()
-    const tasks = Array.from({ length: 3 }, () => oppgaveFraNivaa(kort.nivaa, Math.random, stige))
+    const tasks = []
+    for (let k = 0; k < 3; k++) tasks.push(oppgaveFraNivaa(kort.nivaa, Math.random, stige, { brukt: tasks, sett }))
     setProv(tasks)
     setPi(0)
   }

@@ -29,6 +29,7 @@ export const GEN_GEO = {
     const feil = andre(pool, l, 3, rng)
     return {
       type: `flagg_${region}`,
+      emne: l.id,
       form: 'valg',
       prompt: 'Hvilket land har dette flagget?',
       spoken: 'Hvilket land har dette flagget?',
@@ -46,6 +47,7 @@ export const GEN_GEO = {
     const feil = andre(pool, l, 3, rng)
     return {
       type: `flagg_${region}`,
+      emne: l.id,
       form: 'valg',
       prompt: `Hvilket flagg er ${l.navn} sitt?`,
       spoken: `Hvilket flagg er ${l.navn} sitt?`,
@@ -63,6 +65,7 @@ export const GEN_GEO = {
     if (rng() < 0.5) {
       return {
         type: `hovedstad_${region}`,
+        emne: l.id,
         form: 'valg',
         prompt: `Hva er hovedstaden i ${l.navn}?`,
         spoken: `Hva er hovedstaden i ${l.navn}?`,
@@ -75,6 +78,7 @@ export const GEN_GEO = {
     }
     return {
       type: `hovedstad_${region}`,
+      emne: l.id,
       form: 'valg',
       prompt: `${l.hovedstad} er hovedstaden i …`,
       spoken: `${l.hovedstad} er hovedstaden i hvilket land?`,
@@ -90,6 +94,7 @@ export const GEN_GEO = {
     const l = pick(pool, rng)
     return {
       type: `kart_${region}`,
+      emne: l.id,
       form: 'kart',
       prompt: `Trykk på ${l.navn} på kartet.`,
       spoken: `Trykk på ${l.navn} på kartet.`,
@@ -105,6 +110,7 @@ export const GEN_GEO = {
     const feil = andre(landFor(region), l, 3, rng)
     return {
       type: `kart_${region}`,
+      emne: l.id,
       form: 'valg',
       prompt: 'Hvilket land er markert med rosa?',
       spoken: 'Hvilket land er markert med rosa på kartet?',
@@ -121,6 +127,7 @@ export const GEN_GEO = {
     const l = pick(pool, rng)
     return {
       type: 'verdensdel',
+      emne: l.id,
       form: 'valg',
       prompt: `I hvilken verdensdel ligger ${l.navn}?`,
       spoken: `I hvilken verdensdel ligger ${l.navn}?`,

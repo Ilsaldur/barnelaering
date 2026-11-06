@@ -89,6 +89,7 @@ export const GEN_LESING = {
     const others = shuffle(LYDRETTE_ORD.filter((x) => x.ord !== o.ord), rng).slice(0, 3)
     return {
       type: 'lydering_bilde',
+      emne: o.ord,
       form: 'valg',
       prompt: 'Trekk lydene sammen. Hvilket bilde passer?',
       spoken: `Hør lydene: ${[...o.ord].join(', ')}. Hvilket ord blir det?`,
@@ -106,6 +107,7 @@ export const GEN_LESING = {
     const others = shuffle(LYDRETTE_ORD.filter((x) => x.ord !== o.ord), rng).slice(0, 3)
     return {
       type: 'les_ord_bilde',
+      emne: o.ord,
       form: 'valg',
       prompt: 'Les ordet. Hvilket bilde passer?',
       spoken: 'Les ordet. Hvilket bilde passer?',
@@ -123,6 +125,7 @@ export const GEN_LESING = {
     const others = shuffle(pool.filter((x) => x.ord !== o.ord), rng).slice(0, 3)
     return {
       type: 'bilde_ord',
+      emne: o.ord,
       form: 'valg',
       prompt: 'Hvilket ord passer til bildet?',
       spoken: `Hvilket ord er ${o.ord}?`,
@@ -137,6 +140,7 @@ export const GEN_LESING = {
     const w = pick(VANLIGE_ORD, rng)
     return {
       type: 'vanlig_ord',
+      emne: w,
       form: 'valg',
       kreverLyd: true,
       prompt: 'Hvilket ord hører du?',
@@ -153,6 +157,7 @@ export const GEN_LESING = {
     const s = pick(SETNINGER, rng)
     return {
       type: 'setning_bilde',
+      emne: s.tekst,
       form: 'valg',
       prompt: s.tekst,
       spoken: 'Les setningen og finn bildet som passer.',
@@ -210,6 +215,7 @@ export const GEN_LESING = {
     const o = pick(RETTSKRIVING[gruppe] || RETTSKRIVING.diftonger, rng)
     return {
       type: `skriv_${gruppe}`,
+      emne: o.ord,
       form: 'skriv',
       kreverLyd: true,
       prompt: 'Skriv ordet du hører.',
@@ -225,6 +231,7 @@ export const GEN_LESING = {
     const o = pick(RETTSKRIVING[gruppe] || RETTSKRIVING.diftonger, rng)
     return {
       type: `skriv_${gruppe}`,
+      emne: o.ord,
       form: 'valg',
       prompt: 'Hvilket ord er riktig skrevet?',
       spoken: `Hvilket ord er riktig skrevet? Ordet er ${o.ord}.`,
@@ -241,6 +248,7 @@ export const GEN_LESING = {
     const navn = { substantiv: 'Substantiv', verb: 'Verb', adjektiv: 'Adjektiv' }
     return {
       type: 'ordklasse',
+      emne: w,
       form: 'valg',
       prompt: `Hva slags ord er «${w}»?`,
       spoken: `Hva slags ord er ${w}? Substantiv, verb eller adjektiv?`,
@@ -258,6 +266,7 @@ export const GEN_LESING = {
     const feil = shuffle(andre.flatMap((k) => ORDKLASSER[k]), rng).slice(0, 3)
     return {
       type: 'ordklasse',
+      emne: w,
       form: 'valg',
       prompt: `Hvilket ord er et ${klasse}?`,
       spoken: `Hvilket ord er et ${klasse}?`,
@@ -271,6 +280,7 @@ export const GEN_LESING = {
     const b = pick(BOYING, rng)
     return {
       type: 'boying',
+      emne: b.setning,
       form: 'valg',
       prompt: b.setning,
       spoken: `Fyll inn: ${b.setning.replace('___', 'hva')}`,
@@ -286,6 +296,7 @@ export const GEN_LESING = {
     const alle = MOTSETNINGER.flat().filter((w) => w !== a && w !== b)
     return {
       type: 'motsetning',
+      emne: [...par].sort().join('/'),
       form: 'valg',
       prompt: `Hva er det motsatte av «${a}»?`,
       spoken: `Hva er det motsatte av ${a}?`,
@@ -301,6 +312,7 @@ export const GEN_LESING = {
     const navn = { '.': 'punktum', '?': 'spørsmålstegn', '!': 'utropstegn' }
     return {
       type: 'tegnsetting',
+      emne: t.setning,
       form: 'valg',
       prompt: `Hvilket tegn skal stå sist? «${t.setning} _»`,
       spoken: `Hvilket tegn skal stå sist i setningen: ${t.setning}? Punktum, spørsmålstegn eller utropstegn?`,
@@ -316,6 +328,7 @@ export const GEN_LESING = {
     const s = pick(STOR_BOKSTAV, rng)
     return {
       type: 'stor_bokstav',
+      emne: s.riktig,
       form: 'valg',
       prompt: 'Hvilken setning er riktig skrevet?',
       spoken: `Hvilken setning har stor bokstav på riktig sted? ${s.riktig}`,

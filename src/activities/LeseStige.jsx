@@ -49,6 +49,7 @@ function SporStige({ def, go }) {
     verdener: def.verdener,
     gen: genLesing,
     tekstOppgaver: lagTekstOppgaver,
+    emneMaks: def.id === 'skrive' ? 1 : undefined, // Skrive riktig: et ord høyst én gang per oppdrag
     omraadeFor: def.omraadeFor,
     start: def.id === 'lesing' ? START_LESE : [],
     ikoner: (n) => def.omraadeFor(n.id).emoji,

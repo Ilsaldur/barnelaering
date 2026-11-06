@@ -14,6 +14,7 @@ export function emptyFag() {
     beste: {}, // nivåId -> beste stjerner (0–3) på første forsøk
     bokser: {}, // kort-id -> { boks: 1–5, t }
     svake: {}, // oppgavetype -> { bom, riktig } (bom-lista)
+    sett: [], // hash av de 40 siste oppgavene barnet fikk (eldst først)
     sjef: null, // ikke i bruk lenger (sjefsoppgaven tilbys direkte)
     updatedAt: 0,
   }
@@ -118,7 +119,8 @@ export function normalize(raw) {
     const g = { ...emptyFag(), ...((d.fag || {})[f] || {}) }
     delete g.perfektRad
     // Gamle bom-lister hadde { bom, til }; nå { bom, riktig }.
-    g.svake = Object.fromEntries(Object.entries(g.svake || {}).map(([k, v]) => [k, { bom: v.bom || 1, riktig: v.riktig || 0 }]))
+    g.svake = Object.fromEntries(Object.entries(g.svake || {}).map(([k, v]) => [k, { bom: v.bom || 1, riktig: v.riktig || 0, ...(v.nivaa != null ? { nivaa: v.nivaa } : {}) }]))
+    g.sett = Array.isArray(g.sett) ? g.sett.filter((x) => typeof x === 'string').slice(-40) : []
     fag[f] = g
   }
   d.fag = fag
@@ -155,6 +157,10 @@ function mergeFag(a, b) {
   // Bom-lista og rekkene følger nivået: siden som sist ble endret vinner.
   out.svake = { ...(newest.svake || {}) }
   out.sjef = newest.sjef || null
+  // Husk-lista: nyeste side sist, det den andre siden husker i tillegg legges foran.
+  const nyeste = newest.sett || []
+  const andre = (newest === a ? b : a).sett || []
+  out.sett = [...andre.filter((h) => !nyeste.includes(h)), ...nyeste].slice(-40)
   return out
 }
 

@@ -22,6 +22,7 @@ export const GEN_ENGELSK = {
     const feil = andre(p, w, 3, rng)
     return {
       type: 'hor_finn_bilde',
+      emne: w.en,
       form: 'valg',
       kreverLyd: true,
       prompt: `Hvilket bilde er «${w.en}»?`,
@@ -41,6 +42,7 @@ export const GEN_ENGELSK = {
     const feil = andre(p, w, 3, rng)
     return {
       type: 'bilde_finn_ord',
+      emne: w.en,
       form: 'valg',
       prompt: 'Hva heter dette på engelsk?',
       spoken: 'What is this?',
@@ -59,6 +61,7 @@ export const GEN_ENGELSK = {
     const feil = andre(p, w, 3, rng)
     return {
       type: 'oversett',
+      emne: w.en,
       form: 'valg',
       prompt: `Hva er «${w.no}» på engelsk?`,
       spoken: `Hva er ${w.no} på engelsk?`,
@@ -74,6 +77,7 @@ export const GEN_ENGELSK = {
     const s = pick(SETNINGER, rng)
     return {
       type: 'setning_bilde_en',
+      emne: s.en,
       form: 'valg',
       prompt: s.en,
       spoken: s.en,
@@ -90,6 +94,7 @@ export const GEN_ENGELSK = {
     const f = pick(FYLL_INN, rng)
     return {
       type: 'fyll_inn',
+      emne: f.en,
       form: 'valg',
       prompt: f.en,
       spoken: f.en.replace('___', 'hmm'),
@@ -107,6 +112,7 @@ export const GEN_ENGELSK = {
     const q = pick(SPORSMAAL, rng)
     return {
       type: 'sporsmaal_en',
+      emne: q.q,
       form: 'valg',
       prompt: q.q,
       spoken: q.q,
