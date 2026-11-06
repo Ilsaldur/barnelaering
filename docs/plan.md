@@ -8,7 +8,7 @@
 | 1 – Rett opp det som er galt i dag | Ferdig og pushet. Endringslogg og prøveliste i `docs/etappe1.md`. | 2026-11-05 |
 | 2 – Innlogging, profiler og synkronisering | Kode ferdig. Jon må sette Vercel-nøkler, stenge registrering og legge inn e-poster i Supabase (se `docs/etappe2.md`). | 2026-11-05 |
 | 3 – Mattestigen | Kode ferdig og pushet. Se `docs/etappe3.md`. | 2026-11-06 |
-| 4 – Dagens økt, kart og belønning | Ikke startet | |
+| 4 – Dagens økt, kart og belønning | Kode ferdig og pushet. Se `docs/etappe4.md`. | 2026-11-06 |
 | 5 – Lesestigen | Ikke startet | |
 | 6 – Klokke, geografi og engelsk | Ikke startet | |
 

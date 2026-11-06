@@ -40,7 +40,7 @@ export function emptyData() {
     fag: Object.fromEntries(FAG.map((f) => [f, emptyFag()])),
     attempts: [], // enkeltsvar: { t, fag, nivaa, type, ok, forste, hjelp }
     settings: emptySettings(),
-    dager: {}, // 'YYYY-MM-DD' -> { oppdrag: n }
+    dager: {}, // 'YYYY-MM-DD' -> { oppdrag: n, fag: { matte: 1 } }
     kort: [], // samlekort-id
     kostymer: [], // kjøpte kostymer
     kostyme: null, // kostyme reven har på
@@ -141,7 +141,10 @@ export function mergeData(rawA, rawB) {
 
   for (const src of [a.dager, b.dager]) {
     for (const [day, v] of Object.entries(src)) {
-      out.dager[day] = { oppdrag: Math.max(out.dager[day]?.oppdrag || 0, v.oppdrag || 0) }
+      const cur = out.dager[day] || { oppdrag: 0, fag: {} }
+      const fag = { ...(cur.fag || {}) }
+      for (const [f, n] of Object.entries(v.fag || {})) fag[f] = Math.max(fag[f] || 0, n)
+      out.dager[day] = { oppdrag: Math.max(cur.oppdrag || 0, v.oppdrag || 0), fag }
     }
   }
   out.kort = [...new Set([...a.kort, ...b.kort])]

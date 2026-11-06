@@ -4,8 +4,12 @@ import { StarProvider } from '../StarContext.jsx'
 import { TOPICS } from '../data/topics.js'
 import { ENGINES } from '../activities/engines.js'
 import Home from '../activities/Home.jsx'
-import AdventureMap from '../activities/AdventureMap.jsx'
-import Rewards from '../activities/Rewards.jsx'
+import Samling from '../activities/Samling.jsx'
+import Kart from '../activities/Kart.jsx'
+import Historie from '../components/Historie.jsx'
+import { emptyFag } from '../lib/profil.js'
+import { HISTORIER } from '../data/historier.js'
+import { VERDENER } from '../data/matte/nivaer.js'
 import Parents from '../activities/Parents.jsx'
 import Garden from '../activities/Garden.jsx'
 import Family from '../activities/Family.jsx'
@@ -25,9 +29,12 @@ const wrap = (el) => renderToString(<StarProvider>{el}</StarProvider>)
 
 describe('alle skjermer rendrer uten feil', () => {
   it('forside, kart, stjerner, hage, voksenside, profilvalg', () => {
-    expect(wrap(<Home topics={TOPICS} onPick={noop} onRewards={noop} onGarden={noop} onParents={noop} onSwitchProfile={noop} onEventyr={noop} />)).toContain('Eventyrkartet')
-    expect(wrap(<AdventureMap go={noop} />)).toContain('Trylleskogen')
-    expect(wrap(<Rewards go={noop} />)).toContain('stjerne')
+    const home = wrap(<Home topics={TOPICS} onPick={noop} onSamling={noop} onGarden={noop} onParents={noop} onSwitchProfile={noop} onMatte={noop} onNoetter={noop} onDagens={noop} />)
+    expect(home).toContain('Dagens økt')
+    expect(home).toContain('Eventyrkartet')
+    expect(wrap(<Samling go={noop} onGarden={noop} />)).toContain('Familiekisten')
+    expect(wrap(<Kart matte={{ ...emptyFag(), nivaa: 12, beste: { 7: 3 } }} onStart={noop} onReplay={noop} />)).toContain('Det blå havet')
+    expect(renderToString(<Historie historie={HISTORIER[0]} verden={VERDENER[0]} onDone={noop} />)).toContain('Trylleskogen')
     expect(wrap(<Parents go={noop} onSwitchProfile={noop} />)).toContain('Hold inne')
     expect(wrap(<Garden go={noop} />)).toContain('Hagebutikken')
     expect(wrap(<Family onPicked={noop} />)).toContain('Hvem skal spille')

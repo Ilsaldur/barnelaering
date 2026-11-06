@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { GENERATORS, TOPICS } from '../topics.js'
 import { makeRound } from '../../lib/quiz.js'
-import { eventyrStars, STEDER } from '../eventyr.js'
 import { COLORS, SHAPES, FIRST_LETTER, LETTER_SOUNDS, OPPOSITES, FRACTIONS, COUNTING_TO_5, COUNTING_TO_10 } from '../levels.js'
 
 function checkItem(it) {
@@ -97,18 +96,5 @@ describe('quiz-runder', () => {
     }
     const round = makeRound(LETTER_SOUNDS)
     for (const it of round) for (const o of it._options) expect(o.show).toBeTruthy()
-  })
-})
-
-describe('eventyrkartet', () => {
-  it('gir stjerner bare når alt er riktig, og bare én gang', () => {
-    expect(eventyrStars(3, 3, false)).toBeGreaterThan(0)
-    expect(eventyrStars(2, 3, false)).toBe(0)
-    expect(eventyrStars(0, 3, false)).toBe(0)
-    expect(eventyrStars(3, 3, true)).toBe(0)
-  })
-  it('heter Trylleskogen', () => {
-    expect(STEDER.map((s) => s.title)).toContain('Trylleskogen')
-    expect(STEDER.some((s) => s.title.includes('Tryllesskogen'))).toBe(false)
   })
 })

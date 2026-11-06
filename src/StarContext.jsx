@@ -337,10 +337,13 @@ export function StarProvider({ children }) {
     activeLevelRef.current = meta ? { ...meta, startedAt: Date.now() } : null
   }, [])
 
-  // n = stjerner tjent (kan være 0). extra = { correct, total, fag, nivaa }.
-  // Runden logges alltid, også uten stjerner, med tiden den tok.
+  // n = stjerner tjent (kan være 0). extra = { correct, total, fag, nivaa, oppdrag }.
+  // Runden logges alltid, også uten stjerner, med tiden den tok. Er det et
+  // oppdrag (fra mattestigen eller «Dagens økt»), telles det på dagen.
   const addStars = useCallback((n = 0, extra = null) => {
     const meta = activeLevelRef.current
+    const erOppdrag = !!(extra?.oppdrag || meta?.oppdrag)
+    const fagId = extra?.fag || meta?.fag || null
     setData((d) => {
       const nd = { ...d, stars: d.stars + n }
       const entry = { t: Date.now(), stars: n }
@@ -349,7 +352,12 @@ export function StarProvider({ children }) {
         if (extra.total != null) entry.total = extra.total
         if (extra.fag) entry.fag = extra.fag
         if (extra.nivaa != null) entry.nivaa = extra.nivaa
-        if (extra.oppdrag) entry.oppdrag = true
+      }
+      if (erOppdrag) {
+        entry.oppdrag = true
+        const key = todayKey()
+        const dag = d.dager[key] || { oppdrag: 0, fag: {} }
+        nd.dager = { ...d.dager, [key]: { oppdrag: (dag.oppdrag || 0) + 1, fag: { ...(dag.fag || {}), ...(fagId ? { [fagId]: ((dag.fag || {})[fagId] || 0) + 1 } : {}) } } }
       }
       if (meta) {
         if (meta.topicId) {
@@ -391,10 +399,32 @@ export function StarProvider({ children }) {
     setData((d) => ({ ...d, settings: { ...d.settings, ...partial, updatedAt: Date.now() } }))
   }, [])
 
-  // Et oppdrag er fullført i dag.
-  const finishOppdrag = useCallback(() => {
-    const key = todayKey()
-    setData((d) => ({ ...d, dager: { ...d.dager, [key]: { oppdrag: (d.dager[key]?.oppdrag || 0) + 1 } } }))
+  // Samlekort: legg til et kort (én gang).
+  const giKort = useCallback((id) => {
+    setData((d) => (d.kort.includes(id) ? d : { ...d, kort: [...d.kort, id] }))
+  }, [])
+
+  // Kostymer: kjøp av saldoen, og ta på/av.
+  const buyKostyme = useCallback((k) => {
+    let ok = false
+    setData((d) => {
+      if (d.kostymer.includes(k.id)) {
+        ok = true
+        return d
+      }
+      if (d.stars - d.spent < k.pris) return d
+      ok = true
+      return { ...d, spent: d.spent + k.pris, kostymer: [...d.kostymer, k.id], kostyme: k.id, kostymeT: Date.now() }
+    })
+    return ok
+  }, [])
+  const setKostyme = useCallback((id) => {
+    setData((d) => ({ ...d, kostyme: id, kostymeT: Date.now() }))
+  }, [])
+
+  // Historiebit sett.
+  const markHistorie = useCallback((id) => {
+    setData((d) => (d.historier.includes(id) ? d : { ...d, historier: [...d.historier, id] }))
   }, [])
 
   // Eventyrkartet: et sted gir stjerner bare én gang.
@@ -465,6 +495,28 @@ export function StarProvider({ children }) {
     [profile, childrenData, markDirty],
   )
 
+  // Familiekisten: summen av alle barnas stjerner (egne profiler på enheten,
+  // eller alle barna i familiekontoen).
+  const [familyOthers, setFamilyOthers] = useState({})
+  const loadFamily = useCallback(async () => {
+    const out = {}
+    if (supabase && sessionRef.current) {
+      const { data: rows } = await supabase.from('progress').select('child_id, data')
+      for (const r of rows || []) out[r.child_id] = r.data?.stars || 0
+    }
+    for (const c of childProfiles) {
+      const local = loadJSON(dataKey(c.id), null)
+      if (local && (out[c.id] || 0) < (local.stars || 0)) out[c.id] = local.stars || 0
+    }
+    setFamilyOthers(out)
+    return out
+  }, [childProfiles])
+  const familyStars = (() => {
+    let sum = 0
+    for (const [id, n] of Object.entries(familyOthers)) if (!profile || id !== profile.id) sum += n
+    return sum + data.stars
+  })()
+
   const stars = data.stars
   const unlocked = STICKERS.filter((s) => stars >= s.need)
   const nextSticker = STICKERS.find((s) => stars < s.need) || null
@@ -489,8 +541,13 @@ export function StarProvider({ children }) {
         updateFag,
         settings: data.settings,
         updateSettings,
-        finishOppdrag,
         updateData,
+        giKort,
+        buyKostyme,
+        setKostyme,
+        markHistorie,
+        familyStars,
+        loadFamily,
         // Eventyrkartet
         eventyr: data.eventyr || {},
         completeEventyr,
@@ -526,4 +583,9 @@ export function useStars() {
   const ctx = useContext(StarContext)
   if (!ctx) throw new Error('useStars må brukes inne i StarProvider')
   return ctx
+}
+
+// Samme, men gir null utenfor StarProvider (til små komponenter som Mascot).
+export function useStarsOptional() {
+  return useContext(StarContext)
 }
