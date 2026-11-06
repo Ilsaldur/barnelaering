@@ -193,11 +193,11 @@ export const LAERKORT = [
     ],
   },
 
-  // ---------------------------------------------------------------- Lesing
+  // ------------------------------------------- Lesing: Skrive riktig (1–4) og Språk (1–3)
   {
     id: 'l10-diftonger',
-    fag: 'lesing',
-    nivaa: 10,
+    fag: 'skrive',
+    nivaa: 1,
     tittel: 'Diftonger',
     typer: ['skriv_diftonger'],
     steg: [
@@ -208,8 +208,8 @@ export const LAERKORT = [
   },
   {
     id: 'l11-kj-skj',
-    fag: 'lesing',
-    nivaa: 11,
+    fag: 'skrive',
+    nivaa: 2,
     tittel: 'Kj og skj',
     typer: ['skriv_kj_skj'],
     steg: [
@@ -220,8 +220,8 @@ export const LAERKORT = [
   },
   {
     id: 'l12-dobbel',
-    fag: 'lesing',
-    nivaa: 12,
+    fag: 'skrive',
+    nivaa: 3,
     tittel: 'Dobbel konsonant',
     typer: ['skriv_dobbel_konsonant'],
     steg: [
@@ -232,8 +232,8 @@ export const LAERKORT = [
   },
   {
     id: 'l13-stum-sammensatt',
-    fag: 'lesing',
-    nivaa: 13,
+    fag: 'skrive',
+    nivaa: 4,
     tittel: 'Stumme bokstaver og sammensatte ord',
     typer: ['skriv_stum_h_g', 'skriv_sammensatte'],
     stegForType: { skriv_sammensatte: 2 },
@@ -245,8 +245,8 @@ export const LAERKORT = [
   },
   {
     id: 'l14-ordklasser',
-    fag: 'lesing',
-    nivaa: 14,
+    fag: 'sprak',
+    nivaa: 1,
     tittel: 'Ordklasser',
     typer: ['ordklasse'],
     steg: [
@@ -257,8 +257,8 @@ export const LAERKORT = [
   },
   {
     id: 'l15-boying',
-    fag: 'lesing',
-    nivaa: 15,
+    fag: 'sprak',
+    nivaa: 2,
     tittel: 'Bøying',
     typer: ['boying'],
     steg: [
@@ -269,8 +269,8 @@ export const LAERKORT = [
   },
   {
     id: 'l16-motsetning-tegn',
-    fag: 'lesing',
-    nivaa: 16,
+    fag: 'sprak',
+    nivaa: 3,
     tittel: 'Motsetninger og tegnsetting',
     typer: ['motsetning', 'tegnsetting', 'stor_bokstav'],
     stegForType: { tegnsetting: 1, stor_bokstav: 2 },

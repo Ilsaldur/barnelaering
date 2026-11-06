@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { renderToString } from 'react-dom/server'
 import { LAERKORT, laerkortForNivaa, laerkortForType, stegForType } from '../laerkort.js'
 import { NIVAER } from '../matte/nivaer.js'
-import { NIVAER_LESING } from '../lesing/nivaer.js'
+import { NIVAER_LESING, NIVAER_SKRIVE, NIVAER_SPRAK } from '../lesing/nivaer.js'
 import { StarProvider } from '../../StarContext.jsx'
 import LaerKort from '../../components/LaerKort.jsx'
 import { MATTE_STIGE } from '../../lib/matte/oppdrag.js'
@@ -13,15 +13,15 @@ import { seeded } from '../../lib/rng.js'
 describe('«Lær først»-kort (UTKAST)', () => {
   it('finnes for alle nivåene i bestillingen', () => {
     const matte = [9, 10, 12, 13, 14, 20, 21, 23, 28, 34, 35, 36, 37, 38]
-    const lesing = [10, 11, 12, 13, 14, 15, 16]
     for (const n of matte) expect(laerkortForNivaa('matte', n), `matte ${n}`).toBeTruthy()
-    for (const n of lesing) expect(laerkortForNivaa('lesing', n), `lesing ${n}`).toBeTruthy()
+    for (const n of [1, 2, 3, 4]) expect(laerkortForNivaa('skrive', n), `skrive ${n}`).toBeTruthy()
+    for (const n of [1, 2, 3]) expect(laerkortForNivaa('sprak', n), `sprak ${n}`).toBeTruthy()
   })
   it('tre–fire steg, høyst to setninger-ish per steg, typer som finnes på nivået', () => {
     for (const k of LAERKORT) {
       expect(k.steg.length, k.id).toBeGreaterThanOrEqual(3)
       expect(k.steg.length, k.id).toBeLessThanOrEqual(4)
-      const nivaer = k.fag === 'matte' ? NIVAER : NIVAER_LESING
+      const nivaer = k.fag === 'matte' ? NIVAER : k.fag === 'skrive' ? NIVAER_SKRIVE : NIVAER_SPRAK
       const g = k.fag === 'matte' ? gen : genLesing
       const def = nivaer[k.nivaa - 1]
       // Oppgavetypene nivået faktisk lager (generatorene kan gi undertyper).
@@ -41,7 +41,7 @@ describe('«Lær først»-kort (UTKAST)', () => {
     expect(stegForType('matte', 'dobling').index).toBe(2)
     expect(stegForType('matte', 'tiervenner').index).toBe(0)
     expect(stegForType('matte', 'tell')).toBe(null)
-    expect(laerkortForType('lesing', 'ordklasse').nivaa).toBe(14)
+    expect(laerkortForType('sprak', 'ordklasse').nivaa).toBe(1)
   })
   it('kortene rendrer med figurene sine', () => {
     for (const k of LAERKORT) {

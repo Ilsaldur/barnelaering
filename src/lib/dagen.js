@@ -46,10 +46,12 @@ export function dagStatus({ dager, settings, dayKey = todayKey() }) {
   const d = dager?.[dayKey] || { oppdrag: 0, fag: {} }
   const maal = settings?.oppdragPerDag || 2
   const fast = settings?.fast || null
-  const fastOk = !fast || (d.fag?.[fast] || 0) > 0
+  const fagCount = (f) => (f === 'lesing' ? (d.fag?.lesing || 0) + (d.fag?.skrive || 0) + (d.fag?.sprak || 0) : d.fag?.[f] || 0)
+  const fastOk = !fast || fagCount(fast) > 0
   const gjort = d.oppdrag || 0
   const ferdig = gjort >= maal && fastOk
-  return { gjort, maal, ferdig, fast, fastOk, fag: d.fag || {} }
+  const fagAlle = { ...(d.fag || {}), lesing: fagCount('lesing') }
+  return { gjort, maal, ferdig, fast, fastOk, fag: fagAlle }
 }
 
 // Ukestripe: mandag til søndag i inneværende uke, med stempel for ferdige dager.

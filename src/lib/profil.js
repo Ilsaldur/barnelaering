@@ -1,8 +1,8 @@
 // Barnets fremgang som ren data: tom profil, normalisering av gamle
 // lagringer og fletting av to utgaver (lokal og sky) uten å miste noe.
 
-export const DATA_VERSION = 2
-export const FAG = ['matte', 'lesing', 'klokke', 'geografi', 'engelsk']
+export const DATA_VERSION = 3
+export const FAG = ['matte', 'lesing', 'skrive', 'sprak', 'klokke', 'geografi', 'engelsk']
 
 export function emptyFag() {
   return {
@@ -59,9 +59,45 @@ export function todayKey(d = new Date()) {
   return `${y}-${m}-${day}`
 }
 
+// Lesing ble delt i tre spor (v3): Lese 1–9 (nå 1–12), Skrive riktig 1–4
+// (gamle 10–13) og Språk 1–3 (gamle 14–16). Stjerner følger nivåene.
+export function migrerLesingSpor(fag) {
+  const l = { ...emptyFag(), ...(fag.lesing || {}) }
+  const skrive = { ...emptyFag(), ...(fag.skrive || {}) }
+  const sprak = { ...emptyFag(), ...(fag.sprak || {}) }
+  const n = l.nivaa || 0
+  const beste = l.beste || {}
+  const flytt = (fra, til, mal) => {
+    for (const [k, v] of Object.entries(beste)) {
+      const nk = Number(k)
+      if (nk >= fra && nk <= til) {
+        mal.beste = { ...mal.beste, [nk - fra + 1]: Math.max(mal.beste?.[nk - fra + 1] || 0, v) }
+        delete beste[k]
+      }
+    }
+  }
+  flytt(10, 13, skrive)
+  flytt(14, 16, sprak)
+  l.beste = beste
+  if (n >= 14) {
+    sprak.nivaa = n - 13
+    sprak.plassert = true
+    skrive.nivaa = Math.max(skrive.nivaa || 0, 1)
+    skrive.plassert = true
+    l.nivaa = 9
+  } else if (n >= 10) {
+    skrive.nivaa = n - 9
+    skrive.plassert = true
+    l.nivaa = 9
+  }
+  const t = Date.now()
+  return { lesing: { ...l, updatedAt: Math.max(l.updatedAt || 0, t) }, skrive: { ...skrive, updatedAt: Math.max(skrive.updatedAt || 0, t) }, sprak: { ...sprak, updatedAt: Math.max(sprak.updatedAt || 0, t) } }
+}
+
 // Gjør en lagret (kanskje gammel) profil komplett.
 export function normalize(raw) {
   const d = { ...emptyData(), ...(raw || {}) }
+  const gammelVersjon = (raw && raw.v) || 0
   d.v = DATA_VERSION
   d.best = d.best || {}
   d.garden = d.garden || []
@@ -83,6 +119,7 @@ export function normalize(raw) {
     fag[f] = g
   }
   d.fag = fag
+  if (gammelVersjon < 3 && raw?.fag?.lesing) Object.assign(d.fag, migrerLesingSpor(raw.fag))
   return d
 }
 

@@ -8,7 +8,7 @@ describe('normalize', () => {
     expect(d.best.pluss[0]).toBe(3)
     expect(d.fag.matte.nivaa).toBe(null)
     expect(d.settings.oppdragPerDag).toBe(2)
-    expect(d.v).toBe(2)
+    expect(d.v).toBe(3)
   })
 })
 

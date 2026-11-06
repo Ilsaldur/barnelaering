@@ -3,7 +3,9 @@
 
 export const FAG_LABELS = {
   matte: { navn: 'Matte', emoji: '🔢' },
-  lesing: { navn: 'Lesing', emoji: '📖' },
+  lesing: { navn: 'Lese', emoji: '📖' },
+  skrive: { navn: 'Skrive riktig', emoji: '✏️' },
+  sprak: { navn: 'Språk', emoji: '🧩' },
   klokke: { navn: 'Klokka', emoji: '🕐' },
   geografi: { navn: 'Geografi', emoji: '🌍' },
   engelsk: { navn: 'Engelsk', emoji: '🇬🇧' },

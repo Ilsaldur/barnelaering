@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { seeded } from '../../rng.js'
 import { genLesing, GEN_LESING } from '../generatorer.js'
-import { NIVAER_LESING } from '../../../data/lesing/nivaer.js'
+import { NIVAER_LESING, NIVAER_SKRIVE, NIVAER_SPRAK, SPOR } from '../../../data/lesing/nivaer.js'
+import { TEKSTER2 } from '../../../data/lesing/tekster2.js'
+import { normalize, migrerLesingSpor, emptyData } from '../../profil.js'
 import { TEKSTER, BOKSTAVER, RETTSKRIVING, SETNINGER, BOYING } from '../../../data/lesing/innhold.js'
 import { buildMission, oppgaveFraNivaa } from '../../matte/oppdrag.js'
 import { emptyFag } from '../../profil.js'
@@ -34,11 +36,66 @@ describe('innhold (UTKAST)', () => {
   })
 })
 
+describe('tekster til Lese 10–12 (UTKAST)', () => {
+  it('minst åtte tekster per type, 120–200 ord, gyldige spørsmål', () => {
+    for (const type of ['slutning', 'ordforraad', 'hovedtanke']) {
+      const liste = TEKSTER2.filter((t) => t.type === type)
+      expect(liste.length, type).toBeGreaterThanOrEqual(8)
+      for (const t of liste) {
+        const n = t.tekst.trim().split(/\s+/).length
+        expect(n, t.id).toBeGreaterThanOrEqual(120)
+        expect(n, t.id).toBeLessThanOrEqual(200)
+        expect(t.sporsmaal.length, t.id).toBeGreaterThanOrEqual(3)
+        for (const q of t.sporsmaal) expect(q.alternativer, `${t.id}: ${q.q}`).toContain(q.svar)
+      }
+    }
+    expect(new Set(TEKSTER2.map((t) => t.id)).size).toBe(TEKSTER2.length)
+  })
+})
+
+describe('tre spor (etappe D)', () => {
+  it('Lese 1–12, Skrive riktig 1–4, Språk 1–3', () => {
+    expect(NIVAER_LESING).toHaveLength(12)
+    expect(NIVAER_SKRIVE).toHaveLength(4)
+    expect(NIVAER_SPRAK).toHaveLength(3)
+    expect(SPOR.map((s) => s.id)).toEqual(['lesing', 'skrive', 'sprak'])
+  })
+  it('migrering: 1–9 uendret', () => {
+    const d = normalize({ v: 2, fag: { lesing: { nivaa: 7, plassert: true, beste: { 5: 3 } } } })
+    expect(d.fag.lesing.nivaa).toBe(7)
+    expect(d.fag.lesing.beste[5]).toBe(3)
+    expect(d.fag.skrive.plassert).toBe(false)
+  })
+  it('migrering: 10–13 gir Lese 9 og Skrive riktig nivå − 9, stjerner følger med', () => {
+    const d = normalize({ v: 2, fag: { lesing: { nivaa: 12, plassert: true, beste: { 9: 2, 10: 3, 11: 1 } } } })
+    expect(d.fag.lesing.nivaa).toBe(9)
+    expect(d.fag.skrive.nivaa).toBe(3)
+    expect(d.fag.skrive.plassert).toBe(true)
+    expect(d.fag.skrive.beste).toEqual({ 1: 3, 2: 1 })
+    expect(d.fag.lesing.beste).toEqual({ 9: 2 })
+    expect(d.fag.sprak.plassert).toBe(false)
+  })
+  it('migrering: 14–16 gir Lese 9, Skrive riktig 1 og Språk nivå − 13', () => {
+    const d = normalize({ v: 2, fag: { lesing: { nivaa: 15, plassert: true, beste: { 14: 2, 16: 3 } } } })
+    expect(d.fag.lesing.nivaa).toBe(9)
+    expect(d.fag.skrive.nivaa).toBe(1)
+    expect(d.fag.sprak.nivaa).toBe(2)
+    expect(d.fag.sprak.beste).toEqual({ 1: 2, 3: 3 })
+  })
+  it('migrering skjer bare én gang (v3 røres ikke)', () => {
+    const d = emptyData()
+    d.fag.lesing = { ...d.fag.lesing, nivaa: 12, plassert: true }
+    const igjen = normalize(d)
+    expect(igjen.fag.lesing.nivaa).toBe(12)
+    expect(migrerLesingSpor({ lesing: { nivaa: 3 } }).lesing.nivaa).toBe(3)
+  })
+})
+
 describe('lesegeneratorer', () => {
   it('alle nivåer peker på generatorer som finnes', () => {
-    for (const n of NIVAER_LESING) for (const t of n.typer) expect(GEN_LESING[t.type], `${n.id}: ${t.type}`).toBeTypeOf('function')
+    for (const n of [...NIVAER_LESING, ...NIVAER_SKRIVE, ...NIVAER_SPRAK]) for (const t of n.typer) expect(GEN_LESING[t.type], `${n.id}: ${t.type}`).toBeTypeOf('function')
   })
-  for (const n of NIVAER_LESING) {
+  for (const n of [...NIVAER_LESING, ...NIVAER_SKRIVE.map((x) => ({ ...x, tittel: `Skrive: ${x.tittel}` })), ...NIVAER_SPRAK.map((x) => ({ ...x, tittel: `Språk: ${x.tittel}` }))]) {
     it(`nivå ${n.id} (${n.tittel}) gir gyldige oppgaver`, () => {
       const rng = seeded(100 + n.id)
       for (const t of n.typer) {
@@ -76,12 +133,12 @@ describe('oppdrag i lesestigen', () => {
     const m5 = buildMission({ ...emptyFag(), nivaa: 8, plassert: true }, { rng, stige: STIGE })
     expect(m5.tasks).toHaveLength(5)
     expect(m5.tasks.filter((t) => t.nivaa === 8).length).toBeGreaterThanOrEqual(3)
-    expect(oppgaveFraNivaa(99, rng, STIGE).nivaa).toBe(16)
+    expect(oppgaveFraNivaa(99, rng, STIGE).nivaa).toBe(12)
   })
   it('nivåreglene skalerer til fem oppgaver', () => {
     const f = { ...emptyFag(), nivaa: 8, plassert: true, paaRad: 1 }
-    expect(applyResult(f, { correct: 5, total: 5, nivaa: 8 }, 16).events.levelUp).toBe(true)
-    expect(applyResult(f, { correct: 4, total: 5, nivaa: 8 }, 16).fag.hjelpNeste).toBe(false)
-    expect(applyResult(f, { correct: 3, total: 5, nivaa: 8 }, 16).fag.hjelpNeste).toBe(true)
+    expect(applyResult(f, { correct: 5, total: 5, nivaa: 8 }, 12).events.levelUp).toBe(true)
+    expect(applyResult(f, { correct: 4, total: 5, nivaa: 8 }, 12).fag.hjelpNeste).toBe(false)
+    expect(applyResult(f, { correct: 3, total: 5, nivaa: 8 }, 12).fag.hjelpNeste).toBe(true)
   })
 })

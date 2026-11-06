@@ -7,7 +7,7 @@
 | A – Nivåmotoren | Ferdig og pushet. Se `docs/etappeA.md`. | 2026-11-06 |
 | B – Opplesing | Ferdig og pushet. Se `docs/etappeB.md`. | 2026-11-06 |
 | C – «Lær først»-kort | Ferdig og pushet. Kortene i `src/data/laerkort.js` er UTKAST. Se `docs/etappeC.md`. | 2026-11-06 |
-| D – Tre spor i lesing | Ikke startet | |
+| D – Tre spor i lesing | Ferdig og pushet. Tekstene i `src/data/lesing/tekster2.js` er UTKAST. Se `docs/etappeD.md`. | 2026-11-06 |
 | E – Synkronisering, konto og småfeil | Ikke startet | |
 
 Merk: klokke, geografi og engelsk (etappe 6 i den opprinnelige planen) var allerede ferdig og slått sammen til `main` før denne runden startet.
