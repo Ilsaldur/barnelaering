@@ -1,81 +1,19 @@
 import { useState } from 'react'
-import { TopBar, Mascot, NumberLine, Confetti, StarRating, BigButton } from '../components/ui.jsx'
+import { TopBar, Mascot, NumberLine, BigButton } from '../components/ui.jsx'
+import { SpeakButton, useAutoSpeak, AutoSpeakToggle } from '../components/Speak.jsx'
+import RoundDone from '../components/RoundDone.jsx'
 import { useStars } from '../StarContext.jsx'
 import { sound } from '../sound.js'
-
-const QUESTIONS_PER_ROUND = 8
-
-// Brukes når Math kjøres uten config (gammel 3-nivå-meny).
-const LEVELS = {
-  lett: { label: 'Lett', emoji: '🐣', color: 'bg-emerald-500', sub: 'Tall 1–10', params: { ops: ['add', 'sub'], max: 10 } },
-  middels: { label: 'Middels', emoji: '🐥', color: 'bg-amber-500', sub: 'Tall 1–20', params: { ops: ['add', 'sub'], max: 20 } },
-  vanskelig: { label: 'Vanskelig', emoji: '🦅', color: 'bg-rose-500', sub: '1–100 og gangetabell', params: { ops: ['add', 'sub', 'mul'], max: 100, mulMax: 5 } },
-}
+import { speech } from '../speech.js'
+import { pick } from '../lib/rng.js'
+import { makeMathRound, hasVisualHelp } from '../lib/matte.js'
+import { starsFor } from '../lib/scoring.js'
+import { ROUND_LENGTH } from '../lib/round.js'
 
 const EMOJIS = ['🍎', '🎈', '⭐', '🍓', '🐠', '🌸', '🍪', '🚗']
 
-function randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min
-}
-function pick(arr) {
-  return arr[randInt(0, arr.length - 1)]
-}
-
-// Fyll ut standardverdier for et sett regne-parametre.
-function fullParams(p) {
-  return {
-    ops: p.ops || ['add', 'sub'],
-    max: p.max || 20,
-    mulMax: p.mulMax || 5,
-    mulFactors: p.mulFactors || null,
-    divMax: p.divMax || 10,
-  }
-}
-
-// Lag ett regnestykke ut fra parametrene.
-function makeProblem(params) {
-  const op = pick(params.ops)
-
-  if (op === 'mul') {
-    const a = params.mulFactors ? pick(params.mulFactors) : randInt(1, params.mulMax)
-    const b = randInt(1, params.mulFactors ? 10 : params.mulMax)
-    return { type: 'mul', a, b, answer: a * b, text: `${a} × ${b}`, visual: false }
-  }
-  if (op === 'div') {
-    const b = randInt(2, params.divMax)
-    const ans = randInt(2, params.divMax)
-    const a = b * ans
-    return { type: 'div', a, b, answer: ans, text: `${a} ÷ ${b}`, visual: false }
-  }
-  if (op === 'add') {
-    const a = randInt(1, Math.max(1, Math.floor(params.max / 2)))
-    const b = randInt(1, Math.max(1, params.max - a))
-    return { type: 'add', a, b, answer: a + b, text: `${a} + ${b}`, visual: a + b <= 20 }
-  }
-  // sub
-  const a = randInt(2, params.max)
-  const b = randInt(1, a)
-  return { type: 'sub', a, b, answer: a - b, text: `${a} − ${b}`, visual: a <= 20 }
-}
-
-// Lag 4 svaralternativer der ett er riktig.
-function makeOptions(answer) {
-  const ceil = Math.max(answer + 12, 25)
-  const opts = new Set([answer])
-  let guard = 0
-  while (opts.size < 4 && guard < 50) {
-    guard++
-    const cand = answer + randInt(-5, 5)
-    if (cand >= 0 && cand <= ceil) opts.add(cand)
-  }
-  let n = 0
-  while (opts.size < 4) opts.add(answer + ++n)
-  return [...opts].sort(() => Math.random() - 0.5)
-}
-
-// Viser mengder med emojis for addisjon/subtraksjon.
-function VisualCount({ problem }) {
-  const emoji = problem._emoji
+// Viser mengder med emojis for addisjon/subtraksjon (bak Hjelp-knappen).
+function VisualCount({ problem, emoji }) {
   if (problem.type === 'add') {
     return (
       <div className="flex flex-wrap items-center justify-center gap-3 text-3xl md:text-4xl">
@@ -107,48 +45,34 @@ function VisualCount({ problem }) {
   return null
 }
 
-export default function MathActivity({ go, config }) {
+function newRound(config) {
+  return makeMathRound(config, { n: ROUND_LENGTH }).map((p) => ({ ...p, emoji: pick(EMOJIS) }))
+}
+
+export default function MathActivity({ go, config = {}, onNextLevel }) {
   const { addStars } = useStars()
-  // Med config hopper vi over nivåmenyen og bruker gradens parametre direkte.
-  const configured = !!(config && config.ops)
-  const cfgParams = configured ? fullParams(config) : null
   const title = config?.title ? `${config.title} ${config.emoji || '🔢'}`.trim() : 'Matte 🔢'
 
-  const [level, setLevel] = useState(null)
-  const [stage, setStage] = useState(configured ? 'play' : 'menu') // menu | play | done
-  const [problem, setProblem] = useState(() => (configured ? withEmoji(makeProblem(cfgParams)) : null))
-  const [options, setOptions] = useState(() => (problem ? makeOptions(problem.answer) : []))
+  const [round, setRound] = useState(() => newRound(config))
+  const [stage, setStage] = useState('play') // play | done
   const [qIndex, setQIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
   const [picked, setPicked] = useState(null)
   const [feedback, setFeedback] = useState(null)
-  const [showNumberLine, setShowNumberLine] = useState(true)
-  const [confetti, setConfetti] = useState(false)
+  const [help, setHelp] = useState(false) // Hjelp er av som standard
 
-  function withEmoji(p) {
-    p._emoji = pick(EMOJIS)
-    return p
-  }
+  const problem = round[qIndex]
+  const spoken = problem ? `Hva er ${problem.spoken}?` : ''
+  useAutoSpeak(spoken, [qIndex, stage])
 
-  function activeParams() {
-    return configured ? cfgParams : fullParams(LEVELS[level].params)
-  }
-
-  function nextProblem(params) {
-    const p = withEmoji(makeProblem(params))
-    setProblem(p)
-    setOptions(makeOptions(p.answer))
-    setPicked(null)
-    setFeedback(null)
-  }
-
-  // Brukes både for valgt nivå (legacy) og for "en gang til" (config).
-  function start(lvl) {
-    if (lvl) setLevel(lvl)
+  function start() {
+    setRound(newRound(config))
     setQIndex(0)
     setCorrect(0)
+    setPicked(null)
+    setFeedback(null)
+    setHelp(false)
     setStage('play')
-    nextProblem(lvl ? fullParams(LEVELS[lvl].params) : activeParams())
   }
 
   function answer(opt) {
@@ -158,149 +82,83 @@ export default function MathActivity({ go, config }) {
       setFeedback('right')
       setCorrect((c) => c + 1)
       sound.correct()
+      speech.auto('Riktig!')
     } else {
       setFeedback('wrong')
       sound.wrong()
+      speech.auto(`Svaret er ${problem.answer}.`)
     }
   }
 
   function next() {
-    if (qIndex + 1 >= QUESTIONS_PER_ROUND) {
-      finish()
+    if (qIndex + 1 >= round.length) {
+      const stars = starsFor(correct, round.length)
+      addStars(stars, { correct, total: round.length })
+      setStage('done')
     } else {
       setQIndex((i) => i + 1)
-      nextProblem(activeParams())
+      setPicked(null)
+      setFeedback(null)
+      setHelp(false)
     }
   }
 
-  function finish() {
-    setStage('done')
-    let earned = 1
-    if (correct >= QUESTIONS_PER_ROUND / 2) earned = 2
-    if (correct >= QUESTIONS_PER_ROUND - 1) earned = 3
-    setConfetti(true)
-    sound.fanfare()
-    addStars(earned, { correct, total: QUESTIONS_PER_ROUND })
-    setTimeout(() => setConfetti(false), 2500)
-  }
-
-  // ---- MENY: velg vanskelighetsnivå (kun uten config) ----
-  if (stage === 'menu') {
-    return (
-      <div className="animate-pop-in">
-        <TopBar title="Matte 🔢" onHome={() => go('home')} />
-        <div className="flex justify-center my-4">
-          <Mascot message="Velg hvor vanskelig du vil ha det!" />
-        </div>
-        <div className="grid gap-4 md:gap-6 mt-4">
-          {Object.entries(LEVELS).map(([key, cfg]) => (
-            <button
-              key={key}
-              onClick={() => {
-                sound.click()
-                start(key)
-              }}
-              className={`kid-btn ${cfg.color} text-white p-6 flex items-center justify-between hover:scale-[1.02]`}
-            >
-              <span className="text-5xl md:text-6xl">{cfg.emoji}</span>
-              <span className="flex-1 text-left ml-4">
-                <span className="block text-3xl md:text-4xl font-extrabold">{cfg.label}</span>
-                <span className="block text-lg md:text-xl opacity-95">{cfg.sub}</span>
-              </span>
-              <span className="text-4xl">▶️</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  // ---- FERDIG: vis resultat og stjerner ----
   if (stage === 'done') {
-    let earned = 1
-    if (correct >= QUESTIONS_PER_ROUND / 2) earned = 2
-    if (correct >= QUESTIONS_PER_ROUND - 1) earned = 3
     return (
-      <div className="animate-pop-in">
-        <Confetti show={confetti} />
-        <TopBar title="Bra jobba! 🎉" onHome={() => go('home')} />
-        <div className="bg-white/90 rounded-3xl p-6 text-center shadow-xl mt-4">
-          <Mascot mood="cheer" message={`Du fikk ${correct} av ${QUESTIONS_PER_ROUND} riktig!`} />
-          <div className="my-6">
-            <StarRating earned={earned} />
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <BigButton color="bg-emerald-500" onClick={() => start(configured ? null : level)}>
-              🔁 En gang til
-            </BigButton>
-            {configured ? (
-              <BigButton color="bg-sky-500" onClick={() => go('home')}>
-                🏠 Tilbake
-              </BigButton>
-            ) : (
-              <BigButton color="bg-sky-500" onClick={() => setStage('menu')}>
-                📊 Bytt nivå
-              </BigButton>
-            )}
-          </div>
-        </div>
-      </div>
+      <RoundDone
+        correct={correct}
+        total={round.length}
+        stars={starsFor(correct, round.length)}
+        onAgain={start}
+        onHome={() => go('home')}
+        onNext={onNextLevel}
+      />
     )
   }
 
-  // ---- SPILL: selve quizen ----
-  const showLine = problem.type === 'add' || problem.type === 'sub'
-  const lineMax = Math.min(Math.max(problem.a, problem.answer, 10), 20)
+  const canHelp = hasVisualHelp(problem)
+  const lineStart = problem.type === 'add' ? problem.a : problem.type === 'sub' ? problem.a : null
+
   return (
     <div className="animate-pop-in">
-      <Confetti show={confetti} />
       <TopBar title={title} onHome={() => go('home')} />
 
       <div className="bg-white/80 rounded-full h-5 overflow-hidden mb-4 shadow-inner">
-        <div
-          className="bg-amber-400 h-full transition-all duration-300"
-          style={{ width: `${(qIndex / QUESTIONS_PER_ROUND) * 100}%` }}
-        />
+        <div className="bg-amber-400 h-full transition-all duration-300" style={{ width: `${(qIndex / round.length) * 100}%` }} />
       </div>
       <p className="text-center text-white font-bold text-lg mb-2">
-        Oppgave {qIndex + 1} av {QUESTIONS_PER_ROUND}
+        Oppgave {qIndex + 1} av {round.length}
       </p>
 
       <div className="bg-white/95 rounded-3xl p-5 md:p-8 shadow-xl">
-        {problem.visual && (
-          <div className="mb-4">
-            <VisualCount problem={problem} />
-          </div>
-        )}
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <p className="text-center text-5xl md:text-6xl font-extrabold text-slate-700">{problem.text} = ?</p>
+          <SpeakButton text={spoken} />
+        </div>
 
-        <p className="text-center text-5xl md:text-6xl font-extrabold text-slate-700 mb-2">
-          {problem.text} = ?
-        </p>
-
-        {showLine && (
-          <div className="mt-2">
+        {canHelp && (
+          <div className="mt-2 text-center">
             <button
+              type="button"
               onClick={() => {
                 sound.click()
-                setShowNumberLine((s) => !s)
+                setHelp((h) => !h)
               }}
               className="kid-btn bg-sky-100 text-sky-700 text-base px-4 py-2 mb-1"
             >
-              {showNumberLine ? '🙈 Skjul tallinje' : '📏 Vis tallinje'}
+              {help ? '🙈 Skjul hjelp' : '💡 Hjelp'}
             </button>
-            {showNumberLine && (
-              <NumberLine
-                from={0}
-                to={lineMax}
-                highlight={[problem.answer].filter((n) => n <= 20)}
-                marker={problem.type === 'add' ? problem.a : undefined}
-              />
+            {help && (
+              <div className="mt-2">
+                <VisualCount problem={problem} emoji={problem.emoji} />
+                <NumberLine from={0} to={20} start={lineStart} />
+              </div>
             )}
           </div>
         )}
 
         <div className="grid grid-cols-2 gap-3 md:gap-4 mt-4">
-          {options.map((opt) => {
+          {problem.options.map((opt) => {
             const isPicked = picked === opt
             const isAnswer = opt === problem.answer
             let color = 'bg-indigo-500'
@@ -332,10 +190,12 @@ export default function MathActivity({ go, config }) {
               size="text-5xl"
             />
             <BigButton color="bg-amber-500" onClick={next}>
-              {qIndex + 1 >= QUESTIONS_PER_ROUND ? '🏁 Se resultat' : '➡️ Neste'}
+              {qIndex + 1 >= round.length ? '🏁 Se resultat' : '➡️ Neste'}
             </BigButton>
           </div>
         )}
+
+        <AutoSpeakToggle current={spoken} />
       </div>
     </div>
   )

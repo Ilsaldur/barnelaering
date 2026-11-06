@@ -1,35 +1,12 @@
 import { useRef, useState } from 'react'
-import { TopBar, Mascot, Confetti, StarRating, BigButton } from '../components/ui.jsx'
+import { TopBar, Mascot, BigButton } from '../components/ui.jsx'
+import { SpeakButton, useAutoSpeak, AutoSpeakToggle } from '../components/Speak.jsx'
+import RoundDone from '../components/RoundDone.jsx'
 import { useStars } from '../StarContext.jsx'
 import { sound } from '../sound.js'
-
-const QUESTIONS_PER_ROUND = 6
-
-// Hvilke minutter quizen bruker, ut fra grad.
-const MIN_POOLS = {
-  whole: [0],
-  half: [0, 30],
-  quarter: [0, 15, 30, 45],
-  five: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55],
-}
-
-function randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min
-}
-function shuffle(arr) {
-  return [...arr].sort(() => Math.random() - 0.5)
-}
-
-// Gjør om klokkeslett til vennlig norsk tekst.
-function timeText(hour, minute) {
-  const h12 = ((hour + 11) % 12) + 1 // 1..12
-  const next = (h12 % 12) + 1
-  if (minute === 0) return `Klokka er ${h12}`
-  if (minute === 15) return `Kvart over ${h12}`
-  if (minute === 30) return `Halv ${next}`
-  if (minute === 45) return `Kvart på ${next}`
-  return `${h12}:${minute.toString().padStart(2, '0')}`
-}
+import { speech } from '../speech.js'
+import { starsFor } from '../lib/scoring.js'
+import { makeClockRound, timeSentence } from '../lib/klokke.js'
 
 // Selve den analoge klokka. Viserne kan dras med fingeren.
 function AnalogClock({ hour, minute, onChange, interactive = true, size = 280 }) {
@@ -77,193 +54,112 @@ function AnalogClock({ hour, minute, onChange, interactive = true, size = 280 })
       onPointerLeave={() => setActive(null)}
     >
       <circle cx={cx} cy={cy} r={r} fill="#fff" stroke="#facc15" strokeWidth="10" />
-      {/* Tall 1–12 */}
       {Array.from({ length: 12 }).map((_, i) => {
         const n = i + 1
         const pos = handAt(n * 30, r * 0.82)
         return (
-          <text
-            key={n}
-            x={pos.x}
-            y={pos.y}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize={size * 0.1}
-            fontWeight="800"
-            fill="#475569"
-          >
+          <text key={n} x={pos.x} y={pos.y} textAnchor="middle" dominantBaseline="central" fontSize={size * 0.1} fontWeight="800" fill="#475569">
             {n}
           </text>
         )
       })}
-      {/* Timeviser (kort, tykk) */}
-      <line
-        x1={cx}
-        y1={cy}
-        x2={hourTip.x}
-        y2={hourTip.y}
-        stroke="#6366f1"
-        strokeWidth="12"
-        strokeLinecap="round"
-      />
-      {/* Minuttviser (lang, tynnere) */}
-      <line
-        x1={cx}
-        y1={cy}
-        x2={minTip.x}
-        y2={minTip.y}
-        stroke="#ec4899"
-        strokeWidth="8"
-        strokeLinecap="round"
-      />
-      {/* Gripepunkt for timeviser */}
+      <line x1={cx} y1={cy} x2={hourTip.x} y2={hourTip.y} stroke="#6366f1" strokeWidth="12" strokeLinecap="round" />
+      <line x1={cx} y1={cy} x2={minTip.x} y2={minTip.y} stroke="#ec4899" strokeWidth="8" strokeLinecap="round" />
       {interactive && (
-        <circle
-          cx={hourTip.x}
-          cy={hourTip.y}
-          r="18"
-          fill="#6366f1"
-          opacity={active === 'hour' ? 0.5 : 0.85}
-          onPointerDown={() => setActive('hour')}
-          style={{ cursor: 'grab' }}
-        />
+        <circle cx={hourTip.x} cy={hourTip.y} r="18" fill="#6366f1" opacity={active === 'hour' ? 0.5 : 0.85} onPointerDown={() => setActive('hour')} style={{ cursor: 'grab' }} />
       )}
-      {/* Gripepunkt for minuttviser */}
       {interactive && (
-        <circle
-          cx={minTip.x}
-          cy={minTip.y}
-          r="18"
-          fill="#ec4899"
-          opacity={active === 'minute' ? 0.5 : 0.85}
-          onPointerDown={() => setActive('minute')}
-          style={{ cursor: 'grab' }}
-        />
+        <circle cx={minTip.x} cy={minTip.y} r="18" fill="#ec4899" opacity={active === 'minute' ? 0.5 : 0.85} onPointerDown={() => setActive('minute')} style={{ cursor: 'grab' }} />
       )}
       <circle cx={cx} cy={cy} r="10" fill="#475569" />
     </svg>
   )
 }
 
-export default function Clock({ go, config }) {
+export default function Clock({ go, config, onNextLevel }) {
   const { addStars } = useStars()
-  const minutePool = MIN_POOLS[config?.minutes] || MIN_POOLS.quarter
+  const mode = config?.minutes || 'quarter'
   const learnTitle = config?.title ? `${config.title} 🕐` : 'Lær klokka 🕐'
-  const [mode, setMode] = useState('learn') // learn | quiz | done
+  const [view, setView] = useState('learn') // learn | quiz | done
   const [hour, setHour] = useState(3)
   const [minute, setMinute] = useState(0)
 
   // Quiz
-  const [target, setTarget] = useState({ hour: 3, minute: 0 })
-  const [options, setOptions] = useState([])
+  const [round, setRound] = useState([])
   const [qIndex, setQIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
   const [picked, setPicked] = useState(null)
   const [feedback, setFeedback] = useState(null)
-  const [confetti, setConfetti] = useState(false)
 
-  function makeQuestion() {
-    const h = randInt(1, 12)
-    const m = shuffle(minutePool)[0]
-    const correctText = timeText(h, m)
-    const opts = new Set([correctText])
-    let guard = 0
-    while (opts.size < 4 && guard < 60) {
-      guard++
-      const hh = randInt(1, 12)
-      const mm = shuffle(minutePool)[0]
-      opts.add(timeText(hh, mm))
-    }
-    setTarget({ hour: h, minute: m, text: correctText })
-    setOptions(shuffle([...opts]))
-  }
+  const q = round[qIndex]
+  const spoken = view === 'quiz' && q ? 'Hva er klokka?' : ''
+  useAutoSpeak(spoken, [qIndex, view])
 
   function startQuiz() {
-    setMode('quiz')
+    setRound(makeClockRound(mode))
+    setView('quiz')
     setQIndex(0)
     setCorrect(0)
     setPicked(null)
     setFeedback(null)
-    makeQuestion()
   }
 
   function answer(opt) {
     if (feedback) return
-    setPicked(opt)
-    if (opt === target.text) {
+    setPicked(opt.label)
+    if (opt.h === q.hour && opt.m === q.minute) {
       setFeedback('right')
       setCorrect((c) => c + 1)
       sound.correct()
+      speech.auto(`Riktig! ${q.sentence}.`)
     } else {
       setFeedback('wrong')
       sound.wrong()
+      speech.auto(`${q.sentence}.`)
     }
   }
 
   function next() {
-    if (qIndex + 1 >= QUESTIONS_PER_ROUND) {
-      setMode('done')
-      let earned = 1
-      if (correct >= QUESTIONS_PER_ROUND / 2) earned = 2
-      if (correct >= QUESTIONS_PER_ROUND - 1) earned = 3
-      setConfetti(true)
-      sound.fanfare()
-      addStars(earned, { correct, total: QUESTIONS_PER_ROUND })
-      setTimeout(() => setConfetti(false), 2500)
+    if (qIndex + 1 >= round.length) {
+      addStars(starsFor(correct, round.length), { correct, total: round.length })
+      setView('done')
     } else {
       setQIndex((i) => i + 1)
       setPicked(null)
       setFeedback(null)
-      makeQuestion()
     }
   }
 
-  if (mode === 'done') {
-    let earned = 1
-    if (correct >= QUESTIONS_PER_ROUND / 2) earned = 2
-    if (correct >= QUESTIONS_PER_ROUND - 1) earned = 3
+  if (view === 'done') {
     return (
-      <div className="animate-pop-in">
-        <Confetti show={confetti} />
-        <TopBar title="Klokka 🕐" onHome={() => go('home')} />
-        <div className="bg-white/90 rounded-3xl p-6 text-center shadow-xl mt-4">
-          <Mascot mood="cheer" message={`Du fikk ${correct} av ${QUESTIONS_PER_ROUND} riktig!`} />
-          <div className="my-6">
-            <StarRating earned={earned} />
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <BigButton color="bg-indigo-500" onClick={startQuiz}>
-              🔁 En gang til
-            </BigButton>
-            <BigButton color="bg-sky-500" onClick={() => setMode('learn')}>
-              🖐️ Øv mer
-            </BigButton>
-          </div>
-        </div>
-      </div>
+      <RoundDone correct={correct} total={round.length} stars={starsFor(correct, round.length)} onAgain={startQuiz} onHome={() => go('home')} onNext={onNextLevel}>
+        <BigButton color="bg-indigo-500" onClick={() => setView('learn')}>
+          🖐️ Øv mer
+        </BigButton>
+      </RoundDone>
     )
   }
 
-  if (mode === 'quiz') {
+  if (view === 'quiz') {
     return (
       <div className="animate-pop-in">
-        <Confetti show={confetti} />
         <TopBar title="Hva er klokka? 🕐" onHome={() => go('home')} />
         <div className="bg-white/80 rounded-full h-5 overflow-hidden mb-4 shadow-inner">
-          <div
-            className="bg-indigo-500 h-full transition-all duration-300"
-            style={{ width: `${(qIndex / QUESTIONS_PER_ROUND) * 100}%` }}
-          />
+          <div className="bg-indigo-500 h-full transition-all duration-300" style={{ width: `${(qIndex / round.length) * 100}%` }} />
         </div>
+        <p className="text-center text-white font-bold text-lg mb-2">
+          Oppgave {qIndex + 1} av {round.length}
+        </p>
         <div className="bg-white/95 rounded-3xl p-5 md:p-8 shadow-xl">
-          <AnalogClock hour={target.hour} minute={target.minute} interactive={false} />
-          <p className="text-center text-2xl md:text-3xl font-extrabold text-slate-700 my-4">
-            Hva er klokka? 🤔
-          </p>
+          <AnalogClock hour={q.hour} minute={q.minute} interactive={false} />
+          <div className="flex items-center justify-center gap-2 my-4">
+            <p className="text-center text-2xl md:text-3xl font-extrabold text-slate-700">Hva er klokka? 🤔</p>
+            <SpeakButton text={spoken} />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {options.map((opt) => {
-              const isPicked = picked === opt
-              const isAnswer = opt === target.text
+            {q.options.map((opt) => {
+              const isPicked = picked === opt.label
+              const isAnswer = opt.h === q.hour && opt.m === q.minute
               let color = 'bg-purple-500'
               if (feedback) {
                 if (isAnswer) color = 'bg-emerald-500'
@@ -272,43 +168,40 @@ export default function Clock({ go, config }) {
               }
               return (
                 <button
-                  key={opt}
+                  key={opt.label}
                   disabled={!!feedback}
                   onClick={() => answer(opt)}
-                  className={`kid-btn ${color} text-white text-xl md:text-2xl py-5 ${
-                    feedback && isAnswer ? 'animate-bouncey' : ''
-                  } ${feedback && isPicked && !isAnswer ? 'animate-shake' : ''}`}
+                  className={`kid-btn ${color} text-white text-xl md:text-2xl py-5 ${feedback && isAnswer ? 'animate-bouncey' : ''} ${
+                    feedback && isPicked && !isAnswer ? 'animate-shake' : ''
+                  }`}
                 >
-                  {opt}
+                  {opt.label}
                 </button>
               )
             })}
           </div>
           {feedback && (
             <div className="mt-5 flex flex-col items-center gap-3">
-              <Mascot
-                mood={feedback === 'right' ? 'cheer' : 'oops'}
-                message={feedback === 'right' ? 'Riktig! 🎉' : `Klokka er ${target.text}!`}
-                size="text-5xl"
-              />
+              <Mascot mood={feedback === 'right' ? 'cheer' : 'oops'} message={feedback === 'right' ? 'Riktig! 🎉' : `${q.sentence}!`} size="text-5xl" />
               <BigButton color="bg-amber-500" onClick={next}>
-                {qIndex + 1 >= QUESTIONS_PER_ROUND ? '🏁 Se resultat' : '➡️ Neste'}
+                {qIndex + 1 >= round.length ? '🏁 Se resultat' : '➡️ Neste'}
               </BigButton>
             </div>
           )}
+          <AutoSpeakToggle current={spoken} />
         </div>
       </div>
     )
   }
 
   // ---- LÆR: dra viserne ----
+  const shown = timeSentence(hour, minute)
   return (
     <div className="animate-pop-in">
       <TopBar title={learnTitle} onHome={() => go('home')} />
       <div className="bg-white/95 rounded-3xl p-5 md:p-8 shadow-xl">
         <p className="text-center text-lg md:text-xl font-bold text-slate-500 mb-2">
-          Dra <span className="text-pink-500">den lange</span> og{' '}
-          <span className="text-indigo-500">den korte</span> viseren! 🖐️
+          Dra <span className="text-pink-500">den lange</span> og <span className="text-indigo-500">den korte</span> viseren! 🖐️
         </p>
         <AnalogClock
           hour={hour}
@@ -319,15 +212,13 @@ export default function Clock({ go, config }) {
             sound.click()
           }}
         />
-        <div className="text-center mt-4">
+        <div className="text-center mt-4 flex items-center justify-center gap-2">
           <div className="inline-block bg-indigo-100 rounded-2xl px-6 py-3">
-            <span className="text-3xl md:text-4xl font-extrabold text-indigo-600">
-              {timeText(hour, minute)}
-            </span>
+            <span className="text-3xl md:text-4xl font-extrabold text-indigo-600">{shown}</span>
           </div>
+          <SpeakButton text={shown} />
         </div>
 
-        {/* Raske knapper for å sette vanlige klokkeslett */}
         <div className="flex flex-wrap gap-2 justify-center mt-5">
           {[
             { h: 7, m: 0, label: '🥣 7 (frokost)' },

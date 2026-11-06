@@ -1,14 +1,41 @@
 import { StarCounter } from '../components/ui.jsx'
+import { SpeakButton } from '../components/Speak.jsx'
 import { useStars } from '../StarContext.jsx'
-import { continueSuggestion } from '../progress.js'
 import { sound } from '../sound.js'
+import { dagensKort, dagStatus, ukestripe } from '../lib/dagen.js'
+import { STIGER } from '../data/stiger.js'
 
-// Startskjerm: velg tema. Hvert tema har sin egen nivåstige.
-export default function Home({ topics, onPick, onRewards, onGarden, onParents, onSwitchProfile, onEventyr }) {
-  const { stars, unlocked, profile, log, best } = useStars()
+const KORT_INFO = {
+  matte: { navn: 'Matte', emoji: '🔢', farge: 'bg-indigo-500' },
+  lesing: { navn: 'Lesing', emoji: '📖', farge: 'bg-violet-500' },
+  klokke: { navn: 'Klokka', emoji: '🕐', farge: 'bg-sky-500' },
+  geografi: { navn: 'Geografi', emoji: '🌍', farge: 'bg-teal-500' },
+  nott: { navn: 'Tenkenøtt', emoji: '🌰', farge: 'bg-amber-600' },
+}
 
-  // Adaptivt: foreslå å fortsette der man slapp, på anbefalt nivå.
-  const suggestion = continueSuggestion(log, best)
+// Barnets forside: «Dagens økt» øverst, fri lek under.
+export default function Home({ topics, onPick, onSamling, onGarden, onParents, onSwitchProfile, onMatte, onLesing, onNoetter, onDagens }) {
+  const { profile, onLine, session, fag, data, settings } = useStars()
+  const matte = fag?.matte
+  const lesing = fag?.lesing
+  const fagTilgjengelig = Object.keys(STIGER)
+  const kort = dagensKort({ settings, fagTilgjengelig })
+  const status = dagStatus({ dager: data.dager, settings })
+  const uke = ukestripe({ dager: data.dager, settings })
+
+  const hilsen = status.ferdig
+    ? 'Dagens økt er ferdig! Nå er alt åpent for fri lek. 🎉'
+    : status.gjort === 0
+      ? `Hei ${profile?.name || ''}! Velg ${status.maal === 1 ? 'ett oppdrag' : status.maal === 2 ? 'to oppdrag' : 'tre oppdrag'} i dag.`
+      : `${status.gjort} av ${status.maal} gjort. Ett til, så er dagen i boks!`
+
+  function velg(k) {
+    sound.click()
+    if (k.fag === 'matte') onMatte()
+    else if (k.fag === 'lesing') onLesing()
+    else if (k.fag === 'nott') onDagens('nott')
+    else onDagens(k.fag)
+  }
 
   return (
     <div className="animate-pop-in">
@@ -23,112 +50,108 @@ export default function Home({ topics, onPick, onRewards, onGarden, onParents, o
           <span className="text-2xl">{profile?.emoji || '🦊'}</span>
           {profile?.name || 'Spiller'}
         </button>
-        <StarCounter />
+        <div className="flex items-center gap-2">
+          {session && !onLine && (
+            <span className="bg-white/90 rounded-full px-3 py-2 text-sm font-bold text-slate-500 shadow" title="Uten nett – fremgangen lagres her og synkes senere">
+              📴
+            </span>
+          )}
+          <StarCounter />
+        </div>
       </div>
 
-      <header className="text-center mb-6">
-        <div className="text-7xl md:text-8xl animate-bouncey mb-2">🦊</div>
-        <h1 className="text-white font-extrabold text-4xl md:text-6xl drop-shadow-lg">Selmas Skole</h1>
-        <p className="text-white/95 font-bold text-xl md:text-2xl mt-2">Hva vil du øve på? 👇</p>
+      <header className="text-center mb-4">
+        <div className="text-6xl md:text-7xl animate-bouncey mb-1">🦊</div>
+        <h1 className="text-white font-extrabold text-3xl md:text-5xl drop-shadow-lg">Selmas skole</h1>
       </header>
 
-      {/* Fortsett der du slapp */}
-      {suggestion && (
-        <button
-          onClick={() => {
-            sound.click()
-            onPick(suggestion.topic.id)
-          }}
-          className="kid-btn bg-white/95 text-slate-700 w-full p-4 md:p-5 mb-4 flex items-center justify-center gap-3 hover:scale-[1.02]"
-        >
-          <span className="text-4xl md:text-5xl">▶️</span>
+      {/* Dagens økt */}
+      <section className="bg-white/95 rounded-3xl p-4 md:p-5 shadow-xl mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xl md:text-2xl font-extrabold text-slate-700">📅 Dagens økt</h2>
+          <div className="flex gap-1" title="Ukestripe: et stempel for hver dag du gjorde dagens økt">
+            {uke.map((d) => (
+              <div key={d.key} className={`w-7 h-9 md:w-8 md:h-10 rounded-lg flex flex-col items-center justify-center text-[10px] font-extrabold ${d.ferdig ? 'bg-emerald-400 text-white' : d.idag ? 'bg-amber-100 text-amber-600 ring-2 ring-amber-300' : d.framtid ? 'bg-slate-50 text-slate-300' : 'bg-slate-100 text-slate-400'}`}>
+                <span>{d.navn}</span>
+                <span className="text-sm leading-none">{d.ferdig ? '✓' : d.idag ? '🦊' : ''}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-start gap-2 mb-3">
+          <p className="text-slate-600 font-bold text-base md:text-lg">{hilsen}</p>
+          <SpeakButton text={hilsen} size="text-xl" />
+        </div>
+        <div className="grid grid-cols-3 gap-2 md:gap-3">
+          {kort.map((k) => {
+            const info = KORT_INFO[k.fag]
+            const gjort = (status.fag[k.fag] || 0) > 0
+            return (
+              <button key={k.id} onClick={() => velg(k)} className={`kid-btn ${info.farge} text-white p-3 md:p-4 flex flex-col items-center gap-1 hover:scale-105 relative`}>
+                {k.fast && <span className="absolute top-1 left-2 text-sm" title="Fast oppdrag">📌</span>}
+                {gjort && <span className="absolute top-1 right-2 bg-white text-emerald-500 rounded-full w-6 h-6 flex items-center justify-center text-sm font-extrabold">✓</span>}
+                <span className="text-4xl md:text-5xl">{k.overraskelse ? '🎁' : info.emoji}</span>
+                <span className="text-base md:text-xl font-extrabold text-center leading-tight">{k.overraskelse ? 'Overraskelse' : info.navn}</span>
+                {k.overraskelse && <span className="text-xs opacity-90">{info.emoji} {info.navn}</span>}
+                {k.fag === 'matte' && matte?.nivaa && <span className="text-xs opacity-90">nivå {matte.nivaa}</span>}
+                {k.fag === 'lesing' && lesing?.nivaa && <span className="text-xs opacity-90">nivå {lesing.nivaa}</span>}
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* Fri lek */}
+      <h2 className="text-white font-extrabold text-xl md:text-2xl drop-shadow mb-2 mt-5">🎈 Fri lek</h2>
+      <div className="grid grid-cols-2 gap-3 md:gap-4 mb-3">
+        <button onClick={() => { sound.click(); onMatte() }} className="kid-btn bg-cyan-500 text-white p-4 flex items-center gap-3 hover:scale-[1.02]">
+          <span className="text-4xl">🗺️</span>
           <span className="text-left">
-            <span className="block text-xl md:text-2xl font-extrabold">Fortsett der du slapp!</span>
-            <span className="block text-base md:text-lg font-semibold text-slate-500">
-              {suggestion.topic.emoji} {suggestion.topic.title} – nivå {suggestion.levelIndex + 1}
-            </span>
+            <span className="block text-lg md:text-xl font-extrabold">Eventyrkartet</span>
+            <span className="block text-xs md:text-sm opacity-90">{matte?.nivaa ? `Reven er på nivå ${matte.nivaa}` : 'Finn nivået ditt'}</span>
           </span>
         </button>
-      )}
+        <button onClick={() => { sound.click(); onLesing() }} className="kid-btn bg-violet-500 text-white p-4 flex items-center gap-3 hover:scale-[1.02]">
+          <span className="text-4xl">📖</span>
+          <span className="text-left">
+            <span className="block text-lg md:text-xl font-extrabold">Lesestigen</span>
+            <span className="block text-xs md:text-sm opacity-90">{lesing?.nivaa ? `Nivå ${lesing.nivaa} av 16` : 'Finn nivået ditt'}</span>
+          </span>
+        </button>
+        <button onClick={() => { sound.click(); onNoetter() }} className="kid-btn bg-amber-700 text-white p-4 flex items-center gap-3 hover:scale-[1.02]">
+          <span className="text-4xl">🌰</span>
+          <span className="text-left">
+            <span className="block text-lg md:text-xl font-extrabold">Nøttehula</span>
+            <span className="block text-xs md:text-sm opacity-90">Tenkenøtter</span>
+          </span>
+        </button>
+        <button onClick={() => { sound.click(); onSamling() }} className="kid-btn bg-amber-500 text-white p-4 flex items-center gap-3 hover:scale-[1.02]">
+          <span className="text-4xl">🏆</span>
+          <span className="text-left">
+            <span className="block text-lg md:text-xl font-extrabold">Samlingen</span>
+            <span className="block text-xs md:text-sm opacity-90">Kort, kostymer og kisten</span>
+          </span>
+        </button>
+        <button onClick={() => { sound.click(); onGarden() }} className="kid-btn bg-emerald-500 text-white p-4 flex items-center gap-3 hover:scale-[1.02]">
+          <span className="text-4xl">🌷</span>
+          <span className="text-left">
+            <span className="block text-lg md:text-xl font-extrabold">Hagen min</span>
+            <span className="block text-xs md:text-sm opacity-90">Bruk stjernene</span>
+          </span>
+        </button>
+      </div>
 
-      {/* Temavelger – hvert tema har sin egen nivåstige */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
+      <div className="grid grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
         {topics.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => {
-              sound.click()
-              onPick(t.id)
-            }}
-            className={`kid-btn ${t.color} text-white p-4 md:p-6 flex flex-col items-center gap-1 hover:scale-105`}
-          >
-            <span className="text-5xl md:text-6xl">{t.emoji}</span>
-            <span className="text-lg md:text-2xl font-extrabold text-center leading-tight">{t.title}</span>
+          <button key={t.id} onClick={() => { sound.click(); onPick(t.id) }} className={`kid-btn ${t.color} text-white p-3 md:p-4 flex flex-col items-center gap-1 hover:scale-105`}>
+            <span className="text-3xl md:text-5xl">{t.emoji}</span>
+            <span className="text-sm md:text-lg font-extrabold text-center leading-tight">{t.title}</span>
           </button>
         ))}
       </div>
 
-      {/* Eventyret (samlekategori) – kan skjules via flagg i App.jsx */}
-      {onEventyr && (
-        <div className="mt-4">
-          <button
-            onClick={() => {
-              sound.click()
-              onEventyr()
-            }}
-            className="kid-btn bg-cyan-500 text-white w-full p-5 md:p-7 flex items-center justify-center gap-3 hover:scale-[1.02]"
-          >
-            <span className="text-5xl md:text-6xl">🗺️</span>
-            <span className="text-left">
-              <span className="block text-2xl md:text-3xl font-extrabold">Eventyret</span>
-              <span className="block text-base md:text-lg font-semibold opacity-95">Reis gjennom alle kategoriene!</span>
-            </span>
-          </button>
-        </div>
-      )}
-
-      {/* Hagen og stjernene */}
-      <div className="mt-4 grid grid-cols-2 gap-3 md:gap-4">
-        <button
-          onClick={() => {
-            sound.click()
-            onGarden()
-          }}
-          className="kid-btn bg-emerald-500 text-white p-4 md:p-5 flex items-center justify-center gap-3 hover:scale-[1.02]"
-        >
-          <span className="text-4xl md:text-5xl">🌷</span>
-          <span className="text-xl md:text-3xl font-extrabold">Hagen min</span>
-        </button>
-        <button
-          onClick={() => {
-            sound.click()
-            onRewards()
-          }}
-          className="kid-btn bg-amber-500 text-white p-4 md:p-5 flex items-center justify-center gap-3 hover:scale-[1.02]"
-        >
-          <span className="text-4xl md:text-5xl">🏆</span>
-          <span className="text-xl md:text-3xl font-extrabold">Mine stjerner</span>
-        </button>
-      </div>
-
-      <div className="mt-6 bg-white/90 rounded-3xl p-4 text-center shadow-lg">
-        <p className="text-lg md:text-xl font-bold text-slate-700">
-          Du har samlet <span className="text-amber-500">{stars} ⭐</span> og{' '}
-          <span className="text-fuchsia-500">{unlocked.length}</span> klistremerker!
-        </p>
-        {unlocked.length > 0 && (
-          <p className="text-3xl mt-1">{unlocked.map((u) => u.emoji).join(' ')}</p>
-        )}
-      </div>
-
-      <div className="mt-4 text-center">
-        <button
-          onClick={() => {
-            sound.click()
-            onParents()
-          }}
-          className="text-white/70 text-sm font-bold underline hover:text-white"
-        >
+      <div className="mt-5 text-center">
+        <button onClick={() => { sound.click(); onParents() }} className="text-white/70 text-sm font-bold underline hover:text-white">
           👨‍👩‍👧 For voksne
         </button>
       </div>

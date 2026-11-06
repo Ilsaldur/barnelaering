@@ -1,9 +1,14 @@
-// Opplesing med nettleserens innebygde talesyntese (Web Speech API).
-// Viktig for de minste som ikke kan lese ennå. Ingen nettverk/API-nøkler.
+// Opplesing. Hele appen går gjennom `speech.speak(text)`.
+//
+// Standard er nettleserens norske stemme (Web Speech API, nb-NO). Egne
+// lydopptak kan kobles på senere med `speech.setProvider(fn)` uten at noe
+// annet i appen må endres: fn(text) returnerer true hvis den tok jobben.
 
-const STORAGE_KEY = 'barnelaering_tale_v1'
+const AUTO_KEY = 'barnelaering_tale_auto_v1'
 
 let voices = []
+let provider = null
+const listeners = new Set()
 
 function refreshVoices() {
   if (typeof window === 'undefined' || !window.speechSynthesis) return
@@ -15,8 +20,8 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
   window.speechSynthesis.addEventListener?.('voiceschanged', refreshVoices)
 }
 
-// Finn beste norske stemme. Faller tilbake på dansk/svensk (nært nok for barn)
-// og til slutt standardstemmen.
+// Finn beste norske stemme. Faller tilbake på dansk/svensk og til slutt
+// standardstemmen.
 function pickVoice() {
   if (!voices.length) refreshVoices()
   const by = (pred) => voices.find(pred)
@@ -30,45 +35,70 @@ function pickVoice() {
   )
 }
 
+function browserSpeak(text) {
+  const synth = window.speechSynthesis
+  synth.cancel()
+  const u = new SpeechSynthesisUtterance(text)
+  const voice = pickVoice()
+  if (voice) u.voice = voice
+  u.lang = voice?.lang || 'nb-NO'
+  u.rate = 0.95
+  u.pitch = 1.05
+  synth.speak(u)
+}
+
 export const speech = {
   supported() {
-    return typeof window !== 'undefined' && 'speechSynthesis' in window
+    return !!provider || (typeof window !== 'undefined' && 'speechSynthesis' in window)
   },
 
-  enabled() {
+  // Automatisk opplesing av hver oppgave. Av som standard.
+  autoEnabled() {
     try {
-      return localStorage.getItem(STORAGE_KEY) !== 'av'
+      return localStorage.getItem(AUTO_KEY) === 'på'
     } catch {
-      return true
+      return false
     }
   },
 
-  setEnabled(on) {
+  setAuto(on) {
+    const before = this.autoEnabled()
     try {
-      localStorage.setItem(STORAGE_KEY, on ? 'på' : 'av')
+      localStorage.setItem(AUTO_KEY, on ? 'på' : 'av')
     } catch {
       /* ignorer */
     }
     if (!on) this.stop()
+    if (before !== !!on) for (const fn of listeners) fn(!!on)
   },
 
-  // Les opp tekst (hvis skrudd på). `force` leser selv om bryteren er av,
-  // brukes av den manuelle 🔊-knappen.
-  speak(text, { force = false } = {}) {
-    if (!this.supported() || !text) return
-    if (!force && !this.enabled()) return
-    const synth = window.speechSynthesis
-    synth.cancel()
-    const u = new SpeechSynthesisUtterance(text)
-    const voice = pickVoice()
-    if (voice) u.voice = voice
-    u.lang = voice?.lang || 'nb-NO'
-    u.rate = 0.95
-    u.pitch = 1.05
-    synth.speak(u)
+  // Få beskjed når automatisk opplesing slås av eller på (lagres i profilen).
+  onAutoChange(fn) {
+    listeners.add(fn)
+    return () => listeners.delete(fn)
+  },
+
+  // Les opp tekst. Den eneste veien til stemmen for hele appen.
+  speak(text) {
+    if (!text) return
+    const t = String(text).trim()
+    if (!t) return
+    if (provider && provider(t)) return
+    if (typeof window === 'undefined' || !window.speechSynthesis) return
+    browserSpeak(t)
+  },
+
+  // Les opp bare hvis automatisk opplesing er på.
+  auto(text) {
+    if (this.autoEnabled()) this.speak(text)
   },
 
   stop() {
-    if (this.supported()) window.speechSynthesis.cancel()
+    if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel()
+  },
+
+  // Bytt stemme (f.eks. egne opptak). fn(text) → true hvis den leste.
+  setProvider(fn) {
+    provider = typeof fn === 'function' ? fn : null
   },
 }
