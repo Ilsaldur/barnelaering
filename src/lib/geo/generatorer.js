@@ -2,6 +2,17 @@
 import { pick, shuffle } from '../rng.js'
 import { registerTypeLabels } from '../labels.js'
 import { landFor, VERDENSDELER } from '../../data/geo/land.js'
+import { storeNokPaaVerdenskart } from './topo.js'
+
+// På verdenskartet spørres det bare etter land som synes godt (minst 24 × 24
+// punkter på mobil). Små europeiske land hører til Europa-kartet.
+let storeIds = null
+function kartPool(region) {
+  const pool = landFor(region)
+  if (region !== 'verden') return pool
+  if (!storeIds) storeIds = new Set(storeNokPaaVerdenskart(pool.map((l) => l.id)))
+  return pool.filter((l) => storeIds.has(l.id))
+}
 
 function andre(pool, l, n, rng) {
   return shuffle(
@@ -75,7 +86,7 @@ export const GEN_GEO = {
   },
   // Finn landet på kartet.
   finn_paa_kart: ({ region = 'norden' }, rng) => {
-    const pool = landFor(region)
+    const pool = kartPool(region)
     const l = pick(pool, rng)
     return {
       type: `kart_${region}`,
@@ -89,9 +100,9 @@ export const GEN_GEO = {
   },
   // Hvilket land er markert?
   hvilket_land: ({ region = 'norden' }, rng) => {
-    const pool = landFor(region)
+    const pool = kartPool(region)
     const l = pick(pool, rng)
-    const feil = andre(pool, l, 3, rng)
+    const feil = andre(landFor(region), l, 3, rng)
     return {
       type: `kart_${region}`,
       form: 'valg',
@@ -106,7 +117,7 @@ export const GEN_GEO = {
   },
   // Verdensdel.
   verdensdel: (_, rng) => {
-    const pool = landFor('verden').filter((l) => l.region === 'verden' || l.region === 'norden')
+    const pool = landFor('verden').filter((l) => (l.region === 'verden' || l.region === 'norden') && !l.ikkeVerdensdel)
     const l = pick(pool, rng)
     return {
       type: 'verdensdel',

@@ -7,7 +7,7 @@
 | F – Hjelpemodus (haster) | Ferdig og pushet. Se `docs/etappeF.md`. | 2026-11-06 |
 | G – Resultatskjermen på nettbrett | Ferdig og pushet. Se `docs/etappeG.md`. | 2026-11-06 |
 | H – Lesing | Ferdig og pushet. Se `docs/etappeH.md`. | 2026-11-06 |
-| I – Kort, klokke og kart | Ikke startet | |
+| I – Kort, klokke og kart | Ferdig og pushet. Se `docs/etappeI.md`. | 2026-11-06 |
 | J – Under panseret | Ikke startet | |
 | K – Innhold | Ikke startet (resten av prompten mottatt). | |
 

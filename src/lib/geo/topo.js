@@ -93,3 +93,36 @@ export function centroidFor(country) {
   }
   return [sx / best.length, sy / best.length]
 }
+
+// Hvor stort et land blir på kartet over et område ved en gitt skjermbredde,
+// målt på den største sammenhengende delen (øyer teller ikke).
+export function pikselStorrelse(country, region = 'verden', breddePx = 390) {
+  const vb = viewBoxFor(region)
+  const skala = breddePx / vb.w
+  let best = null
+  for (const r of country.rings) if (!best || r.length > best.length) best = r
+  if (!best) return { w: 0, h: 0 }
+  let x0 = Infinity
+  let x1 = -Infinity
+  let y0 = Infinity
+  let y1 = -Infinity
+  for (const p of best) {
+    const [x, y] = project(p)
+    if (x < x0) x0 = x
+    if (x > x1) x1 = x
+    if (y < y0) y0 = y
+    if (y > y1) y1 = y
+  }
+  return { w: (x1 - x0) * skala, h: (y1 - y0) * skala }
+}
+
+// Land som er minst `min` × `min` punkter på verdenskartet ved 390 punkters bredde.
+export function storeNokPaaVerdenskart(ids, min = 24) {
+  const alle = countries()
+  return ids.filter((id) => {
+    const c = alle.find((x) => x.id === id)
+    if (!c) return false
+    const { w, h } = pikselStorrelse(c, 'verden', 390)
+    return w >= min && h >= min
+  })
+}

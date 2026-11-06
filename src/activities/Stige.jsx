@@ -128,14 +128,18 @@ export default function Stige({ cfg, go }) {
   if (view === 'oppdrag' && mission) {
     const o = cfg.omraadeFor(mission.nivaa)
     // «Lær først» første gang barnet starter et oppdrag på et nivå med kort.
+    // Oppdraget starter først når kortet er lukket.
     const kort = laerkortForNivaa(cfg.id, mission.nivaa)
     const visKort = kort && !(data.laerkort || []).includes(kort.id)
-    return (
-      <>
-        {visKort && <LaerKort kort={kort} stige={STIGE} modus="forst" fag={cfg.id} onDone={() => markLaerkort(kort.id)} onSkip={() => markLaerkort(kort.id)} />}
-        <Oppdrag tasks={mission.tasks} title={`${mission.replay ? 'Om igjen: nivå' : 'Nivå'} ${mission.nivaa} ${o.emoji}`} hjelpStart={mission.hjelp} onDone={ferdigOppdrag} onHome={go} fag={cfg.id} stige={STIGE} />
-      </>
-    )
+    if (visKort) {
+      return (
+        <div className="animate-pop-in">
+          <TopBar title={`Nivå ${mission.nivaa} ${o.emoji}`} onHome={go} />
+          <LaerKort kort={kort} stige={STIGE} modus="forst" fag={cfg.id} onDone={() => markLaerkort(kort.id)} onSkip={() => markLaerkort(kort.id)} />
+        </div>
+      )
+    }
+    return <Oppdrag tasks={mission.tasks} title={`${mission.replay ? 'Om igjen: nivå' : 'Nivå'} ${mission.nivaa} ${o.emoji}`} hjelpStart={mission.hjelp} onDone={ferdigOppdrag} onHome={go} fag={cfg.id} stige={STIGE} />
   }
   if (view === 'sjef' && mission) {
     return <Oppdrag tasks={mission.tasks} title="Sjefsoppgave 👑" onDone={ferdigSjef} onHome={go} fag={cfg.id} attempts={1} noHelp />
