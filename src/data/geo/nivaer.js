@@ -1,6 +1,7 @@
 // Geografistigen: ni nivåer. Norden, Europa og verden, med flagg,
 // hovedsteder og et ordentlig kart å trykke på.
 import { registerStige } from '../stiger.js'
+import { registerTypeLabels } from '../../lib/labels.js'
 
 export const GEO_OMRAADER = [
   { id: 'norden', navn: 'Norden', emoji: '❄️', farge: 'bg-sky-500', gradient: 'from-sky-300 via-cyan-200 to-blue-200', fra: 1, til: 3 },
@@ -47,3 +48,21 @@ export function geoOmraadeFor(id) {
 }
 
 registerStige('geografi', NIVAER_GEO)
+
+// Lesbare navn på oppgavetypene (voksensiden), uavhengig av om kartet er lastet.
+registerTypeLabels({
+  flagg_norden: 'Flagg i Norden',
+  flagg_europa: 'Flagg i Europa',
+  flagg_verden: 'Flagg i verden',
+  hovedstad_norden: 'Hovedsteder i Norden',
+  hovedstad_europa: 'Hovedsteder i Europa',
+  hovedstad_verden: 'Hovedsteder i verden',
+  kart_norden: 'Kartet over Norden',
+  kart_europa: 'Kartet over Europa',
+  kart_verden: 'Verdenskartet',
+  kart_amerika: 'Kartet over Amerika',
+  kart_afrika: 'Kartet over Afrika',
+  kart_asia: 'Kartet over Asia',
+  kart_oseania: 'Kartet over Oseania',
+  verdensdel: 'Verdensdeler',
+})

@@ -2,7 +2,6 @@
 // Kunnskapsstige: hver oppgave har `kjent` («land:se» / «hovedstad:se»),
 // `visning` (slik tingen vises første gang) og `optionsKjent`.
 import { shuffle } from '../rng.js'
-import { registerTypeLabels } from '../labels.js'
 import { landFor, VERDENSDELER } from '../../data/geo/land.js'
 import { kartPool, KART_NAVN } from './kart.js'
 import { velgKjent, kjenteFeil } from '../kunnskap.js'
@@ -216,19 +215,3 @@ export function genGeo(type, param = {}, rng = Math.random) {
   return task
 }
 
-registerTypeLabels({
-  flagg_norden: 'Flagg i Norden',
-  flagg_europa: 'Flagg i Europa',
-  flagg_verden: 'Flagg i verden',
-  hovedstad_norden: 'Hovedsteder i Norden',
-  hovedstad_europa: 'Hovedsteder i Europa',
-  hovedstad_verden: 'Hovedsteder i verden',
-  kart_norden: 'Kartet over Norden',
-  kart_europa: 'Kartet over Europa',
-  kart_verden: 'Verdenskartet',
-  kart_amerika: 'Kartet over Amerika',
-  kart_afrika: 'Kartet over Afrika',
-  kart_asia: 'Kartet over Asia',
-  kart_oseania: 'Kartet over Oseania',
-  verdensdel: 'Verdensdeler',
-})
