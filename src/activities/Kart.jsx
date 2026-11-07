@@ -1,6 +1,5 @@
+import Rev from '../components/Rev.jsx'
 import { useState } from 'react'
-import { useStarsOptional } from '../StarContext.jsx'
-import { kostymeById } from '../data/kostymer.js'
 import { NIVAER as NIVAER_MATTE, VERDENER as VERDENER_MATTE } from '../data/matte/nivaer.js'
 import { sound } from '../sound.js'
 
@@ -9,11 +8,9 @@ import { sound } from '../sound.js'
 // Steder lenger fram er låst til reven kommer dit.
 
 function Fox({ className = '' }) {
-  const ctx = useStarsOptional()
-  const k = ctx?.data?.kostyme ? kostymeById(ctx.data.kostyme) : null
   return (
-    <span className={`relative inline-block ${className}`}>
-      🦊{k && <span className="absolute -top-[0.35em] left-1/2 -translate-x-1/2 text-[0.55em]">{k.emoji}</span>}
+    <span className={`inline-block align-middle ${className}`}>
+      <Rev className="w-[1.3em]" />
     </span>
   )
 }

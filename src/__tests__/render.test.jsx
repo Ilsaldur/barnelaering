@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { renderToString } from 'react-dom/server'
 import { StarProvider } from '../StarContext.jsx'
-import { TOPICS } from '../data/topics.js'
-import { ENGINES } from '../activities/engines.js'
 import Home from '../activities/Home.jsx'
 import Samling from '../activities/Samling.jsx'
 import Kart from '../activities/Kart.jsx'
@@ -14,7 +12,6 @@ import Parents from '../activities/Parents.jsx'
 import Garden from '../activities/Garden.jsx'
 import Family from '../activities/Family.jsx'
 import Personvern from '../activities/Personvern.jsx'
-import TopicLadder from '../activities/TopicLadder.jsx'
 import RoundDone from '../components/RoundDone.jsx'
 import AdultGate from '../components/AdultGate.jsx'
 import MatteStige from '../activities/MatteStige.jsx'
@@ -43,9 +40,9 @@ const wrap = (el) => renderToString(<StarProvider>{el}</StarProvider>)
 
 describe('alle skjermer rendrer uten feil', () => {
   it('forside, kart, stjerner, hage, voksenside, profilvalg', () => {
-    const home = wrap(<Home topics={TOPICS} onPick={noop} onSamling={noop} onGarden={noop} onParents={noop} onSwitchProfile={noop} onMatte={noop} onLesing={noop} onNoetter={noop} onDagens={noop} onFag={noop} />)
+    const home = wrap(<Home onSamling={noop} onGarden={noop} onParents={noop} onSwitchProfile={noop} onMatte={noop} onLesing={noop} onNoetter={noop} onDagens={noop} onFag={noop} />)
     expect(home).toContain('Dagens økt')
-    expect(home).toContain('Eventyrkartet')
+    expect(home).toContain('Fri lek')
     expect(wrap(<Samling go={noop} onGarden={noop} />)).toContain('Familiekisten')
     const kart = wrap(<Kart matte={{ ...emptyFag(), nivaa: 12, beste: { 7: 3 } }} onStart={noop} onReplay={noop} />)
     expect(kart).toContain('Det blå havet')
@@ -55,7 +52,6 @@ describe('alle skjermer rendrer uten feil', () => {
     expect(wrap(<Garden go={noop} />)).toContain('Hagebutikken')
     expect(wrap(<Family onPicked={noop} onPrivacy={noop} />)).toContain('Hvem skal spille')
     expect(wrap(<Personvern go={noop} />)).toContain('Sletting')
-    expect(wrap(<TopicLadder topic={TOPICS[0]} go={noop} onOpenLevel={noop} />)).toContain('Hvilken form')
     expect(renderToString(<AdultGate onPass={noop} />)).toContain('tre sekunder')
   })
 
@@ -67,24 +63,12 @@ describe('alle skjermer rendrer uten feil', () => {
     expect(strong).toContain('Alle riktige')
   })
 
-  it('hvert nivå i hver stige rendrer første oppgave', () => {
-    for (const topic of TOPICS) {
-      topic.levels.forEach((lvl, idx) => {
-        const Engine = ENGINES[lvl.engine]
-        expect(Engine, `${topic.id}/${idx}: ukjent motor ${lvl.engine}`).toBeTruthy()
-        const html = wrap(<Engine go={noop} config={lvl.config} />)
-        expect(html.length, `${topic.id}/${lvl.sub}`).toBeGreaterThan(200)
-        // Tallinja skal aldri være synlig før barnet ber om hjelp.
-        expect(html).not.toContain('🐰')
-      })
-    }
-  })
 
-  it('mattestigen: plassering, nøttehula og alle oppgavetyper rendrer', () => {
-    expect(wrap(<MatteStige go={noop} onNoetter={noop} />)).toContain('Hvor vil du begynne')
+  it('mattestigen: første oppdrag, nøttehula og alle oppgavetyper rendrer', () => {
+    expect(wrap(<MatteStige go={noop} onNoetter={noop} />)).toContain('Eventyrkartet')
     expect(wrap(<Noettehula go={noop} />)).toContain('Nøttehula')
     expect(wrap(<LeseStige go={noop} />)).toContain('Skrive riktig')
-    expect(wrap(<LeseStige go={noop} start="lesing" />)).toContain('Hva passer best')
+    expect(wrap(<LeseStige go={noop} start="lesing" />)).toContain('Lese')
     const rngL = seeded(31)
     for (const n of [...NIVAER_LESING, ...NIVAER_SKRIVE, ...NIVAER_SPRAK]) {
       for (const t of n.typer) {
@@ -111,9 +95,9 @@ describe('alle skjermer rendrer uten feil', () => {
   })
 
   it('klokke-, geografi- og engelskstigen rendrer med alle oppgavetyper', () => {
-    expect(wrap(<KlokkeStige go={noop} />)).toContain('Hva passer best')
-    expect(wrap(<GeoStige go={noop} />)).toContain('Hva passer best')
-    expect(wrap(<EngelskStige go={noop} />)).toContain('Hva passer best')
+    expect(wrap(<KlokkeStige go={noop} />)).toContain('Klokkestigen')
+    expect(wrap(<GeoStige go={noop} />)).toContain('Geografistigen')
+    expect(wrap(<EngelskStige go={noop} />)).toContain('Engelskstigen')
     expect(renderToString(<VerdensKart region="norden" highlight="578" />)).toContain('<path')
     const rng = seeded(41)
     for (const [nivaer, gen, fag] of [

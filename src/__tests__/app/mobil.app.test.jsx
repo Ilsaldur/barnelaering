@@ -13,7 +13,6 @@ import { SpeakButton } from '../../components/Speak.jsx'
 import { speech } from '../../speech.js'
 import { StarProvider } from '../../StarContext.jsx'
 import Home from '../../activities/Home.jsx'
-import { TOPICS } from '../../data/topics.js'
 
 afterEach(cleanup)
 
@@ -80,11 +79,11 @@ describe('bredder', () => {
   it('knappene under Fri lek lar lange ord brytes', () => {
     render(
       <StarProvider>
-        <Home topics={TOPICS} onPick={() => {}} onSamling={() => {}} onGarden={() => {}} onParents={() => {}} onSwitchProfile={() => {}} onMatte={() => {}} onLesing={() => {}} onNoetter={() => {}} onDagens={() => {}} onFag={() => {}} />
+        <Home onSamling={() => {}} onGarden={() => {}} onParents={() => {}} onSwitchProfile={() => {}} onMatte={() => {}} onLesing={() => {}} onNoetter={() => {}} onDagens={() => {}} onFag={() => {}} />
       </StarProvider>,
     )
-    for (const navn of ['Geografistigen', 'Klokkestigen', 'Engelskstigen', 'Eventyrkartet']) {
-      const tittel = screen.getByText(navn)
+    for (const navn of ['Geografi', 'Klokka', 'Engelsk', 'Matte']) {
+      const tittel = screen.getAllByText(navn).find((e) => e.className.includes('[overflow-wrap:anywhere]'))
       expect(tittel.className).toContain('[overflow-wrap:anywhere]')
       const knapp = tittel.closest('button')
       expect(knapp.className).toContain('min-w-0')

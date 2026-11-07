@@ -20,7 +20,8 @@ function sjekk(task, type) {
     if (!task.allowDecimal) expect(Number.isInteger(task.answer), type).toBe(true)
   } else if (task.form === 'sorter') {
     expect(task.items.length, type).toBe(task.answer.length)
-    expect([...task.items].sort((a, b) => a - b), type).toEqual(task.answer)
+    if (task.items.every((x) => typeof x === 'number')) expect([...task.items].sort((a, b) => a - b), type).toEqual(task.answer)
+    else expect([...task.items].map((x) => x.id).sort(), type).toEqual([...task.answer].sort())
   } else if (task.form === 'tallinje') {
     expect(task.answer, type).toBeGreaterThanOrEqual(task.line.from)
     expect(task.answer, type).toBeLessThanOrEqual(task.line.to)
@@ -121,7 +122,7 @@ describe('oppgavegeneratorer', () => {
   })
   it('nivå 2 blander telling, terning, fingre og flest', () => {
     const n = NIVAER[1]
-    expect(n.typer.map((t) => t.type).sort()).toEqual(['fingre', 'mer_mindre_mengder', 'tell', 'terning'])
+    expect(n.typer.map((t) => t.type).sort()).toEqual(['fingre', 'mer_mindre_mengder', 'monster_neste', 'tell', 'tell_former', 'terning'])
     const rng = seeded(2)
     for (let i = 0; i < 50; i++) {
       const t = gen('fingre', { min: 1, max: 10 }, rng)

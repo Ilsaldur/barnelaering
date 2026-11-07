@@ -1,7 +1,7 @@
 // Service worker for Selmas skole: lagrer appskallet så appen starter uten nett
 // etter første besøk. Hashede filer i /assets/ caches først (de endrer seg
 // aldri), sider hentes fra nettet først med cachet index.html som reserve.
-const CACHE = 'selmas-skole-v3'
+const CACHE = 'selmas-skole-v4'
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png']
 
 // Ved installasjon: lagre skallet, og hent skriptene og stilarkene som
@@ -15,12 +15,22 @@ async function hentSkall() {
     await c.put('/index.html', new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } }))
     const filer = [...html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map((m) => m[1])
     await Promise.all(filer.map((f) => c.add(f).catch(() => {})))
-    // Alle flaggene, så flaggoppgavene virker uten nett etter første besøk.
-    const liste = await (await fetch('/flagg/liste.json', { cache: 'no-cache' })).json()
-    await c.add('/flagg/liste.json').catch(() => {})
-    await Promise.all(liste.map((k) => c.add(`/flagg/${k}.svg`).catch(() => {})))
   } catch {
     /* uten nett ved installasjon: skallet fylles ved neste besøk */
+  }
+}
+
+// Alle flaggene, så flaggoppgavene virker uten nett. Hentes etter at
+// arbeideren er aktiv, så appen er klar uten nett etter noen sekunder også
+// på dårlig nett. Flagg som ikke rakk å bli hentet, lagres når de brukes.
+async function hentFlagg() {
+  try {
+    const c = await caches.open(CACHE)
+    const liste = await (await fetch('/flagg/liste.json', { cache: 'no-cache' })).json()
+    await c.add('/flagg/liste.json').catch(() => {})
+    for (const k of liste) if (!(await c.match(`/flagg/${k}.svg`))) await c.add(`/flagg/${k}.svg`).catch(() => {})
+  } catch {
+    /* uten nett: prøves ved neste aktivering */
   }
 }
 
@@ -33,7 +43,10 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim()),
+      .then(() => self.clients.claim())
+      .then(() => {
+        hentFlagg() // ikke ventet på: arbeideren er aktiv før flaggene er hentet
+      }),
   )
 })
 

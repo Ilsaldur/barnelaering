@@ -4,8 +4,6 @@ import AdultGate from '../components/AdultGate.jsx'
 import { useStars, GUEST_PROFILE } from '../StarContext.jsx'
 import { supabase } from '../lib/supabase.js'
 import { speech } from '../speech.js'
-import { TOPICS, recommendedIndex, topicProgress } from '../progress.js'
-import { topicById } from '../data/topics.js'
 import { emptyData, recentRounds, minutesLastWeek, weakestTypes, FAG, todayKey, effectiveAutoSpeak, nullstiltData } from '../lib/profil.js'
 import { ukestripe } from '../lib/dagen.js'
 import { FAG_LABELS, typeLabel } from '../lib/labels.js'
@@ -128,17 +126,17 @@ function ChildPanel({ child, data, update, isActive }) {
   const s = d.settings
 
   const setSettings = (partial) => update((cur) => ({ ...cur, settings: { ...cur.settings, ...partial, updatedAt: Date.now() } }))
+  // Nullstiller plassert, så neste oppdrag i faget finner nivået på nytt.
+  const finnPaaNytt = (fag) =>
+    update((cur) => ({
+      ...cur,
+      fag: { ...cur.fag, [fag]: { ...cur.fag[fag], nivaa: null, plassert: false, paaRad: 0, svakRad: 0, hjelpNeste: false, sjef: null, updatedAt: Date.now() } },
+    }))
   const setNivaa = (fag, nivaa) =>
     update((cur) => ({
       ...cur,
       fag: { ...cur.fag, [fag]: { ...settNivaa(cur.fag[fag], nivaa), updatedAt: Date.now() } },
     }))
-  const toggleFag = (f) => {
-    const cur = s.fagblanding || []
-    const next = cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f]
-    if (next.length === 0) return
-    setSettings({ fagblanding: next })
-  }
 
   return (
     <>
@@ -180,7 +178,7 @@ function ChildPanel({ child, data, update, isActive }) {
                       onChange={(e) => setNivaa(f, e.target.value === '' ? null : Number(e.target.value))}
                       className="rounded-xl border-2 border-slate-200 px-3 py-2 font-bold text-slate-700 bg-white max-w-[60%]"
                     >
-                      <option value="">Ikke plassert (plasseringstest først)</option>
+                      <option value="">Ikke plassert (reven finner nivået i første oppdrag)</option>
                       {Array.from({ length: maks }, (_, i) => i + 1).map((n) => (
                         <option key={n} value={n}>
                           Nivå {n}: {nivaaNavn(f, n)}
@@ -188,6 +186,11 @@ function ChildPanel({ child, data, update, isActive }) {
                       ))}
                     </select>
                     {fd.hjelpNeste && <span className="text-xs font-bold text-amber-500">hjelp på neste oppdrag</span>}
+                    {fd.plassert && (
+                      <button type="button" onClick={() => finnPaaNytt(f)} className="text-xs font-bold text-sky-600 underline">
+                        La reven finne nivået på nytt
+                      </button>
+                    )}
                   </>
                 ) : (
                   <span className="text-sm font-bold text-slate-400">stigen kommer i en senere etappe</span>
@@ -242,56 +245,7 @@ function ChildPanel({ child, data, update, isActive }) {
               ))}
             </div>
           </div>
-          <div>
-            <p className="font-bold text-slate-600 mb-2">Fag i «Dagens økt»</p>
-            <div className="flex flex-wrap gap-2">
-              {['matte', 'lesing', 'klokke', 'geografi', 'engelsk', 'overraskelse'].map((f) => (
-                <Chip key={f} active={(s.fagblanding || []).includes(f)} onClick={() => toggleFag(f)}>
-                  {f === 'overraskelse' ? '🎁 Overraskelse' : `${FAG_LABELS[f].emoji} ${FAG_LABELS[f].navn}`}
-                </Chip>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="font-bold text-slate-600 mb-2">Fast oppdrag hver dag</p>
-            <div className="flex flex-wrap gap-2">
-              <Chip active={!s.fast} onClick={() => setSettings({ fast: null })}>
-                Barnet velger fritt
-              </Chip>
-              <Chip active={s.fast === 'matte'} onClick={() => setSettings({ fast: 'matte' })}>
-                🔢 Alltid matte
-              </Chip>
-              <Chip active={s.fast === 'lesing'} onClick={() => setSettings({ fast: 'lesing' })}>
-                📖 Alltid lesing
-              </Chip>
-            </div>
-          </div>
-        </div>
-      </Section>
-
-      <Section title="📚 Temastiger">
-        <div className="space-y-3">
-          {TOPICS.map((t) => {
-            const p = topicProgress(t, d.best)
-            const rec = recommendedIndex(t, d.best)
-            return (
-              <div key={t.id} className="flex items-center gap-3">
-                <span className="text-2xl w-8 shrink-0">{t.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between gap-2">
-                    <p className="font-extrabold text-slate-600 truncate">{t.title}</p>
-                    <p className="text-sm font-bold text-slate-400 shrink-0">
-                      {p.done}/{p.total} nivåer
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Bar value={p.done} max={p.total} color={t.color} />
-                    {rec >= 0 ? <span className="text-xs font-bold text-slate-400 shrink-0">øver på nivå {rec + 1}</span> : <span className="text-xs font-bold text-emerald-500 shrink-0">mestret! 🌟</span>}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
+          <p className="text-xs text-slate-400">Reven velger kortene i «Dagens økt» selv: de to fagene det er lengst siden barnet spilte, og en overraskelse.</p>
         </div>
       </Section>
 
@@ -299,7 +253,7 @@ function ChildPanel({ child, data, update, isActive }) {
         <Section title="🕐 Siste runder">
           <div className="space-y-1">
             {recent.map((e, i) => {
-              const t = e.topic ? topicById(e.topic) : null
+              const t = e.topic ? { emoji: e.topic === 'farger' ? '🎨' : '🔺', title: e.topic === 'farger' ? 'Farger' : 'Former og mønster' } : null
               const dt = new Date(e.t)
               const when = `${dt.getDate()}.${dt.getMonth() + 1}. kl. ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`
               const label = t

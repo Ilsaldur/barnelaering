@@ -11,12 +11,6 @@ import { genGeo } from '../lib/geo/generatorer.js'
 import { REGIONER, landById } from '../data/geo/land.js'
 import { kartPool } from '../lib/geo/kart.js'
 
-const START = [
-  { id: 'norden', navn: 'Jeg lærer landene i Norden', emoji: '❄️', nivaa: 1, farge: 'bg-sky-500' },
-  { id: 'europa', navn: 'Jeg kan Norden og vil lære Europa', emoji: '🏰', nivaa: 4, farge: 'bg-emerald-500' },
-  { id: 'verden', navn: 'Jeg kan Europa og vil lære hele verden', emoji: '🌍', nivaa: 7, farge: 'bg-amber-500' },
-]
-
 // Utforsk kartet: trykk på et land og se flagg og hovedstad.
 function Utforsk({ onClose }) {
   const [region, setRegion] = useState('norden')
@@ -41,6 +35,7 @@ function Utforsk({ onClose }) {
       </div>
       <VerdensKart
         region={region}
+        visAlle
         picked={valgt}
         onPick={(id) => {
           sound.click()
@@ -60,7 +55,7 @@ function Utforsk({ onClose }) {
             <SpeakButton text={`${l.navn}. Hovedstaden er ${l.hovedstad}.`} />
           </div>
         ) : (
-          <p className="text-slate-500 font-bold">👆 Trykk på et grønt land! {kartPool(region).length} land å finne.</p>
+          <p className="text-slate-500 font-bold">👆 Trykk på et grønt land! {kartPool(region, { alle: true }).length} land å finne.</p>
         )}
       </div>
       <div className="flex justify-center mt-3">
@@ -78,12 +73,12 @@ export default function GeoStige({ go }) {
     id: 'geografi',
     tittel: 'Geografi',
     kartTittel: 'Geografistigen',
+    kunnskap: true, // ting vises før det spørres om dem
     emoji: '🌍',
     nivaer: NIVAER_GEO,
     verdener: GEO_OMRAADER,
     gen: genGeo,
     omraadeFor: geoOmraadeFor,
-    start: START,
     ikoner: (n) => geoOmraadeFor(n.id).emoji,
     ekstra: (
       <BigButton color="bg-teal-500" onClick={() => setUt(true)}>

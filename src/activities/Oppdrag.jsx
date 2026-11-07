@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { TopBar, Mascot, BigButton } from '../components/ui.jsx'
 import { SpeakButton, AutoSpeakToggle } from '../components/Speak.jsx'
 import Keypad, { parseAnswer } from '../components/Keypad.jsx'
 import { Visual, Help } from '../components/TaskVisual.jsx'
 import AnalogClock from '../components/AnalogClock.jsx'
-import VerdensKart from '../components/VerdensKart.jsx'
+const VerdensKart = lazy(() => import('../components/VerdensKart.jsx'))
 import Flagg from '../components/Flagg.jsx'
 import { landById } from '../data/geo/land.js'
 import { laerkortForType, stegForType } from '../data/laerkort.js'
@@ -15,6 +15,12 @@ import { speech } from '../speech.js'
 import { fmt } from '../lib/matte/felles.js'
 import LaerKort from '../components/LaerKort.jsx'
 import { startKlokke, settTime, settMinutt, stillRiktig, stiltTid, timeviserTekst } from '../lib/klokke/vinkel.js'
+
+// Sorteringsoppgaver: elementene er tall/tekst, eller { id, label, scale } når
+// samme figur vises i ulik størrelse.
+const sortId = (v) => (v && typeof v === 'object' ? v.id : v)
+const sortLabel = (v) => (v && typeof v === 'object' ? v.label : v)
+const sortScale = (v) => (v && typeof v === 'object' && v.scale) || ''
 
 // Tallinje å trykke på: bare noen tall står skrevet, barnet finner plassen.
 function TapLine({ line, picked, answer, disabled, onPick }) {
@@ -54,7 +60,7 @@ function TapLine({ line, picked, answer, disabled, onPick }) {
 // Én oppgave: to forsøk, Hjelp-knapp, løsning med forklaring etter andre feil.
 // onAnswer({ ok, forste, hjelp }) kalles når oppgaven er ferdig (riktig eller etter to feil).
 // Bare første forsøk uten hjelp teller mot nivået; det regner den som kaller ut.
-export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index, total, fag = 'matte', noHelp = false, placement = false, practice = false, onLaer = null, frosset = false }) {
+export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index, total, fag = 'matte', noHelp = false, placement = false, practice = false, onLaer = null, frosset = false, siste = false }) {
   const { recordAttempt } = useStars()
   const [attempt, setAttempt] = useState(1)
   const [input, setInput] = useState('')
@@ -65,6 +71,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
   const [usedHelp, setUsedHelp] = useState(false)
   const [result, setResult] = useState(null)
   const [seq, setSeq] = useState([]) // sortering: valgt rekkefølge
+  const [visMeg, setVisMeg] = useState(false) // «👀 Vis meg» i kunnskapsoppgaver
 
   const spoken = task.spoken || task.prompt
   const lang = task.lang || 'nb-NO'
@@ -157,6 +164,34 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
   // Låst: ferdig, i «prøv igjen»-pausen, eller mens et kort ligger oppå.
   const laast = done || feedback === 'retry' || frosset
   const canHelp = !!task.hjelp && !noHelp
+  const kanVisMeg = !!task.visning && !canHelp && !noHelp && !placement
+
+  // Vis-oppgave: ett bilde med navn, lest høyt, og én knapp. Teller alltid som riktig.
+  if (task.form === 'vis') {
+    return (
+      <div className="bg-white/95 rounded-3xl p-5 md:p-8 shadow-xl" data-testid="vis-oppgave">
+        <p className="text-center text-sm font-bold text-slate-400 mb-1">👀 Se her</p>
+        {task.visual && (
+          <div className="mb-3">
+            <Visual visual={task.visual} avslort />
+          </div>
+        )}
+        <div className="flex items-start justify-center gap-2 mb-1">
+          <p className={`text-center font-extrabold text-slate-700 ${task.prompt.length > 30 ? 'text-2xl md:text-3xl' : 'text-4xl md:text-5xl'}`} lang={lang}>
+            {task.prompt}
+          </p>
+          <SpeakButton text={spoken} lang={lang} />
+        </div>
+        {task.under && <p className="text-center text-lg font-bold text-slate-500 mb-2">{task.under}</p>}
+        <div className="mt-5 flex justify-center">
+          <BigButton color="bg-amber-500" onClick={() => onDone({ ok: true, forste: true, hjelp: false, vis: true })}>
+            {siste ? '🏁 Se resultat' : '➡️ Neste'}
+          </BigButton>
+        </div>
+        <AutoSpeakToggle current={spokenFull} />
+      </div>
+    )
+  }
 
   return (
     <div className="bg-white/95 rounded-3xl p-5 md:p-8 shadow-xl">
@@ -214,6 +249,32 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
           >
             📚 Lær
           </button>
+        </div>
+      )}
+
+      {kanVisMeg && !done && (
+        <div className="text-center my-2">
+          <button
+            type="button"
+            onClick={() => {
+              sound.click()
+              if (!visMeg) setUsedHelp(true)
+              setVisMeg((v) => !v)
+              if (!visMeg) speech.speak(task.visning.spoken || task.visning.tekst, { lang: task.visning.lang || lang })
+            }}
+            className="kid-btn bg-sky-100 text-sky-700 text-base px-4 py-2"
+          >
+            {visMeg ? '🙈 Skjul' : '👀 Vis meg'}
+          </button>
+          {visMeg && (
+            <div data-testid="vis-meg" className="mt-3 bg-sky-50 rounded-2xl p-3">
+              {task.visning.visual && <Visual visual={task.visning.visual} avslort />}
+              <p className="mt-2 font-extrabold text-slate-700 text-xl" lang={task.visning.lang || lang}>
+                {task.visning.tekst}
+              </p>
+              {task.visning.under && <p className="text-slate-500 font-bold">{task.visning.under}</p>}
+            </div>
+          )}
         </div>
       )}
 
@@ -346,7 +407,9 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
 
       {task.form === 'kart' && (
         <div className="mt-3">
-          <VerdensKart region={task.region} picked={picked} answer={done ? task.answer : null} disabled={laast} onPick={(id) => submit(id)} />
+          <Suspense fallback={<div className="w-full aspect-[4/3] max-h-[60vh] rounded-2xl bg-sky-100 animate-pulse" aria-label="Henter kartet" />}>
+            <VerdensKart region={task.region} picked={picked} answer={done ? task.answer : null} disabled={laast} onPick={(id) => submit(id)} />
+          </Suspense>
           {picked && !done && feedback === 'retry' && <p className="text-center text-sm font-bold text-slate-500 mt-1">Du trykket på {landById(picked)?.navn || 'et annet land'}.</p>}
         </div>
       )}
@@ -355,29 +418,34 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
         <div className="mt-4">
           <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-3 min-h-[3.5rem]">
             {seq.length === 0 && <span className="text-slate-400 font-bold self-center">{task.sorterHint || 'Minst først …'}</span>}
-            {seq.map((v, i) => (
-              <span key={i} className={`kid-btn px-3 py-2 ${String(v).length > 4 ? 'text-lg md:text-2xl' : 'text-2xl md:text-3xl'} text-white ${done ? (task.answer[i] === v ? 'bg-emerald-500' : 'bg-rose-400') : 'bg-sky-500'}`}>
-                {v}
-              </span>
-            ))}
+            {seq.map((v, i) => {
+              const it = task.items.find((x) => sortId(x) === v)
+              return (
+                <span key={i} className={`kid-btn px-3 py-2 ${sortScale(it) || (String(sortLabel(it)).length > 4 ? 'text-lg md:text-2xl' : 'text-2xl md:text-3xl')} text-white ${done ? (task.answer[i] === v ? 'bg-emerald-500' : 'bg-rose-400') : 'bg-sky-500'}`}>
+                  {sortLabel(it)}
+                </span>
+              )
+            })}
           </div>
-          {done && feedback === 'solution' && <p className="text-center font-bold text-slate-500 mb-2">Riktig rekkefølge: {task.answer.join(task.sorterHint ? ' ' : ', ')}</p>}
-          <div className="flex flex-wrap justify-center gap-2 md:gap-3">
+          {done && feedback === 'solution' && <p className="text-center font-bold text-slate-500 mb-2">Riktig rekkefølge: {task.answer.map((id) => sortLabel(task.items.find((x) => sortId(x) === id))).join(task.sorterHint ? ' ' : ', ')}</p>}
+          <div className="flex flex-wrap justify-center items-end gap-2 md:gap-3">
             {task.items.map((v, i) => {
-              const used = seq.includes(v)
+              const id = sortId(v)
+              const used = seq.includes(id)
               return (
                 <button
                   key={i}
                   disabled={laast || used}
+                  aria-label={typeof v === 'object' ? `${sortLabel(v)} ${id}` : undefined}
                   onClick={() => {
                     sound.click()
-                    const next = [...seq, v]
+                    const next = [...seq, id]
                     setSeq(next)
                     if (next.length === task.items.length) submit(next)
                   }}
-                  className={`kid-btn px-4 py-3 md:px-5 md:py-4 break-words ${String(v).length > 4 ? 'text-xl md:text-2xl' : 'text-3xl md:text-4xl'} ${used ? 'bg-slate-200 text-slate-400' : 'bg-indigo-500 text-white'}`}
+                  className={`kid-btn px-4 py-3 md:px-5 md:py-4 break-words ${sortScale(v) || (String(sortLabel(v)).length > 4 ? 'text-xl md:text-2xl' : 'text-3xl md:text-4xl')} ${used ? 'bg-slate-200 text-slate-400' : 'bg-indigo-500 text-white'}`}
                 >
-                  {v}
+                  {sortLabel(v)}
                 </button>
               )
             })}
@@ -478,7 +546,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
             ) : null
           })()}
           <BigButton color="bg-amber-500" onClick={() => onDone(result)}>
-            {index != null && index + 1 >= total ? '🏁 Se resultat' : '➡️ Neste'}
+            {(index != null && index + 1 >= total) || siste ? '🏁 Se resultat' : '➡️ Neste'}
           </BigButton>
         </div>
       )}
@@ -496,7 +564,8 @@ export default function Oppdrag({ tasks, title, hjelpStart = false, onDone, onHo
   const task = tasks[i]
 
   function next(res) {
-    const entry = { type: task.type, nivaa: task.nivaa, tag: task.tag, kortId: task.kortId, ...res, counts: !!(res.ok && res.forste && !res.hjelp) }
+    const vis = task.form === 'vis'
+    const entry = { type: task.type, nivaa: task.nivaa, tag: task.tag, kortId: task.kortId, kjent: task.kjent, vis, ...res, counts: vis || !!(res.ok && res.forste && !res.hjelp) }
     const all = [...perTask, entry]
     if (i + 1 >= tasks.length) {
       const correct = all.filter((r) => r.counts).length

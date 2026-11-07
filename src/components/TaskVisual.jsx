@@ -1,6 +1,9 @@
 import { NumberLine } from './ui.jsx'
 import AnalogClock from './AnalogClock.jsx'
-import VerdensKart from './VerdensKart.jsx'
+import { lazy, Suspense } from 'react'
+
+const VerdensKart = lazy(() => import('./VerdensKart.jsx'))
+const KartVenter = () => <div className="w-full aspect-[4/3] max-h-[60vh] rounded-2xl bg-sky-100 animate-pulse" aria-label="Henter kartet" />
 import Flagg from './Flagg.jsx'
 
 // Tegner det visuelle i en oppgave (visual) og hjelpen bak Hjelp-knappen (hjelp).
@@ -262,7 +265,11 @@ export function Visual({ visual, avslort = true }) {
         </div>
       )
     case 'kart':
-      return <VerdensKart region={visual.region} highlight={visual.highlight} disabled />
+      return (
+        <Suspense fallback={<KartVenter />}>
+          <VerdensKart region={visual.region} highlight={visual.highlight} disabled />
+        </Suspense>
+      )
     case 'kvadrat':
       return (
         <div className="text-center">

@@ -4,20 +4,20 @@
 import { describe, it, expect } from 'vitest'
 import { seeded } from '../../rng.js'
 import { emptyFag } from '../../profil.js'
-import { startPlassering, stegPlassering, START_NIVAA, TAK_NIVAA } from '../plassering.js'
+import { startFinn, stegFinn } from '../finnNivaa.js'
 import { buildMission, buildBoss, oppgaveTilPlassering } from '../oppdrag.js'
 import { applyResult, applyBoss, settNivaa } from '../stige.js'
 
 const MAKS = 38
 
-// Kjør plasseringstesten med et barn som kan alt til og med `kan`.
-function plasser(verden, kan, rng) {
-  let s = startPlassering({ start: START_NIVAA[verden], tak: TAK_NIVAA[verden], maks: MAKS })
+// Kjør det første oppdraget (reven finner nivået) med et barn som kan alt til og med `kan`.
+function plasser(kan, rng) {
+  let s = startFinn({ maks: MAKS })
   const oppgaver = []
   while (!s.ferdig) {
     const t = oppgaveTilPlassering(s.pos, rng)
     oppgaver.push(t)
-    s = stegPlassering(s, t.nivaa <= kan)
+    s = stegFinn(s, t.nivaa <= kan)
   }
   return { nivaa: s.nivaa, oppgaver }
 }
@@ -33,22 +33,21 @@ function spill(fag, riktige, rng) {
 }
 
 describe('akseptansetester etappe A', () => {
-  it('1. svarer riktig på alt, velger Det blå havet: nivå 15 etter høyst 12 oppgaver, aldri over 15', () => {
-    const { nivaa, oppgaver } = plasser('hav', 38, seeded(1))
-    expect(nivaa).toBe(15)
-    expect(oppgaver.length).toBeLessThanOrEqual(12)
-    for (const t of oppgaver) expect(t.nivaa).toBeLessThanOrEqual(15)
+  it('1. svarer riktig på alt: nivå 38 etter høyst 14 oppgaver', () => {
+    const { nivaa, oppgaver } = plasser(38, seeded(1))
+    expect(nivaa).toBe(38)
+    expect(oppgaver.length).toBeLessThanOrEqual(14)
   })
-
-  it('2. kan alt til og med nivå 9, velger Det blå havet: består 6 og 8, bommer på 10, plasseres på 9', () => {
-    const { nivaa, oppgaver } = plasser('hav', 9, seeded(2))
-    expect(oppgaver.map((t) => t.nivaa)).toEqual([6, 6, 8, 8, 10])
+  it('2. kan alt til og med nivå 9: 1, 2, 4, 8, 16 (bom), 12 (bom), 10 (bom), 9, 9 → nivå 9', () => {
+    const { nivaa, oppgaver } = plasser(9, seeded(2))
+    expect(oppgaver.slice(0, 9).map((t) => t.nivaa)).toEqual([1, 2, 4, 8, 16, 12, 10, 9, 9])
     expect(nivaa).toBe(9)
   })
 
-  it('3. bommer på alt, velger Det blå havet: plasseres på 1', () => {
-    const { nivaa } = plasser('hav', 0, seeded(3))
+  it('3. bommer på alt: plasseres på 1 etter åtte oppgaver', () => {
+    const { nivaa, oppgaver } = plasser(0, seeded(3))
     expect(nivaa).toBe(1)
+    expect(oppgaver).toHaveLength(8)
   })
 
   it('4. bom på nivå 38, sett nivå 2 under For voksne, 50 oppdrag: ingen oppgave over nivå 3', () => {
@@ -117,9 +116,9 @@ describe('akseptansetester etappe A', () => {
   })
 
   it('plasseringstesten skriver ikke til bom-lista', () => {
-    // Testen bruker bare stegPlassering/settNivaa; svake er tom etterpå.
-    // Kan alt til 14, starter på 13: består 13, bommer på 15, plasseres på 14.
-    const { nivaa } = plasser('fjell', 14, seeded(9))
+    // Første oppdrag bruker bare stegFinn/settNivaa; svake er tom etterpå.
+    // Kan alt til 14: 1, 2, 4, 8, 16 (bom), 12, 14, 15 (bom) → 14.
+    const { nivaa } = plasser(14, seeded(9))
     const fag = settNivaa(emptyFag(), nivaa)
     expect(fag.svake).toEqual({})
     expect(fag.nivaa).toBe(14)

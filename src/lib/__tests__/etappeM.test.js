@@ -56,7 +56,7 @@ describe('M – innhold', () => {
   })
   it('Skrive riktig har minst 25 ord per gruppe, og ingen feilsvar er et ekte ord', () => {
     const alleOrd = new Set(Object.values(RETTSKRIVING).flatMap((g) => g.map((o) => o.ord)))
-    const ekte = new Set([...alleOrd, 'hai', 'kval', 'sten', 'ren', 'bake', 'pen', 'gått', 'nøt', 'kuer', 'øyer', 'høyst', 'dårligst', 'svømmet', 'kjære', 'hope', 'bokhylla', 'hjemme'])
+    const ekte = new Set([...alleOrd, 'hai', 'kval', 'sten', 'ren', 'bake', 'pen', 'gått', 'nøt', 'kuer', 'øyer', 'høyst', 'dårligst', 'svømmet', 'kjære', 'hope', 'bokhylla', 'hjemme', 'egge', 'bukke', 'sommar', 'dei'])
     for (const [gruppe, liste] of Object.entries(RETTSKRIVING)) {
       expect(liste.length, gruppe).toBeGreaterThanOrEqual(25)
       expect(new Set(liste.map((o) => o.ord)).size, gruppe).toBe(liste.length)
@@ -87,7 +87,7 @@ describe('M – innhold', () => {
   it('Geografi 9: kart over hver verdensdel med alle land som er minst 24 × 24 punkter; verdenskartet beholder de store', () => {
     const alle = countries()
     for (const region of ['amerika', 'afrika', 'asia', 'oseania']) {
-      const pool = kartPool(region)
+      const pool = kartPool(region, { alle: true })
       expect(pool.length, region).toBeGreaterThanOrEqual(3)
       const h = genGeo('hvilket_land', { region }, seeded(2))
       expect(h.options).toHaveLength(4)

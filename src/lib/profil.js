@@ -1,3 +1,5 @@
+import { migrerKostyme } from './kostyme.js'
+
 // Barnets fremgang som ren data: tom profil, normalisering av gamle
 // lagringer og fletting av to utgaver (lokal og sky) uten å miste noe.
 
@@ -15,6 +17,7 @@ export function emptyFag() {
     bokser: {}, // kort-id -> { boks: 1–5, t }
     svake: {}, // oppgavetype -> { bom, riktig } (bom-lista)
     sett: [], // hash av de 40 siste oppgavene barnet fikk (eldst først)
+    kjent: [], // ting barnet har fått vist (kunnskapsstigene): «land:se», «ord:cat», «tid:3:00»
     sjef: null, // ikke i bruk lenger (sjefsoppgaven tilbys direkte)
     updatedAt: 0,
   }
@@ -24,9 +27,7 @@ export function emptySettings() {
   return {
     autoSpeak: false,
     autoSpeakSet: false, // true når en voksen (eller profilskjemaet) har valgt
-    fast: null, // 'matte' | 'lesing' | null – fast oppdrag i «Dagens økt»
     oppdragPerDag: 2,
-    fagblanding: ['matte', 'lesing', 'overraskelse'],
     updatedAt: 0,
   }
 }
@@ -46,7 +47,7 @@ export function emptyData() {
     dager: {}, // 'YYYY-MM-DD' -> { oppdrag: n, fag: { matte: 1 } }
     kort: [], // samlekort-id
     kostymer: [], // kjøpte kostymer
-    kostyme: null, // kostyme reven har på
+    kostymerPaa: [], // kostymene reven har på (høyst ett per plass)
     kostymeT: 0,
     historier: [], // historiebiter barnet har sett
     laerkort: [], // «Lær først»-kort barnet har sett
@@ -112,6 +113,8 @@ export function normalize(raw) {
   d.dager = d.dager || {}
   d.kort = d.kort || []
   d.kostymer = d.kostymer || []
+  d.kostymerPaa = migrerKostyme(raw)
+  delete d.kostyme
   d.historier = d.historier || []
   d.laerkort = d.laerkort || []
   const fag = {}
@@ -121,6 +124,7 @@ export function normalize(raw) {
     // Gamle bom-lister hadde { bom, til }; nå { bom, riktig }.
     g.svake = Object.fromEntries(Object.entries(g.svake || {}).map(([k, v]) => [k, { bom: v.bom || 1, riktig: v.riktig || 0, ...(v.nivaa != null ? { nivaa: v.nivaa } : {}) }]))
     g.sett = Array.isArray(g.sett) ? g.sett.filter((x) => typeof x === 'string').slice(-40) : []
+    g.kjent = Array.isArray(g.kjent) ? [...new Set(g.kjent.filter((x) => typeof x === 'string'))] : []
     fag[f] = g
   }
   d.fag = fag
@@ -161,6 +165,8 @@ function mergeFag(a, b) {
   const nyeste = newest.sett || []
   const andre = (newest === a ? b : a).sett || []
   out.sett = [...andre.filter((h) => !nyeste.includes(h)), ...nyeste].slice(-40)
+  // Kjent-lista: union – noe barnet har fått vist på én enhet, er kjent overalt.
+  out.kjent = [...new Set([...(a.kjent || []), ...(b.kjent || [])])]
   return out
 }
 
@@ -207,10 +213,10 @@ export function mergeData(rawA, rawB) {
   out.historier = [...new Set([...a.historier, ...b.historier])]
   out.laerkort = [...new Set([...a.laerkort, ...b.laerkort])]
   if ((a.kostymeT || 0) >= (b.kostymeT || 0)) {
-    out.kostyme = a.kostyme
+    out.kostymerPaa = a.kostymerPaa
     out.kostymeT = a.kostymeT
   } else {
-    out.kostyme = b.kostyme
+    out.kostymerPaa = b.kostymerPaa
     out.kostymeT = b.kostymeT
   }
   return out

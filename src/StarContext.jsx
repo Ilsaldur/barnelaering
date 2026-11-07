@@ -1,3 +1,4 @@
+import { taPaa, taAv } from './lib/kostyme.js'
 import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
 import { sound } from './sound.js'
 import { speech } from './speech.js'
@@ -461,12 +462,13 @@ export function StarProvider({ children }) {
       }
       if (d.stars - d.spent < k.pris) return d
       ok = true
-      return { ...d, spent: d.spent + k.pris, kostymer: [...d.kostymer, k.id], kostyme: k.id, kostymeT: Date.now() }
+      return { ...d, spent: d.spent + k.pris, kostymer: [...d.kostymer, k.id], kostymerPaa: taPaa(d.kostymerPaa, k.id), kostymeT: Date.now() }
     })
     return ok
   }, [])
-  const setKostyme = useCallback((id) => {
-    setData((d) => ({ ...d, kostyme: id, kostymeT: Date.now() }))
+  // Ta på (det på samme plass tas av) eller av.
+  const setKostyme = useCallback((id, paa = true) => {
+    setData((d) => ({ ...d, kostymerPaa: paa ? taPaa(d.kostymerPaa, id) : taAv(d.kostymerPaa, id), kostymeT: Date.now() }))
   }, [])
 
   // «Lær først»-kort sett.

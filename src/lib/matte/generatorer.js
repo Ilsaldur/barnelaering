@@ -5,9 +5,10 @@
 import { GEN_SKOG } from './gen_skog.js'
 import { GEN_HAV_FJELL } from './gen_hav_fjell.js'
 import { GEN_SLOTT_ROM } from './gen_slott_rom.js'
+import { GEN_FORMER } from './gen_former.js'
 import { registerTypeLabels } from '../labels.js'
 
-export const GENERATORER = { ...GEN_SKOG, ...GEN_HAV_FJELL, ...GEN_SLOTT_ROM }
+export const GENERATORER = { ...GEN_SKOG, ...GEN_HAV_FJELL, ...GEN_SLOTT_ROM, ...GEN_FORMER }
 
 export function gen(type, param = {}, rng = Math.random) {
   const g = GENERATORER[type]
@@ -21,6 +22,11 @@ export function gen(type, param = {}, rng = Math.random) {
 
 // Lesbare navn (voksensiden: «bommer mest på»).
 export const TYPE_LABELS = {
+  monster_neste: 'Hva kommer neste i mønsteret',
+  sorter_storrelse: 'Sortere etter størrelse',
+  form_navn: 'Navn på former',
+  farge_navn: 'Navn på farger',
+  tell_former: 'Telle former',
   tell: 'Telle ting',
   terning: 'Terningbilder',
   fingre: 'Telle fingre',

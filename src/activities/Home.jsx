@@ -1,8 +1,9 @@
 import { StarCounter } from '../components/ui.jsx'
+import Rev from '../components/Rev.jsx'
 import { SpeakButton } from '../components/Speak.jsx'
 import { useStars } from '../StarContext.jsx'
 import { sound } from '../sound.js'
-import { dagensKort, dagStatus, ukestripe } from '../lib/dagen.js'
+import { dagensKort, dagStatus, ukestripe, FAG_I_DAGEN } from '../lib/dagen.js'
 import { STIGER } from '../data/stiger.js'
 
 const KORT_INFO = {
@@ -15,27 +16,29 @@ const KORT_INFO = {
 }
 
 // Barnets forside: «Dagens økt» øverst, fri lek under.
-export default function Home({ topics, onPick, onSamling, onGarden, onParents, onSwitchProfile, onMatte, onLesing, onNoetter, onDagens, onFag }) {
+export default function Home({ onSamling, onGarden, onParents, onSwitchProfile, onMatte, onLesing, onNoetter, onDagens, onFag }) {
   const { profile, onLine, session, fag, data, settings } = useStars()
-  const matte = fag?.matte
-  const lesing = fag?.lesing
   const fagTilgjengelig = Object.keys(STIGER)
-  const kort = dagensKort({ settings, fagTilgjengelig })
+  const kort = dagensKort({ log: data.log, fagTilgjengelig })
   const status = dagStatus({ dager: data.dager, settings })
   const uke = ukestripe({ dager: data.dager, settings })
 
   const hilsen = status.ferdig
-    ? 'Dagens økt er ferdig! Nå er alt åpent for fri lek. 🎉'
+    ? 'Dagens økt er ferdig! 🎉 Stempel i boka.'
     : status.gjort === 0
-      ? `Hei ${profile?.name || ''}! Velg ${status.maal === 1 ? 'ett oppdrag' : status.maal === 2 ? 'to oppdrag' : 'tre oppdrag'} i dag.`
+      ? `Hei ${profile?.name || ''}! Velg ${status.maal === 1 ? 'ett' : status.maal === 2 ? 'to' : 'tre'} av kortene i dag.`
       : `${status.gjort} av ${status.maal} gjort. Ett til, så er dagen i boks!`
 
-  function velg(k) {
+  // Samme dør fra kortet i Dagens økt og fra Fri lek.
+  function aapne(fagId) {
     sound.click()
-    if (k.fag === 'matte') onMatte()
-    else if (k.fag === 'lesing') onLesing()
-    else if (k.fag === 'nott') onDagens('nott')
-    else onDagens(k.fag)
+    if (fagId === 'matte') onMatte()
+    else if (fagId === 'lesing') onLesing()
+    else if (fagId === 'nott') onDagens('nott')
+    else onDagens(fagId)
+  }
+  function velg(k) {
+    aapne(k.fag)
   }
 
   return (
@@ -62,14 +65,16 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
       </div>
 
       <header className="text-center mb-4">
-        <div className="text-6xl md:text-7xl animate-bouncey mb-1">🦊</div>
+        <div className="animate-bouncey mb-1 flex justify-center">
+          <Rev className="w-24 md:w-32" />
+        </div>
         <h1 className="text-white font-extrabold text-3xl md:text-5xl drop-shadow-lg">Selmas skole</h1>
       </header>
 
       {/* Dagens økt */}
       <section className="bg-white/95 rounded-3xl p-4 md:p-5 shadow-xl mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-xl md:text-2xl font-extrabold text-slate-700">📅 Dagens økt</h2>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-2">
+          <h2 className="text-xl md:text-2xl font-extrabold text-slate-700 whitespace-nowrap">📅 Dagens økt</h2>
           <div className="flex gap-1" title="Ukestripe: et stempel for hver dag du gjorde dagens økt">
             {uke.map((d) => (
               <div key={d.key} className={`w-7 h-9 md:w-8 md:h-10 rounded-lg flex flex-col items-center justify-center text-[10px] font-extrabold ${d.ferdig ? 'bg-emerald-400 text-white' : d.idag ? 'bg-amber-100 text-amber-600 ring-2 ring-amber-300' : d.framtid ? 'bg-slate-50 text-slate-300' : 'bg-slate-100 text-slate-400'}`}>
@@ -92,47 +97,33 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
                 {k.fast && <span className="absolute top-1 left-2 text-sm" title="Fast oppdrag">📌</span>}
                 {gjort && <span className="absolute top-1 right-2 bg-white text-emerald-500 rounded-full w-6 h-6 flex items-center justify-center text-sm font-extrabold">✓</span>}
                 <span className="text-4xl md:text-5xl">{k.overraskelse ? '🎁' : info.emoji}</span>
-                <span className="text-base md:text-xl font-extrabold text-center leading-tight break-words [overflow-wrap:anywhere] max-w-full">{k.overraskelse ? 'Overraskelse' : info.navn}</span>
-                {k.overraskelse && <span className="text-xs opacity-90">{info.emoji} {info.navn}</span>}
-                {k.fag === 'matte' && matte?.nivaa && <span className="text-xs opacity-90">nivå {matte.nivaa}</span>}
-                {k.fag === 'lesing' && lesing?.nivaa && <span className="text-xs opacity-90">nivå {lesing.nivaa}</span>}
-                {['klokke', 'geografi', 'engelsk'].includes(k.fag) && fag?.[k.fag]?.nivaa && <span className="text-xs opacity-90">nivå {fag[k.fag].nivaa}</span>}
+                <span className="text-base md:text-xl font-extrabold text-center leading-tight break-words [overflow-wrap:anywhere] max-w-full">{k.overraskelse ? 'Gave' : info.navn}</span>
+                {k.overraskelse && <span className="text-xs opacity-90 whitespace-nowrap">{info.emoji} {info.navn}</span>}
+                {k.fag !== 'nott' && !k.overraskelse && <span className="text-xs opacity-90">{fag?.[k.fag]?.plassert && fag?.[k.fag]?.nivaa ? `nivå ${fag[k.fag].nivaa}` : 'Ny!'}</span>}
               </button>
             )
           })}
         </div>
       </section>
 
-      {/* Fri lek */}
+      {/* Fri lek: én dør per fag, samme navn og ikon som kortene i Dagens økt. */}
       <h2 className="text-white font-extrabold text-xl md:text-2xl drop-shadow mb-2 mt-5">🎈 Fri lek</h2>
-      <div className="grid grid-cols-2 gap-3 md:gap-4 mb-3">
-        <button onClick={() => { sound.click(); onMatte() }} className="kid-btn bg-cyan-500 text-white p-3 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 min-w-0 hover:scale-[1.02]">
-          <span className="text-4xl">🗺️</span>
-          <span className="text-center sm:text-left min-w-0 max-w-full">
-            <span className="block text-base sm:text-lg md:text-xl font-extrabold break-words [overflow-wrap:anywhere] leading-tight">Eventyrkartet</span>
-            <span className="block text-xs md:text-sm opacity-90 break-words [overflow-wrap:anywhere]">{matte?.nivaa ? `Reven er på nivå ${matte.nivaa}` : 'Finn nivået ditt'}</span>
-          </span>
-        </button>
-        <button onClick={() => { sound.click(); onLesing() }} className="kid-btn bg-violet-500 text-white p-3 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 min-w-0 hover:scale-[1.02]">
-          <span className="text-4xl">📖</span>
-          <span className="text-center sm:text-left min-w-0 max-w-full">
-            <span className="block text-base sm:text-lg md:text-xl font-extrabold break-words [overflow-wrap:anywhere] leading-tight">Lesestigen</span>
-            <span className="block text-xs md:text-sm opacity-90 break-words [overflow-wrap:anywhere]">{lesing?.nivaa ? `Lese nivå ${lesing.nivaa} av 12` : 'Tre spor: lese, skrive, språk'}</span>
-          </span>
-        </button>
-        {[
-          { id: 'klokke', navn: 'Klokkestigen', emoji: '🕐', farge: 'bg-sky-500', maks: STIGER.klokke?.length || 8 },
-          { id: 'geografi', navn: 'Geografistigen', emoji: '🌍', farge: 'bg-teal-500', maks: STIGER.geografi?.length || 9 },
-          { id: 'engelsk', navn: 'Engelskstigen', emoji: '🇬🇧', farge: 'bg-rose-500', maks: STIGER.engelsk?.length || 7 },
-        ].map((f) => (
-          <button key={f.id} onClick={() => { sound.click(); onFag(f.id) }} className={`kid-btn ${f.farge} text-white p-3 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 min-w-0 hover:scale-[1.02]`}>
-            <span className="text-4xl">{f.emoji}</span>
-            <span className="text-center sm:text-left min-w-0 max-w-full">
-              <span className="block text-base sm:text-lg md:text-xl font-extrabold break-words [overflow-wrap:anywhere] leading-tight">{f.navn}</span>
-              <span className="block text-xs md:text-sm opacity-90 break-words [overflow-wrap:anywhere]">{fag?.[f.id]?.nivaa ? `Nivå ${fag[f.id].nivaa} av ${f.maks}` : 'Finn nivået ditt'}</span>
-            </span>
-          </button>
-        ))}
+      <div data-testid="fri-lek" className="grid grid-cols-2 gap-3 md:gap-4 mb-3">
+        {FAG_I_DAGEN.map((id) => {
+          const info = KORT_INFO[id]
+          const f = fag?.[id]
+          const maks = STIGER[id]?.length || 0
+          const under = f?.plassert && f?.nivaa ? `Nivå ${f.nivaa} av ${maks}` : 'Ny!'
+          return (
+            <button key={id} onClick={() => aapne(id)} className={`kid-btn ${info.farge} text-white p-3 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 min-w-0 hover:scale-[1.02]`}>
+              <span className="text-4xl">{info.emoji}</span>
+              <span className="text-center sm:text-left min-w-0 max-w-full">
+                <span className="block text-base sm:text-lg md:text-xl font-extrabold break-words [overflow-wrap:anywhere] leading-tight">{info.navn}</span>
+                <span className="block text-xs md:text-sm opacity-90 break-words [overflow-wrap:anywhere]">{under}</span>
+              </span>
+            </button>
+          )
+        })}
         <button onClick={() => { sound.click(); onNoetter() }} className="kid-btn bg-amber-700 text-white p-3 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 min-w-0 hover:scale-[1.02]">
           <span className="text-4xl">🌰</span>
           <span className="text-center sm:text-left min-w-0 max-w-full">
@@ -154,15 +145,6 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
             <span className="block text-xs md:text-sm opacity-90 break-words [overflow-wrap:anywhere]">Bruk stjernene</span>
           </span>
         </button>
-      </div>
-
-      <div className="grid grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
-        {topics.map((t) => (
-          <button key={t.id} onClick={() => { sound.click(); onPick(t.id) }} className={`kid-btn ${t.color} text-white p-3 md:p-4 flex flex-col items-center gap-1 hover:scale-105`}>
-            <span className="text-3xl md:text-5xl">{t.emoji}</span>
-            <span className="text-sm md:text-lg font-extrabold text-center leading-tight break-words [overflow-wrap:anywhere] max-w-full">{t.title}</span>
-          </button>
-        ))}
       </div>
 
       <div className="mt-5 text-center">

@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { emptyFag, mergeData, emptyData } from '../../profil.js'
 import { applyResult, applyBoss, settNivaa, oppdaterSvake, activeWeakTypes, sjefMaal } from '../stige.js'
-import { startPlassering, stegPlassering, START_NIVAA, TAK_NIVAA, TRAPP_MATTE } from '../plassering.js'
 import { kortstokk, trekkKort, oppdaterBoks, boksFor } from '../kort.js'
 import { buildMission, buildBoss, oppgaveTilPlassering, oppgaveFraNivaa, nivaaForType } from '../oppdrag.js'
 import { seeded } from '../../rng.js'
@@ -141,71 +140,7 @@ describe('bom-lista (A4)', () => {
   })
 })
 
-describe('plasseringstest (A1)', () => {
-  it('start og tak per verden', () => {
-    expect(START_NIVAA).toEqual({ skog: 1, hav: 6, fjell: 13, slott: 21, rom: 29 })
-    expect(TAK_NIVAA).toEqual({ skog: 7, hav: 15, fjell: 23, slott: 31, rom: 38 })
-  })
-  it('to riktige går to opp, aldri over taket; alt riktig fra havet gir 15 på høyst 12 oppgaver', () => {
-    let s = startPlassering({ start: 6, tak: 15, maks: 38 })
-    const sett = []
-    let n = 0
-    while (!s.ferdig) {
-      sett.push(s.pos)
-      s = stegPlassering(s, true)
-      n++
-    }
-    expect(s.nivaa).toBe(15)
-    expect(n).toBeLessThanOrEqual(12)
-    // 14 bestått rett under taket 15: plasseringen er gitt uten prøve på taket.
-    expect([...new Set(sett)]).toEqual([6, 8, 10, 12, 14])
-  })
-  it('kan alt til og med 9: består 6 og 8, bommer på 10, plasseres på 9', () => {
-    let s = startPlassering({ start: 6, tak: 15, maks: 38 })
-    const spurt = []
-    while (!s.ferdig) {
-      spurt.push(s.pos)
-      s = stegPlassering(s, s.pos <= 9)
-    }
-    expect(spurt).toEqual([6, 6, 8, 8, 10])
-    expect(s.nivaa).toBe(9)
-  })
-  it('bommer på alt: to ned om gangen, ender på 1', () => {
-    let s = startPlassering({ start: 6, tak: 15, maks: 38 })
-    const spurt = []
-    while (!s.ferdig) {
-      spurt.push(s.pos)
-      s = stegPlassering(s, false)
-    }
-    expect(spurt).toEqual([6, 4, 2, 1])
-    expect(s.nivaa).toBe(1)
-  })
-  it('bommer på start: ned til startnivået i verdenen under og klatrer derfra', () => {
-    let s = startPlassering({ start: 13, tak: 23, maks: 38, trapp: TRAPP_MATTE })
-    s = stegPlassering(s, false) // 13
-    expect(s.pos).toBe(6)
-    expect(s.tak).toBe(13) // taket er nivået barnet falt fra (runde 4, P2)
-    s = stegPlassering(s, true)
-    s = stegPlassering(s, true) // besto 6
-    expect(s.pos).toBe(8)
-    s = stegPlassering(s, false) // bom på 8
-    expect(s.ferdig).toBe(true)
-    expect(s.nivaa).toBe(7)
-  })
-  it('én feil på andre oppgave stopper også', () => {
-    let s = startPlassering({ start: 1, tak: 7, maks: 38 })
-    s = stegPlassering(s, true)
-    s = stegPlassering(s, true) // besto 1 → 3
-    s = stegPlassering(s, true)
-    s = stegPlassering(s, false) // bom på 3
-    expect(s.ferdig).toBe(true)
-    expect(s.nivaa).toBe(2)
-  })
-  it('lesing: tak 9 uansett start', () => {
-    let s = startPlassering({ start: 8, tak: 9, maks: 16 })
-    while (!s.ferdig) s = stegPlassering(s, true)
-    expect(s.nivaa).toBe(9)
-  })
+describe('oppgaver til første oppdrag (plassering)', () => {
   it('oppgaver til testen er aldri sant/usant eller fagord-typer', () => {
     const rng = seeded(8)
     for (let n = 1; n <= 38; n++) {

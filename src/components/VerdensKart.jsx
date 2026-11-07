@@ -8,10 +8,10 @@ import { kartPool } from '../lib/geo/kart.js'
 //  - picked / answer: markerer valgt og riktig land etter svar
 //  - onPick(id): kalles når barnet trykker på et land i området
 //  - labels: vis navn på landene (til utforsking)
-export default function VerdensKart({ region = 'norden', highlight = null, picked = null, answer = null, onPick, disabled = false, labels = false, className = '' }) {
+export default function VerdensKart({ region = 'norden', highlight = null, picked = null, answer = null, onPick, disabled = false, labels = false, visAlle = false, className = '' }) {
   const vb = viewBoxFor(region)
   const alle = useMemo(() => countries().filter((c) => c.id !== '010'), [])
-  const iOmraadet = useMemo(() => new Set(kartPool(region).map((l) => l.id)), [region])
+  const iOmraadet = useMemo(() => new Set(kartPool(region, { alle: visAlle }).map((l) => l.id)), [region, visAlle])
   const navn = useMemo(() => Object.fromEntries(LAND.map((l) => [l.id, l.navn])), [])
   const paths = useMemo(() => alle.map((c) => ({ c, d: pathFor(c) })), [alle])
   const strokeW = Math.max(0.08, vb.w / 900)

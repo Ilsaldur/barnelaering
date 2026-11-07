@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { seeded } from '../rng.js'
 import { buildMission, buildBoss, oppgaveTilPlassering, oppgaveFraNivaa, nokkel, hashNokkel, huskOppgaver, antallUlike, oppdragLengde, MATTE_STIGE, SETT_MAKS } from '../matte/oppdrag.js'
-import { startPlassering, stegPlassering } from '../matte/plassering.js'
+import { startFinn, stegFinn } from '../matte/finnNivaa.js'
 import { sjefMaal } from '../matte/stige.js'
 import { emptyFag, normalize, mergeData, emptyData } from '../profil.js'
 import { NIVAER_GEO } from '../../data/geo/nivaer.js'
@@ -23,42 +23,24 @@ const STIGER = {
   skrive: { nivaer: NIVAER_SKRIVE, gen: genLesing, emneMaks: 1 },
   sprak: { nivaer: NIVAER_SPRAK, gen: genLesing },
 }
-// Startvalgene i appen (nivå og tak), så plasseringstesten kan simuleres.
-const START = {
-  matte: [
-    { nivaa: 1, tak: 7 },
-    { nivaa: 6, tak: 15 },
-    { nivaa: 13, tak: 23 },
-    { nivaa: 21, tak: 31 },
-    { nivaa: 29, tak: 38 },
-  ],
-  geografi: [{ nivaa: 1 }, { nivaa: 4 }, { nivaa: 7 }],
-  engelsk: [{ nivaa: 1 }, { nivaa: 3 }, { nivaa: 5 }],
-  klokke: [{ nivaa: 1 }, { nivaa: 3 }, { nivaa: 5 }, { nivaa: 7 }],
-  lesing: [
-    { nivaa: 1, tak: LESE_TAK },
-    { nivaa: 4, tak: LESE_TAK },
-    { nivaa: 6, tak: LESE_TAK },
-    { nivaa: 8, tak: LESE_TAK },
-  ],
-}
 const fagPaa = (nivaa, ekstra = {}) => ({ ...emptyFag(), nivaa, plassert: true, ...ekstra })
 const nokler = (tasks) => tasks.map(nokkel)
 const harDuplikat = (tasks) => new Set(nokler(tasks)).size !== tasks.length
 // Nøkler som hører til nivåene i et oppdrag (og nivåene rundt): har de nok ulike spørsmål?
 const nokUlike = (stige, nivaaer, trenger) => nivaaer.every((n) => antallUlike(stige, n, 60) >= trenger)
 
-// Simulerer plasseringstesten med gitt svarmønster. Returnerer oppgavene som ble vist.
-function simulerPlassering(stige, start, svar, rng, sett = []) {
-  const trapp = (START[start.fag] || []).map((x) => ({ start: x.nivaa, tak: x.tak ?? stige.nivaer.length }))
-  let pl = startPlassering({ start: start.nivaa, tak: start.tak ?? stige.nivaer.length, maks: stige.nivaer.length, trapp })
+// Simulerer det første oppdraget (reven finner nivået) med gitt svarmønster.
+// Returnerer oppgavene som ble vist.
+function simulerPlassering(stige, { tak } = {}, svar, rng, sett = []) {
+  const MAKS = stige.nivaer.length
+  let f = startFinn({ maks: MAKS, tak: tak ?? MAKS, lengdeFor: (n) => oppdragLengde(stige, n) })
   const vist = []
-  while (!pl.ferdig) {
-    const t = oppgaveTilPlassering(pl.pos, rng, stige, { brukt: vist, sett })
+  while (!f.ferdig) {
+    const t = f.fase === 'vanlig' ? oppgaveFraNivaa(f.nivaa, rng, stige, { brukt: vist, sett }) : oppgaveTilPlassering(f.pos, rng, stige, { brukt: vist, sett })
     vist.push(t)
-    pl = stegPlassering(pl, svar(vist.length - 1, t))
+    f = stegFinn(f, svar(vist.length - 1, t))
   }
-  return { vist, nivaa: pl.nivaa }
+  return { vist, nivaa: f.nivaa }
 }
 
 describe('L1 – nøkkelen er det barnet ser', () => {
@@ -172,12 +154,12 @@ describe('Akseptansetester L', () => {
           }
         }
       }
-      for (const start of START[fag] || []) {
+      if (!['skrive', 'sprak'].includes(fag)) {
         for (let k = 0; k < 10; k++) {
           // Alt riktig, alt feil og annenhver.
           for (const svar of [() => true, () => false, (i) => i % 2 === 0]) {
-            const { vist } = simulerPlassering(stige, { fag, ...start }, svar, rng)
-            expect(harDuplikat(vist), `${fag} plassering fra ${start.nivaa}`).toBe(false)
+            const { vist } = simulerPlassering(stige, { tak: fag === 'lesing' ? LESE_TAK : undefined }, svar, rng)
+            expect(harDuplikat(vist), `${fag} første oppdrag`).toBe(false)
           }
         }
       }
@@ -215,11 +197,11 @@ describe('Akseptansetester L', () => {
     }
   })
 
-  it('3. Geografi nivå 1: plasseringstest fra Norden og tre oppdrag – ingen oppgave mer enn to ganger', () => {
+  it('3. Geografi nivå 1: første oppdrag (bom på nivå 2) og tre oppdrag – ingen oppgave mer enn to ganger', () => {
     const stige = STIGER.geografi
     for (let k = 0; k < 20; k++) {
       const rng = seeded(300 + k)
-      const { vist } = simulerPlassering(stige, { fag: 'geografi', nivaa: 1 }, (i) => i < 2, rng)
+      const { vist } = simulerPlassering(stige, {}, (i, t) => t.nivaa <= 1, rng)
       let f = huskOppgaver(fagPaa(1), vist)
       const alle = [...vist]
       for (let o = 0; o < 3; o++) {
@@ -244,7 +226,7 @@ describe('Akseptansetester L', () => {
     }
   })
 
-  it('«Prøv selv» og plasseringstesten bruker husk-lista og gir tre ulike oppgaver', () => {
+  it('«Prøv selv» bruker husk-lista og gir tre ulike oppgaver', () => {
     const rng = seeded(7)
     const sett = huskOppgaver(fagPaa(1), Array.from({ length: 20 }, () => oppgaveFraNivaa(1, rng, STIGER.geografi))).sett
     const tasks = []

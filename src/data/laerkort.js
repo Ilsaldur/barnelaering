@@ -16,6 +16,18 @@
 export const LAERKORT = [
   // ---------------------------------------------------------------- Matte
   {
+    id: 'm3-monster',
+    fag: 'matte',
+    nivaa: 3,
+    tittel: 'Mønster',
+    typer: ['monster_neste'],
+    steg: [
+      { tekst: 'Et mønster gjentar seg. Se: rød, blå, rød, blå. Hva kommer så? Rød!', figur: { visual: { kind: 'rekke', items: ['🔴', '🔵', '🔴', '🔵', '?'] } } },
+      { tekst: 'Finn biten som gjentar seg. Her er biten stjerne, måne, sol – og så begynner den på nytt.', figur: { visual: { kind: 'rekke', items: ['⭐', '🌙', '☀️', '⭐', '🌙', '☀️'] } } },
+      { tekst: 'Pek på hver figur og si navnet høyt. Da hører du mønsteret, og vet hva som kommer.' },
+    ],
+  },
+  {
     id: 'm9-tiervenner',
     fag: 'matte',
     nivaa: 9,

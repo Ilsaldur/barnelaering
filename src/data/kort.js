@@ -2,10 +2,18 @@
 // `nivaa` kobler kortet til nivået. Bonuskort (uten nivå) dukker opp av og til.
 // Redigér fritt: navn, bilde (emoji) og én faktalinje per kort.
 
+// Hvert sett hører til et fag (`fag`); kortene i settet har `nivaa` i den
+// stigen. Bonuskort har ikke fag.
 export const SETT = [
-  { id: 'dyr', navn: 'Norske dyr', emoji: '🦌' },
-  { id: 'dino', navn: 'Dinosaurer', emoji: '🦕' },
-  { id: 'planeter', navn: 'Planeter og rommet', emoji: '🪐' },
+  { id: 'dyr', fag: 'matte', navn: 'Norske dyr', emoji: '🦌' },
+  { id: 'dino', fag: 'matte', navn: 'Dinosaurer', emoji: '🦕' },
+  { id: 'planeter', fag: 'matte', navn: 'Planeter og rommet', emoji: '🪐' },
+  { id: 'lesing', fag: 'lesing', navn: 'Bokstavdyr', emoji: '🔤' },
+  { id: 'skrive', fag: 'skrive', navn: 'Skrivesaker', emoji: '✏️' },
+  { id: 'sprak', fag: 'sprak', navn: 'Språkskatter', emoji: '🧩' },
+  { id: 'klokke', fag: 'klokke', navn: 'Klokker og tider', emoji: '🕐' },
+  { id: 'geografi', fag: 'geografi', navn: 'Flagg og landemerker', emoji: '🌍' },
+  { id: 'engelsk', fag: 'engelsk', navn: 'English words', emoji: '🇬🇧' },
   { id: 'bonus', navn: 'Bonuskort', emoji: '✨' },
 ]
 
@@ -62,10 +70,69 @@ export const KORT = [
   { id: 'bonus-skatt', sett: 'bonus', navn: 'Skattekiste', emoji: '💎', fakta: 'Diamant er det hardeste stoffet som finnes i naturen.' },
   { id: 'bonus-sommerfugl', sett: 'bonus', navn: 'Sommerfugl', emoji: '🦋', fakta: 'Sommerfugler smaker med føttene.' },
   { id: 'bonus-blekksprut', sett: 'bonus', navn: 'Blekksprut', emoji: '🐙', fakta: 'Blekkspruten har tre hjerter og blått blod.' },
+
+  // ---- UTKAST (runde 5, etappe V): ett kort per nivå i de andre stigene ----
+  // Lese 1–12: bokstavdyr
+  { id: 'lese-1', sett: 'lesing', fag: 'lesing', nivaa: 1, navn: 'Ape', emoji: '🐵', fakta: 'A som i ape. Aper bruker hendene nesten som oss.' },
+  { id: 'lese-2', sett: 'lesing', fag: 'lesing', nivaa: 2, navn: 'Bjørn', emoji: '🐻', fakta: 'B som i bjørn. Bjørnen sover hele vinteren.' },
+  { id: 'lese-3', sett: 'lesing', fag: 'lesing', nivaa: 3, navn: 'Due', emoji: '🕊️', fakta: 'D som i due. Duer finner alltid veien hjem.' },
+  { id: 'lese-4', sett: 'lesing', fag: 'lesing', nivaa: 4, navn: 'Elefant', emoji: '🐘', fakta: 'E som i elefant. Elefanten drikker med snabelen.' },
+  { id: 'lese-5', sett: 'lesing', fag: 'lesing', nivaa: 5, navn: 'Frosk', emoji: '🐸', fakta: 'F som i frosk. Frosken puster gjennom huden.' },
+  { id: 'lese-6', sett: 'lesing', fag: 'lesing', nivaa: 6, navn: 'Gris', emoji: '🐷', fakta: 'G som i gris. Griser er renslige og smarte.' },
+  { id: 'lese-7', sett: 'lesing', fag: 'lesing', nivaa: 7, navn: 'Hest', emoji: '🐴', fakta: 'H som i hest. Hesten kan sove stående.' },
+  { id: 'lese-8', sett: 'lesing', fag: 'lesing', nivaa: 8, navn: 'Krokodille', emoji: '🐊', fakta: 'K som i krokodille. Krokodillen kan ikke stikke tunga ut.' },
+  { id: 'lese-9', sett: 'lesing', fag: 'lesing', nivaa: 9, navn: 'Løve', emoji: '🦁', fakta: 'L som i løve. Løvens brøl høres en mil unna.' },
+  { id: 'lese-10', sett: 'lesing', fag: 'lesing', nivaa: 10, navn: 'Papegøye', emoji: '🦜', fakta: 'P som i papegøye. Noen papegøyer lærer hundre ord.' },
+  { id: 'lese-11', sett: 'lesing', fag: 'lesing', nivaa: 11, navn: 'Skilpadde', emoji: '🐢', fakta: 'S som i skilpadde. Skilpadder kan bli over hundre år.' },
+  { id: 'lese-12', sett: 'lesing', fag: 'lesing', nivaa: 12, navn: 'Ugle', emoji: '🦉', fakta: 'U som i ugle. Ugla flyr helt lydløst.' },
+  // Skrive riktig 1–4
+  { id: 'skrive-1', sett: 'skrive', fag: 'skrive', nivaa: 1, navn: 'Blyant', emoji: '✏️', fakta: 'En blyant kan tegne en strek på over 50 kilometer.' },
+  { id: 'skrive-2', sett: 'skrive', fag: 'skrive', nivaa: 2, navn: 'Brev', emoji: '✉️', fakta: 'Før i tiden ble brev båret av ryttere som byttet hest underveis.' },
+  { id: 'skrive-3', sett: 'skrive', fag: 'skrive', nivaa: 3, navn: 'Bok', emoji: '📖', fakta: 'De første bøkene ble skrevet for hånd og tok måneder å lage.' },
+  { id: 'skrive-4', sett: 'skrive', fag: 'skrive', nivaa: 4, navn: 'Ordbok', emoji: '📚', fakta: 'Norsk har flere hundre tusen ord, og det kommer nye hvert år.' },
+  // Språk 1–3
+  { id: 'sprak-1', sett: 'sprak', fag: 'sprak', nivaa: 1, navn: 'Puslebit', emoji: '🧩', fakta: 'Ord er som puslebiter: substantiv, verb og adjektiv passer sammen til setninger.' },
+  { id: 'sprak-2', sett: 'sprak', fag: 'sprak', nivaa: 2, navn: 'Teater', emoji: '🎭', fakta: 'I dag, i går, i morgen: ordene bøyer seg etter når det skjer.' },
+  { id: 'sprak-3', sett: 'sprak', fag: 'sprak', nivaa: 3, navn: 'Skriftrull', emoji: '📜', fakta: 'Punktum, spørsmålstegn og utropstegn forteller hvordan setningen skal leses.' },
+  // Klokka 1–8
+  { id: 'klokke-1', sett: 'klokke', fag: 'klokke', nivaa: 1, navn: 'Klokka ett', emoji: '🕐', fakta: 'Den korte viseren viser timen, den lange minuttene.' },
+  { id: 'klokke-2', sett: 'klokke', fag: 'klokke', nivaa: 2, navn: 'Klokka to', emoji: '🕑', fakta: 'Et døgn har 24 timer, så den korte viseren går rundt to ganger.' },
+  { id: 'klokke-3', sett: 'klokke', fag: 'klokke', nivaa: 3, navn: 'Halv fire', emoji: '🕞', fakta: 'Halv fire betyr at det er en halv time igjen til fire.' },
+  { id: 'klokke-4', sett: 'klokke', fag: 'klokke', nivaa: 4, navn: 'Kvart over fem', emoji: '🕔', fakta: 'Et kvarter er 15 minutter, en firedel av en time.' },
+  { id: 'klokke-5', sett: 'klokke', fag: 'klokke', nivaa: 5, navn: 'Solur', emoji: '☀️', fakta: 'Før klokka fantes, leste folk tiden av skyggen fra sola.' },
+  { id: 'klokke-6', sett: 'klokke', fag: 'klokke', nivaa: 6, navn: 'Timeglass', emoji: '⏳', fakta: 'Sanden i et timeglass renner like fort hver gang.' },
+  { id: 'klokke-7', sett: 'klokke', fag: 'klokke', nivaa: 7, navn: 'Digital klokke', emoji: '⏰', fakta: '15:00 er det samme som klokka tre om ettermiddagen.' },
+  { id: 'klokke-8', sett: 'klokke', fag: 'klokke', nivaa: 8, navn: 'Stoppeklokke', emoji: '⏱️', fakta: 'En time er 60 minutter, og et minutt er 60 sekunder.' },
+  // Geografi 1–9: flagg (bilde fra public/flagg) og landemerker
+  { id: 'geo-1', sett: 'geografi', fag: 'geografi', nivaa: 1, navn: 'Norge', flagg: 'no', fakta: 'Det norske flagget har korset fra Danmark og fargene fra Frankrike.' },
+  { id: 'geo-2', sett: 'geografi', fag: 'geografi', nivaa: 2, navn: 'Island', flagg: 'is', fakta: 'På Island finnes det varme kilder midt i snøen.' },
+  { id: 'geo-3', sett: 'geografi', fag: 'geografi', nivaa: 3, navn: 'Danmark', flagg: 'dk', fakta: 'Dannebrog er verdens eldste flagg som fortsatt er i bruk.' },
+  { id: 'geo-4', sett: 'geografi', fag: 'geografi', nivaa: 4, navn: 'Eiffeltårnet', emoji: '🗼', fakta: 'Eiffeltårnet i Paris blir 15 centimeter høyere om sommeren når jernet utvider seg.' },
+  { id: 'geo-5', sett: 'geografi', fag: 'geografi', nivaa: 5, navn: 'Italia', flagg: 'it', fakta: 'I Roma kaster folk mynter i en fontene for lykke.' },
+  { id: 'geo-6', sett: 'geografi', fag: 'geografi', nivaa: 6, navn: 'Slott', emoji: '🏰', fakta: 'Europa har tusenvis av slott, og mange av dem kan du besøke.' },
+  { id: 'geo-7', sett: 'geografi', fag: 'geografi', nivaa: 7, navn: 'Egypt', flagg: 'eg', fakta: 'Pyramidene i Egypt er over 4000 år gamle.' },
+  { id: 'geo-8', sett: 'geografi', fag: 'geografi', nivaa: 8, navn: 'Frihetsgudinnen', emoji: '🗽', fakta: 'Frihetsgudinnen i New York var en gave fra Frankrike.' },
+  { id: 'geo-9', sett: 'geografi', fag: 'geografi', nivaa: 9, navn: 'Fujifjellet', emoji: '🗻', fakta: 'Fuji i Japan er en vulkan med snø på toppen.' },
+  // Engelsk 1–10: ord med bilde
+  { id: 'eng-1', sett: 'engelsk', fag: 'engelsk', nivaa: 1, navn: 'Red', emoji: '🟥', fakta: 'Red – rød. Stop signs are red all over the world.' },
+  { id: 'eng-2', sett: 'engelsk', fag: 'engelsk', nivaa: 2, navn: 'Cat', emoji: '🐱', fakta: 'Cat – katt. Cats sleep about sixteen hours a day.' },
+  { id: 'eng-3', sett: 'engelsk', fag: 'engelsk', nivaa: 3, navn: 'Apple', emoji: '🍎', fakta: 'Apple – eple. An apple can float on water.' },
+  { id: 'eng-4', sett: 'engelsk', fag: 'engelsk', nivaa: 4, navn: 'Hat', emoji: '🎩', fakta: 'Hat – hatt. A top hat was once worn every day.' },
+  { id: 'eng-5', sett: 'engelsk', fag: 'engelsk', nivaa: 5, navn: 'Sun', emoji: '☀️', fakta: 'Sun – sol. The sun is a star.' },
+  { id: 'eng-6', sett: 'engelsk', fag: 'engelsk', nivaa: 6, navn: 'House', emoji: '🏠', fakta: 'House – hus. Some houses in England are 500 years old.' },
+  { id: 'eng-7', sett: 'engelsk', fag: 'engelsk', nivaa: 7, navn: 'Question', emoji: '❓', fakta: 'Question – spørsmål. Who, what, where, when, why.' },
+  { id: 'eng-8', sett: 'engelsk', fag: 'engelsk', nivaa: 8, navn: 'Book', emoji: '📖', fakta: 'Book – bok. The longest English word has 45 letters.' },
+  { id: 'eng-9', sett: 'engelsk', fag: 'engelsk', nivaa: 9, navn: 'Pencil', emoji: '✏️', fakta: 'Pencil – blyant. Spell it: p-e-n-c-i-l.' },
+  { id: 'eng-10', sett: 'engelsk', fag: 'engelsk', nivaa: 10, navn: 'Rainbow', emoji: '🌈', fakta: 'Rainbow – regnbue. A rainbow has seven colours.' },
 ]
 
-export function kortForNivaa(nivaa) {
-  return KORT.find((k) => k.nivaa === nivaa) || null
+// Kortet for et nivå i en stige. Kort uten `fag` hører til matte.
+export function kortForNivaa(nivaa, fag = 'matte') {
+  return KORT.find((k) => k.nivaa === nivaa && (k.fag || 'matte') === fag) || null
+}
+
+export function fagForKort(k) {
+  return k?.fag || (k?.nivaa ? 'matte' : null)
 }
 
 export function kortById(id) {

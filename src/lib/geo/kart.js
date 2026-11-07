@@ -5,18 +5,29 @@
 import { landFor, landIKontinent, KONTINENTER } from '../../data/geo/land.js'
 import { storeNokPaaKart } from './topo.js'
 
+// Landene det spørres etter på kartene over verdensdelene: 10–12 kjente land,
+// valgt for hånd (runde 5, etappe X). Resten vises i «Utforsk kartet».
+export const KART_UTVALG = {
+  afrika: ['eg', 'ma', 'dz', 'ng', 'et', 'ke', 'tz', 'za', 'mg', 'cd', 'so', 'ml'],
+  asia: ['cn', 'jp', 'in', 'ru', 'th', 'sa', 'mn', 'kz', 'ir', 'pk', 'iq', 'af'],
+  amerika: ['us', 'ca', 'mx', 'br', 'ar', 'cl', 'pe', 'co', 'bo', 've'],
+}
+
 const cache = {}
 
-export function kartPool(region) {
-  if (cache[region]) return cache[region]
+// `alle`: alle land som er store nok (til utforsking), ikke bare utvalget.
+export function kartPool(region, { alle = false } = {}) {
+  const key = alle ? `${region}:alle` : region
+  if (cache[key]) return cache[key]
   let pool
   if (region === 'norden' || region === 'europa') pool = landFor(region)
   else {
     const kandidater = KONTINENTER[region] ? landIKontinent(region) : landFor('verden')
     const ok = new Set(storeNokPaaKart(kandidater.map((l) => l.id), region))
     pool = kandidater.filter((l) => ok.has(l.id))
+    if (!alle && KART_UTVALG[region]) pool = pool.filter((l) => KART_UTVALG[region].includes(l.kode))
   }
-  cache[region] = pool
+  cache[key] = pool
   return pool
 }
 

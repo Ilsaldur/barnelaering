@@ -2,6 +2,7 @@
 // skrivemåte blandes aldri i samme oppgave.
 import { randInt, pick, shuffle } from '../rng.js'
 import { registerTypeLabels } from '../labels.js'
+import { velgKjent, kjenteFeil } from '../kunnskap.js'
 
 const MIN_POOLS = { whole: [0], half: [0, 30], quarter: [0, 15, 30, 45], five: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55] }
 
@@ -95,16 +96,42 @@ function poolFor(param) {
   return MIN_POOLS[param.minutes || 'whole']
 }
 
+// Kunnskapsstige: nøkler «tid:3:00» (analog, 12-timer) og «digital:15:00».
+const pad = (m) => String(m).padStart(2, '0')
+const keyTid = (t) => `tid:${h12(t.h)}:${pad(t.m)}`
+const keyDig = (t) => `digital:${digital(t.h24, t.m)}`
+function tider(param) {
+  const ut = []
+  for (let h = 1; h <= 12; h++) for (const m of poolFor(param)) ut.push({ h, m })
+  return ut
+}
+function tider24(param) {
+  const ut = []
+  for (let h24 = 0; h24 < 24; h24++) for (const m of poolFor(param)) ut.push({ h24, m, h: h12(h24) })
+  return ut
+}
+const visTid = (h, m) => ({ tekst: `${klokkeSetning(h, m)}.`, visual: { kind: 'klokke', h, m } })
+// Feilsvar blant kjente tider når barnet kjenner noen; ellers de vanlige feilsvarene.
+function feilTiderKjent(h, m, pool, param, rng) {
+  if (!param.kjent) return feilTider(h, m, pool, rng)
+  const alle = tider(param)
+  const kj = kjenteFeil(alle, { h, m }, keyTid, param, 3, rng)
+  if (kj.length && param.kjent.has(keyTid(kj[0]))) return kj.map((t) => norm(t.h, t.m))
+  return feilTider(h, m, pool, rng)
+}
+
 export const GEN_KLOKKE = {
   // Analog klokke → hva er klokka (norsk klokkespråk).
   les_analog: (param, rng) => {
     const pool = poolFor(param)
-    const h = randInt(1, 12, rng)
-    const m = pick(pool, rng)
-    const feil = feilTider(h, m, pool, rng)
+    const { h, m } = velgKjent(tider(param), keyTid, param, rng)
+    const feil = feilTiderKjent(h, m, pool, param, rng)
     return {
       type: `les_analog_${param.minutes || 'whole'}`,
       emne: `${h12(h)}:${m}`,
+      kjent: keyTid({ h, m }),
+      visning: visTid(h, m),
+      optionsKjent: Object.fromEntries([{ h, m }, ...feil].map((t) => [knapp(t.h, t.m), keyTid(t)])),
       form: 'valg',
       prompt: 'Hva er klokka?',
       spoken: 'Hva er klokka?',
@@ -117,13 +144,13 @@ export const GEN_KLOKKE = {
   },
   // Still klokka: dra viserne til oppgitt tid (norsk klokkespråk).
   still_klokka: (param, rng) => {
-    const pool = poolFor(param)
-    const h = randInt(1, 12, rng)
-    const m = pick(pool, rng)
+    const { h, m } = velgKjent(tider(param), keyTid, param, rng)
     const step = param.minutes === 'five' ? 5 : param.minutes === 'quarter' ? 15 : param.minutes === 'half' ? 30 : 60
     return {
       type: `still_klokka_${param.minutes || 'whole'}`,
       emne: `${h12(h)}:${m}`,
+      kjent: keyTid({ h, m }),
+      visning: visTid(h, m),
       form: 'still',
       prompt: `Still klokka på ${klokkespraak(h, m)}.`,
       spoken: `Still klokka på ${klokkespraak(h, m)}. Sett den lange viseren på minuttene og den korte på timen.`,
@@ -135,12 +162,14 @@ export const GEN_KLOKKE = {
   // Norsk klokkespråk → velg riktig klokke.
   finn_klokka: (param, rng) => {
     const pool = poolFor(param)
-    const h = randInt(1, 12, rng)
-    const m = pick(pool, rng)
-    const feil = feilTider(h, m, pool, rng)
+    const { h, m } = velgKjent(tider(param), keyTid, param, rng)
+    const feil = feilTiderKjent(h, m, pool, param, rng)
     return {
       type: `finn_klokka_${param.minutes || 'whole'}`,
       emne: `${h12(h)}:${m}`,
+      kjent: keyTid({ h, m }),
+      visning: visTid(h, m),
+      optionsKjent: Object.fromEntries([{ h: h12(h), m }, ...feil].map((t) => [`${t.h}:${t.m}`, keyTid(t)])),
       form: 'valgklokke',
       prompt: `Hvilken klokke viser ${klokkespraak(h, m)}?`,
       spoken: `Hvilken klokke viser ${klokkespraak(h, m)}?`,
@@ -151,16 +180,21 @@ export const GEN_KLOKKE = {
   },
   // Digital mot analog: analog klokke → digital tid (24-timer, med dag/kveld-hint).
   analog_til_digital: (param, rng) => {
-    const pool = poolFor(param)
-    const h24 = randInt(0, 23, rng)
-    const m = pick(pool, rng)
+    const t0 = velgKjent(tider24(param), keyDig, param, rng)
+    const h24 = t0.h24
+    const m = t0.m
     const h = h12(h24)
     const dagdel = h24 < 6 ? 'om natta' : h24 < 12 ? 'om formiddagen' : h24 < 18 ? 'om ettermiddagen' : 'om kvelden'
     const svar = digital(h24, m)
-    const feil = [digital((h24 + 12) % 24, m), digital((h24 + 1) % 24, m), digital(h24, (m + 30) % 60), digital((h24 + 23) % 24, m)].filter((x, i, a) => x !== svar && a.indexOf(x) === i).slice(0, 3)
+    const vanlige = [digital((h24 + 12) % 24, m), digital((h24 + 1) % 24, m), digital(h24, (m + 30) % 60), digital((h24 + 23) % 24, m)].filter((x, i, a) => x !== svar && a.indexOf(x) === i).slice(0, 3)
+    const kj = param.kjent ? kjenteFeil(tider24(param), t0, keyDig, param, 3, rng) : []
+    const feil = kj.length && param.kjent.has(keyDig(kj[0])) ? kj.map((t) => digital(t.h24, t.m)) : vanlige
     return {
       type: 'digital',
       emne: `${h}:${m}`,
+      kjent: keyDig(t0),
+      visning: { tekst: `Klokka er ${svar}. Det er ${klokkespraak(h, m)}.`, visual: { kind: 'klokke', h, m } },
+      optionsKjent: Object.fromEntries([svar, ...feil].map((x) => [x, `digital:${x}`])),
       form: 'valg',
       prompt: `Klokka viser dette ${dagdel}. Hva står det på en digital klokke?`,
       spoken: `Klokka viser dette ${dagdel}. Hva står det på en digital klokke?`,
@@ -174,13 +208,17 @@ export const GEN_KLOKKE = {
   // Digital tid → velg riktig analog klokke.
   digital_til_analog: (param, rng) => {
     const pool = poolFor(param)
-    const h24 = randInt(0, 23, rng)
-    const m = pick(pool, rng)
+    const t0 = velgKjent(tider24(param), keyDig, param, rng)
+    const h24 = t0.h24
+    const m = t0.m
     const h = h12(h24)
-    const feil = feilTider(h, m, pool, rng)
+    const feil = feilTiderKjent(h, m, pool, param, rng)
     return {
       type: 'digital',
       emne: `${h}:${m}`,
+      kjent: keyDig(t0),
+      visning: { tekst: `Klokka er ${digital(h24, m)}. Det er ${klokkespraak(h, m)}.`, visual: { kind: 'klokke', h, m } },
+      optionsKjent: Object.fromEntries([{ h, m }, ...feil].map((t) => [`${t.h}:${t.m}`, keyTid(t)])),
       form: 'valgklokke',
       prompt: `Hvilken klokke viser ${digital(h24, m)}?`,
       spoken: `Hvilken klokke viser ${digitalSpoken(h24, m)}?`,

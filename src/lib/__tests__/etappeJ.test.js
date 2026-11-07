@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { seeded } from '../rng.js'
 import { normalize, mergeData, emptyData, emptyFag } from '../profil.js'
-import { startPlassering, stegPlassering, TRAPP_MATTE } from '../matte/plassering.js'
 import { buildMission, oppgaveTilPlassering, MATTE_STIGE } from '../matte/oppdrag.js'
 import { oppdaterSvake } from '../matte/stige.js'
 import { sudokuLosninger, NOTT_TYPER } from '../matte/noetter.js'
@@ -66,53 +65,6 @@ describe('J2 bom-lista med nivå', () => {
       }
     })
   }
-})
-
-describe('J3 plasseringstest ned verden for verden', () => {
-  it('kan til og med 5, velger Verdensrommet: plasseres på 5 eller 6 med høyst fem gale svar', () => {
-    const rng = seeded(7)
-    let s = startPlassering({ start: 29, tak: 38, maks: 38, trapp: TRAPP_MATTE })
-    let gale = 0
-    const spurt = []
-    while (!s.ferdig) {
-      spurt.push(s.pos)
-      const ok = s.pos <= 5
-      if (!ok) gale++
-      s = stegPlassering(s, ok)
-      void rng
-    }
-    expect([5, 6]).toContain(s.nivaa)
-    expect(gale).toBeLessThanOrEqual(5)
-    expect(spurt.slice(0, 4)).toEqual([29, 21, 13, 6])
-  })
-  it('hopper over prøven på taket når nivået rett under er bestått', () => {
-    let s = startPlassering({ start: 1, tak: 7, maks: 38, trapp: TRAPP_MATTE })
-    for (const ok of [true, true, true, true, true, true]) s = stegPlassering(s, ok) // 1, 3, 5 bestått
-    expect(s.pos).toBe(7)
-    s = stegPlassering(s, true)
-    s = stegPlassering(s, true) // 7 er taket
-    expect(s.ferdig).toBe(true)
-    expect(s.nivaa).toBe(7)
-    // Rett under taket: 6 bestått → 7 uten prøve.
-    let u = startPlassering({ start: 6, tak: 7, maks: 38, trapp: TRAPP_MATTE })
-    u = stegPlassering(u, true)
-    u = stegPlassering(u, true)
-    expect(u.ferdig).toBe(true)
-    expect(u.nivaa).toBe(7)
-  })
-  it('alt riktig fra havet gir fortsatt 15, og alt feil gir 1', () => {
-    let s = startPlassering({ start: 6, tak: 15, maks: 38, trapp: TRAPP_MATTE })
-    while (!s.ferdig) s = stegPlassering(s, true)
-    expect(s.nivaa).toBe(15)
-    s = startPlassering({ start: 6, tak: 15, maks: 38, trapp: TRAPP_MATTE })
-    let gale = 0
-    while (!s.ferdig) {
-      s = stegPlassering(s, false)
-      gale++
-    }
-    expect(s.nivaa).toBe(1)
-    expect(gale).toBe(2) // 6, så 1
-  })
 })
 
 describe('J4 sudoku', () => {

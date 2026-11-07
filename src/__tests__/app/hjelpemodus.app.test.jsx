@@ -52,7 +52,7 @@ function svar(task, riktig) {
     if (task.form === 'valg') klikk(label(ok ? task.answer : feilValg()))
     else if (task.form === 'tastatur') tast(ok ? task.answer : task.answer + 1)
     else if (task.form === 'santusant') klikk(ok === task.answer ? '✅ Sant' : '❌ Usant')
-    else if (task.form === 'sorter') for (const v of ok ? task.answer : [...task.answer].reverse()) klikk(String(v))
+    else if (task.form === 'sorter') for (const v of ok ? task.answer : [...task.answer].reverse()) { const it = task.items.find((x) => (x && typeof x === 'object' ? x.id : x) === v); klikk(it && typeof it === 'object' ? `${it.label} ${it.id}` : String(v)) }
     else if (task.form === 'tallinje') {
       const alt = ok ? task.answer : task.line.from + (task.answer === task.line.from ? task.line.step : 0)
       klikk(String(alt))

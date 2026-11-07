@@ -7,13 +7,6 @@ import { sound } from '../sound.js'
 import { NIVAER_KLOKKE, KLOKKE_OMRAADER, klokkeOmraadeFor } from '../data/klokke/nivaer.js'
 import { genKlokke, klokkeSetning, digital } from '../lib/klokke/generatorer.js'
 
-const START = [
-  { id: 'hel', navn: 'Jeg lærer hele timer', emoji: '🕐', nivaa: 1, farge: 'bg-sky-500' },
-  { id: 'halv', navn: 'Jeg kan hele og halve timer', emoji: '🕞', nivaa: 3, farge: 'bg-indigo-500' },
-  { id: 'kvart', navn: 'Jeg kan kvart over og kvart på', emoji: '🕒', nivaa: 5, farge: 'bg-violet-500' },
-  { id: 'digital', navn: 'Jeg kan klokka og vil øve digital og tidsregning', emoji: '⏱️', nivaa: 7, farge: 'bg-fuchsia-500' },
-]
-
 // Fri øving: dra viserne og se hva klokka er, på norsk og digitalt.
 function Ovelse({ onClose }) {
   const [h, setH] = useState(3)
@@ -59,7 +52,7 @@ function Ovelse({ onClose }) {
 
 export default function KlokkeStige({ go }) {
   const [ov, setOv] = useState(false)
-  const cfg = {
+  const cfg = { kunnskap: true,
     id: 'klokke',
     tittel: 'Klokka',
     kartTittel: 'Klokkestigen',
@@ -68,7 +61,6 @@ export default function KlokkeStige({ go }) {
     verdener: KLOKKE_OMRAADER,
     gen: genKlokke,
     omraadeFor: klokkeOmraadeFor,
-    start: START,
     ikoner: (n) => klokkeOmraadeFor(n.id).emoji,
     ekstra: (
       <BigButton color="bg-indigo-500" onClick={() => setOv(true)}>
