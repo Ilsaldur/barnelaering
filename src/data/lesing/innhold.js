@@ -334,6 +334,73 @@ export const TEKSTER = [
       { q: '«Det var den fineste trompeten han hadde hørt.» Er det fakta eller mening?', alternativer: ['Mening', 'Fakta'], svar: 'Mening', type: 'faktamening' },
     ],
   },
+  // ---- UTKAST (runde 6, etappe AE): seks tekster til, 90–130 ord, til Lese 9 ----
+  {
+    id: 'n9-isbjorn',
+    tittel: 'Isbjørnen på Svalbard',
+    tekst: 'Isbjørnen er det største rovdyret som lever på land. En voksen hann kan veie like mye som fem voksne mennesker. Pelsen ser hvit ut, men hårene er egentlig uten farge, og huden under er svart. Det hjelper bjørnen å holde på varmen. Isbjørnen lever på Svalbard og i andre områder rundt Nordpolen, der havet fryser til om vinteren. Den jakter på sel ved å vente stille ved et hull i isen. Når selen kommer opp for å puste, slår bjørnen til. Om sommeren smelter mye av isen, og da må isbjørnen svømme langt. Den kan svømme i flere dager uten å hvile. Forskere følger isbjørnene med små sendere i halsbånd for å lære hvor de går.',
+    sporsmaal: [
+      { q: 'Hvilken farge har huden til isbjørnen?', alternativer: ['Svart', 'Hvit', 'Rosa', 'Grå'], svar: 'Svart', type: 'fakta' },
+      { q: 'Hvordan jakter isbjørnen på sel?', alternativer: ['Den venter ved et hull i isen', 'Den jager selen på land', 'Den dykker etter den i havet', 'Den graver den ut av snøen'], svar: 'Den venter ved et hull i isen', type: 'fakta' },
+      { q: 'Hvorfor må isbjørnen svømme langt om sommeren?', alternativer: ['Mye av isen smelter', 'Den leter etter kaldere vann', 'Selene flytter sørover', 'Den vil besøke andre øyer'], svar: 'Mye av isen smelter', type: 'fakta' },
+      { q: '«Isbjørnen er det største rovdyret som lever på land.» Er det fakta eller mening?', alternativer: ['Fakta', 'Mening'], svar: 'Fakta', type: 'faktamening' },
+    ],
+  },
+  {
+    id: 'n9-fotballcup',
+    tittel: 'Den siste kampen',
+    tekst: 'Laget til Noor hadde tapt alle kampene i cupen, og nå var det bare én igjen. Treneren samlet dem i en ring og sa at i dag skulle de bare ha det gøy. Motstanderne var store og raske, og etter ti minutter ledet de med to mål. Da fikk Noor ballen ute på kanten. Hun løp forbi en spiller, så enda en, og skjøt. Ballen gikk i mål. Laget hennes jublet som om de hadde vunnet hele cupen. Kampen endte med tap, men på vei hjem i bilen snakket alle bare om det ene målet. Pappa sa at det var det beste målet i hele turneringen. Noor visste at hun ville spille fotball resten av livet.',
+    sporsmaal: [
+      { q: 'Hvor mange kamper hadde laget vunnet før den siste?', alternativer: ['Ingen', 'Én', 'To', 'Alle'], svar: 'Ingen', type: 'fakta' },
+      { q: 'Hva sa treneren før kampen?', alternativer: ['At de skulle ha det gøy', 'At de måtte vinne', 'At de skulle spille forsiktig', 'At de burde gi opp'], svar: 'At de skulle ha det gøy', type: 'fakta' },
+      { q: 'Hvordan endte kampen?', alternativer: ['Med tap', 'Med seier', 'Uavgjort', 'Den ble avbrutt'], svar: 'Med tap', type: 'fakta' },
+      { q: '«Det var det beste målet i hele turneringen.» Er det fakta eller mening?', alternativer: ['Mening', 'Fakta'], svar: 'Mening', type: 'faktamening' },
+    ],
+  },
+  {
+    id: 'n9-vulkan',
+    tittel: 'Fjellet som spruter ild',
+    tekst: 'En vulkan er et fjell med et hull ned til jordas glovarme indre. Dypt under oss er steinen så varm at den er flytende. Den kalles magma. Når trykket blir stort nok, presses magmaen opp gjennom hullet og renner ut som lava. Lavaen er over tusen grader varm og lyser rødt og gult. Når den kjølner, blir den til ny, svart stein. Noen vulkaner spruter også aske høyt opp i lufta, så himmelen blir mørk langt unna. Island har mange vulkaner, og der bruker folk varmen fra bakken til å varme opp hus og svømmebasseng. I Norge er det ingen vulkaner som er aktive i dag, men på øya Jan Mayen ligger en som sist hadde utbrudd i 1985.',
+    sporsmaal: [
+      { q: 'Hva heter den flytende steinen under jorda?', alternativer: ['Magma', 'Aske', 'Granitt', 'Sand'], svar: 'Magma', type: 'fakta' },
+      { q: 'Hva blir lavaen til når den kjølner?', alternativer: ['Ny, svart stein', 'Varm damp', 'Fin sand', 'Grå aske'], svar: 'Ny, svart stein', type: 'fakta' },
+      { q: 'Hva bruker folk på Island varmen fra bakken til?', alternativer: ['Å varme opp hus', 'Å lage glass', 'Å smelte snø på veiene', 'Å koke fisk'], svar: 'Å varme opp hus', type: 'fakta' },
+      { q: '«Lavaen er over tusen grader varm.» Er det fakta eller mening?', alternativer: ['Fakta', 'Mening'], svar: 'Fakta', type: 'faktamening' },
+    ],
+  },
+  {
+    id: 'n9-besteforeldre',
+    tittel: 'Hos bestemor og bestefar',
+    tekst: 'Hver sommer bor Jonas en uke hos bestemor og bestefar på gården. Der er det ingen skjermer, men det er aldri kjedelig. Om morgenen henter han egg i hønsehuset, og bestemor steker dem med bacon. Etter frokost hjelper han bestefar med å mate sauene og fylle vann i trauene. Midt på dagen bader de i elva, der vannet er så klart at man ser steinene på bunnen. Om kvelden spiller de kort ved kjøkkenbordet, og bestefar jukser alltid litt for å få Jonas til å le. Den siste kvelden tenner de bål og griller pinnebrød. Jonas synes at uka på gården er den beste i hele sommeren, og han teller dagene til neste år.',
+    sporsmaal: [
+      { q: 'Hva henter Jonas om morgenen?', alternativer: ['Egg i hønsehuset', 'Melk fra kua', 'Ved til ovnen', 'Post i kassa'], svar: 'Egg i hønsehuset', type: 'fakta' },
+      { q: 'Hva gjør de midt på dagen?', alternativer: ['Bader i elva', 'Sover middag', 'Kjører traktor', 'Plukker bær'], svar: 'Bader i elva', type: 'fakta' },
+      { q: 'Hva gjør de den siste kvelden?', alternativer: ['Tenner bål og griller pinnebrød', 'Ser på film sammen', 'Kjører til byen', 'Spiller fotball i hagen'], svar: 'Tenner bål og griller pinnebrød', type: 'fakta' },
+      { q: '«Uka på gården er den beste i hele sommeren.» Er det fakta eller mening?', alternativer: ['Mening', 'Fakta'], svar: 'Mening', type: 'faktamening' },
+    ],
+  },
+  {
+    id: 'n9-honningbie',
+    tittel: 'Biene og honningen',
+    tekst: 'I en bikube bor det opptil femti tusen bier, men bare én dronning. Hun legger alle eggene. De fleste andre biene er arbeidere, og hver arbeider har en jobb. Noen passer på de små larvene, noen vokter inngangen, og noen flyr ut for å hente nektar fra blomstene. Nektaren bærer de hjem i en egen pose i kroppen. Inne i kuben helles den over i små rom av voks, og biene vifter med vingene til den blir tykk og søt. Da er det blitt honning. Når biene besøker blomstene, får de med seg pollen på beina, og dermed hjelper de blomstene å lage frø. Uten biene ville vi hatt mye mindre frukt og bær. En bie lager bare en liten teskje honning i hele sitt liv.',
+    sporsmaal: [
+      { q: 'Hvor mange dronninger er det i en bikube?', alternativer: ['Én', 'To', 'Ti', 'Tre'], svar: 'Én', type: 'fakta' },
+      { q: 'Hvordan blir nektaren til honning?', alternativer: ['Biene vifter til den blir tykk', 'Den kokes i sola', 'Den fryser om natta', 'Dronningen rører i den'], svar: 'Biene vifter til den blir tykk', type: 'fakta' },
+      { q: 'Hvorfor er biene viktige for blomstene?', alternativer: ['De bærer pollen mellom dem', 'De vanner dem med nektar', 'De spiser skadedyr', 'De holder dem varme'], svar: 'De bærer pollen mellom dem', type: 'fakta' },
+      { q: '«En bie lager bare en liten teskje honning i hele sitt liv.» Er det fakta eller mening?', alternativer: ['Fakta', 'Mening'], svar: 'Fakta', type: 'faktamening' },
+    ],
+  },
+  {
+    id: 'n9-roboten',
+    tittel: 'Roboten i klasserommet',
+    tekst: 'En dag kom det en liten robot til klassen. Den var ikke høyere enn en brusflaske, hadde to hjul og et skjermansikt som kunne smile. Læreren sa at elevene skulle lære den å kjøre gjennom en bane av bøker. Først trodde Mina det var umulig, for roboten forsto ikke et ord norsk. Men den forsto piler. Elevene la brikker med piler etter hverandre, og roboten fulgte dem: fram, fram, høyre, fram. Første gang kjørte den rett inn i en bok og falt over. Alle lo, og roboten viste et surt ansikt på skjermen. Mina flyttet en pil, og på det tredje forsøket kom roboten helt gjennom banen. Da blinket den grønt og spilte en liten melodi. Mina synes roboter er det morsomste i hele skolen.',
+    sporsmaal: [
+      { q: 'Hvor høy var roboten?', alternativer: ['Som en brusflaske', 'Som et bord', 'Som en lærer', 'Som en blyant'], svar: 'Som en brusflaske', type: 'fakta' },
+      { q: 'Hvordan styrte elevene roboten?', alternativer: ['Med brikker med piler', 'Med stemmen', 'Med en fjernkontroll', 'Med et tau'], svar: 'Med brikker med piler', type: 'fakta' },
+      { q: 'Hva gjorde roboten da den kom gjennom banen?', alternativer: ['Blinket grønt og spilte en melodi', 'Kjørte ut av døra', 'Viste et surt ansikt', 'Falt over en bok'], svar: 'Blinket grønt og spilte en melodi', type: 'fakta' },
+      { q: '«Roboter er det morsomste i hele skolen.» Er det fakta eller mening?', alternativer: ['Mening', 'Fakta'], svar: 'Mening', type: 'faktamening' },
+    ],
+  },
 ]
 
 // Rettskriving: ord gruppert etter det som er vanskelig. `feil` er vanlige

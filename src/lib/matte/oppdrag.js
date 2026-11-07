@@ -520,29 +520,23 @@ export function byggKunnskapsOppdrag(plan, rng, stige, { L, nivaa, kjent: kjentL
       const lagNy = () => lagOppgave(n, rng, { ekstra: { kjent, foretrekkUkjent: true, vanligeFeil: true } }, stige)
       for (let i = 0; i < 30; i++) {
         const t = lagNy()
-        if (t.kjent && !kjent.has(t.kjent) && fersk(t)) return { ...(n === nivaa ? heller(t, lagNy) : t), tag: 'prov' }
+        if (t.kjent && !kjent.has(t.kjent) && fersk(t) && emneOk(t)) {
+          const v = n === nivaa ? heller(t, lagNy) : t
+          if (fersk(v) && emneOk(v)) return { ...v, tag: 'prov' }
+        }
       }
     }
     return null
   }
+  // Plassen holdes av; selve prøven lages til slutt, så den følger emneregelen
+  // og ikke handler om noe som ble vist i dette oppdraget.
   const provSlot = slots.findIndex((p) => p.tag === 'neste')
-  if (provSlot >= 0) {
-    slots.splice(provSlot, 1)
-    prov = lagProv()
-    if (prov) brukt.add(nokkel(prov))
-  }
-  // Tingen på prøv-plassen vises ikke i samme oppdrag.
-  const erProv = (t) => !!prov && t.kjent === prov.kjent
-  const Lrest = prov ? L - 1 : L
+  if (provSlot >= 0) slots.splice(provSlot, 1)
+  const Lrest = provSlot >= 0 ? L - 1 : L
   while (slots.length && tasks.length < Lrest) {
     const p = slots.shift()
     const kanNy = nye < nyeMaks && Lrest - tasks.length >= 2
-    let t = velg(lag(p, { kjent, foretrekkUkjent: kanNy }), rng, { brukt, sett, emneOk, avvis: (x) => erProv(x) || !fersk(x) })
-    if (erProv(t)) {
-      const t2 = kjentSpm(p)
-      if (t2) leggTil(t2)
-      continue
-    }
+    let t = velg(lag(p, { kjent, foretrekkUkjent: kanNy }), rng, { brukt, sett, emneOk, avvis: (x) => !fersk(x) })
     if (t.kjent && !kjent.has(t.kjent)) {
       if (kanNy && (p.nivaaVelger ? p.nivaa : p.nivaa) === nivaa) t = heller(t, () => lag(p, { kjent, foretrekkUkjent: true })(rng))
       if (kanNy && introduser(p, t)) continue
@@ -564,27 +558,38 @@ export function byggKunnskapsOppdrag(plan, rng, stige, { L, nivaa, kjent: kjentL
     }
     leggTil(t)
   }
-  // Prøv-plassen sist (eller nest sist, om siste oppgave handler om det samme).
-  // Var tingen på prøv-plassen den eneste nye som kunne vises, vises den i
-  // stedet – ellers ville den aldri blitt lært.
-  if (prov && nye === 0 && nyeMaks > 0 && egne.has(prov.kjent) && !harUkjentEgenUtenom(prov.kjent)) {
-    const vis = { ...tilVis(prov), tag: 'eget' }
-    const q = { ...lagOppgaveOm(prov, prov.kjent, kjent, rng, stige), tag: 'eget' }
-    kjent.add(prov.kjent)
-    if (alleKjente(q) && fersk(q)) {
-      leggTil(vis)
-      leggTil(q)
-      nye++
-      prov = null
-    } else kjent.delete(prov.kjent)
-  }
-  if (prov) {
-    const s = tasks[tasks.length - 1]
-    if (!s || s.emne !== prov.emne) tasks.push(prov)
-    else if (tasks.length >= 2 && tasks[tasks.length - 2].emne !== prov.emne) tasks.splice(tasks.length - 1, 0, prov)
+  // Prøv-plassen sist. Var tingen på prøv-plassen den eneste nye som kunne
+  // vises, vises den i stedet (vis + spørsmål) – ellers ville den aldri blitt lært.
+  let ekstra = 0
+  if (provSlot >= 0) {
+    prov = lagProv()
+    if (prov && nye === 0 && nyeMaks > 0 && egne.has(prov.kjent) && !harUkjentEgenUtenom(prov.kjent)) {
+      const vis = { ...tilVis(prov), tag: 'eget' }
+      const q = { ...lagOppgaveOm(prov, prov.kjent, kjent, rng, stige), tag: 'eget' }
+      kjent.add(prov.kjent)
+      if (alleKjente(q) && fersk(q)) {
+        leggTil(vis)
+        leggTil(q)
+        nye++
+        ekstra = 1
+        prov = null
+      } else kjent.delete(prov.kjent)
+    }
+    if (prov) leggTil(prov)
+    else if (!ekstra) {
+      // Ingen prøve å stille: ett kjent spørsmål til i stedet.
+      for (let bom = 0; bom < 4 && tasks.length < L; ) {
+        const t = velg(lag({ nivaa, tag: 'eget' }, { kjent, foretrekkUkjent: false }), rng, { brukt, sett, emneOk, avvis: (x) => !fersk(x) })
+        if ((t.kjent && !kjent.has(t.kjent)) || !alleKjente(t) || !fersk(t) || !emneOk(t)) {
+          bom++
+          continue
+        }
+        leggTil(t)
+      }
+    }
   }
   // Rekkefølgen beholdes: en ting vises alltid før det spørres om den.
-  return tasks.slice(0, Math.max(L, 2))
+  return tasks.slice(0, Math.max(L, 2) + ekstra)
 }
 
 // Sjefsoppgave: fem oppgaver fra nivåene mellom barnets nivå og målet –

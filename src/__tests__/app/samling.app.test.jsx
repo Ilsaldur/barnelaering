@@ -27,6 +27,8 @@ describe('samlingen', () => {
     )
     expect(document.body.textContent).toContain('Du får et kort hver gang du klarer et nivå med tre stjerner, eller går opp et nivå.')
     expect(document.body.textContent).toMatch(/1 av \d+ kort/)
+    // Settene for andre fag enn det sist spilte er slått sammen (etappe AE): åpne geografi først.
+    fireEvent.click(screen.getByTestId('sett-geografi').querySelector('button'))
     // Grått geografikort for nivå 3 (passert: barnet står på 5).
     fireEvent.click(screen.getByTestId('kort-geo-3'))
     const vindu = screen.getByTestId('kort-vindu')
@@ -36,6 +38,7 @@ describe('samlingen', () => {
     expect(onFag).toHaveBeenCalledWith('geografi')
     // Grått lesekort for nivå 7 (ikke passert).
     fireEvent.click(screen.getByText('Lukk'))
+    fireEvent.click(screen.getByTestId('sett-lesing').querySelector('button'))
     fireEvent.click(screen.getByTestId('kort-lese-7'))
     expect(screen.getByTestId('kort-vindu').textContent).toContain('Lese, nivå 7')
     expect(screen.getByTestId('kort-vindu').textContent).toContain('tre stjerner')

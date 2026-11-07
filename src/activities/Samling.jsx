@@ -13,6 +13,13 @@ import { harPaa } from '../lib/kostyme.js'
 import Rev from '../components/Rev.jsx'
 import { kisteStatus } from '../lib/samling.js'
 
+// Faget barnet sist spilte (slik det står i loggen), til rekkefølgen på settene.
+export function sistSpilteFag(log = []) {
+  let best = null
+  for (const e of log) if (e && e.fag && e.t && (!best || e.t > best.t) && SETT.some((s) => s.fag === e.fag)) best = e
+  return best ? best.fag : 'matte'
+}
+
 // Samlingen: samlekort, revens garderobe og familiekisten.
 export default function Samling({ go, onGarden, onFag }) {
   const { data, fag, balance, buyKostyme, setKostyme, familyStars, loadFamily, childProfiles, profile } = useStars()
@@ -26,6 +33,13 @@ export default function Samling({ go, onGarden, onFag }) {
 
   const kiste = kisteStatus(familyStars)
   const eier = new Set(data.kort)
+
+  // Settet for faget barnet sist spilte står øverst og er åpent; de andre er
+  // slått sammen til én linje med «x av y» til man trykker (runde 6, etappe AE).
+  const sistFag = sistSpilteFag(data.log)
+  const settRekkef = [...SETT].sort((a, b) => (a.fag === sistFag ? -1 : 0) - (b.fag === sistFag ? -1 : 0))
+  const [aapne, setAapne] = useState(() => new Set())
+  const erAapen = (sett) => sett.fag === sistFag || aapne.has(sett.id)
 
   const paa = data.kostymerPaa || []
   function kjop(k) {
@@ -57,24 +71,39 @@ export default function Samling({ go, onGarden, onFag }) {
         <Mascot message={msg || `Du får et kort hver gang du klarer et nivå med tre stjerner, eller går opp et nivå. Du har ${data.kort.length} av ${KORT.length} kort.`} />
       </div>
 
-      {/* Samlekort, gruppert per fag */}
-      {SETT.map((sett, si) => {
+      {/* Samlekort, gruppert per fag. Sist spilte fag øverst og åpent, resten sammenslått. */}
+      {settRekkef.map((sett, si) => {
         const kort = KORT.filter((k) => k.sett === sett.id)
         const har = kort.filter((k) => eier.has(k.id)).length
-        const nyttFag = si === 0 || SETT[si - 1].fag !== sett.fag
+        const nyttFag = si === 0 || settRekkef[si - 1].fag !== sett.fag
+        const aapen = erAapen(sett)
         return (
-          <div key={sett.id} className="bg-white/90 rounded-3xl p-4 shadow-xl mb-4">
-            {nyttFag && (
+          <div key={sett.id} data-testid={`sett-${sett.id}`} data-aapen={aapen ? 'ja' : 'nei'} className={`bg-white/90 rounded-3xl shadow-xl ${aapen ? 'p-4 mb-4' : 'px-4 py-2 mb-2'}`}>
+            {nyttFag && aapen && (
               <p className="text-xs font-extrabold uppercase tracking-wide text-slate-400 mb-1">{sett.fag ? `${FAG_LABELS[sett.fag]?.emoji || ''} ${FAG_LABELS[sett.fag]?.navn || sett.fag}` : '✨ Bonus'}</p>
             )}
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xl md:text-2xl font-extrabold text-slate-700">
+            <button
+              type="button"
+              aria-expanded={aapen}
+              onClick={() => {
+                sound.click()
+                setAapne((a) => {
+                  const n = new Set(a)
+                  if (n.has(sett.id)) n.delete(sett.id)
+                  else n.add(sett.id)
+                  return n
+                })
+              }}
+              className={`w-full flex items-center justify-between text-left ${aapen ? 'mb-3' : ''}`}
+            >
+              <h2 className={`font-extrabold text-slate-700 ${aapen ? 'text-xl md:text-2xl' : 'text-base md:text-lg'}`}>
                 {sett.emoji} {sett.navn}
               </h2>
-              <span className="text-sm font-bold text-slate-400">
-                {har} av {kort.length}
+              <span className="text-sm font-bold text-slate-400 whitespace-nowrap">
+                {har} av {kort.length} {aapen ? '▴' : '▾'}
               </span>
-            </div>
+            </button>
+            {aapen && (
             <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
               {kort.map((k) => {
                 const have = eier.has(k.id)
@@ -95,6 +124,7 @@ export default function Samling({ go, onGarden, onFag }) {
                 )
               })}
             </div>
+            )}
           </div>
         )
       })}
@@ -120,12 +150,13 @@ export default function Samling({ go, onGarden, onFag }) {
         const f = fagForKort(valgt)
         const info = f ? FAG_LABELS[f] : null
         const staar = f ? fag?.[f]?.nivaa || 0 : 0
-        const passert = f && valgt.nivaa && fag?.[f]?.plassert && staar > valgt.nivaa
+        const plassert = f && fag?.[f]?.plassert && fag?.[f]?.nivaa
+        const passert = f && valgt.nivaa && plassert && staar > valgt.nivaa
         const tekst = !f
           ? 'Bonuskort dukker opp av og til når du gjør det godt i et oppdrag.'
           : passert
             ? `Du har passert nivå ${valgt.nivaa}. Spill det om igjen på kartet og klar det med tre stjerner, så er kortet ditt.`
-            : `Klar nivå ${valgt.nivaa} med tre stjerner, eller gå opp fra nivået, så får du kortet.`
+            : `Klar nivå ${valgt.nivaa} med tre stjerner, eller gå opp fra nivået, så får du kortet.${!plassert && !['skrive', 'sprak'].includes(f) ? ' Reven finner først nivået ditt.' : ''}`
         return (
           <div className="fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4" onClick={() => setValgt(null)}>
             <div data-testid="kort-vindu" className="bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full text-center animate-pop-in" onClick={(e) => e.stopPropagation()}>

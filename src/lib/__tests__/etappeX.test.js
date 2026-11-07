@@ -82,9 +82,9 @@ describe('X1 – lesetekster', () => {
       }
     }
     expect(new Set(TEKSTER2.map((t) => t.id)).size).toBe(TEKSTER2.length)
-    // De seks nye tekstene til nivå 9 er på 90–130 ord og har fakta-eller-mening.
+    // De nye tekstene til nivå 9 (seks i runde 5, seks i runde 6) er på 90–130 ord og har fakta-eller-mening.
     const nye = TEKSTER.filter((t) => t.id.startsWith('n9-'))
-    expect(nye.length).toBe(6)
+    expect(nye.length).toBe(12)
     for (const t of nye) {
       expect(ordI(t)).toBeGreaterThanOrEqual(90)
       expect(ordI(t)).toBeLessThanOrEqual(130)
