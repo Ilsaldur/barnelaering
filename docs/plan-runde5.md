@@ -5,7 +5,7 @@
 | Etappe | Status | Sist oppdatert |
 |--------|--------|----------------|
 | R – Én dør per fag, Dagens økt velger seg selv | Ferdig og pushet. Se `docs/etappeR.md`. | 2026-11-07 |
-| S – Usynlig plassering | Ikke startet. | |
+| S – Usynlig plassering | Ferdig og pushet. Se `docs/etappeS.md`. | 2026-11-07 |
 | T – Innføring i kunnskapsstigene | Ikke startet. | |
 | U – Former og farger inn i matte | Ikke startet. | |
 | V – Samlingen forklarer seg selv, alle stiger gir kort | Ikke startet. | |

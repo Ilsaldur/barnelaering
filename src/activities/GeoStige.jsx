@@ -11,12 +11,6 @@ import { genGeo } from '../lib/geo/generatorer.js'
 import { REGIONER, landById } from '../data/geo/land.js'
 import { kartPool } from '../lib/geo/kart.js'
 
-const START = [
-  { id: 'norden', navn: 'Jeg lærer landene i Norden', emoji: '❄️', nivaa: 1, farge: 'bg-sky-500' },
-  { id: 'europa', navn: 'Jeg kan Norden og vil lære Europa', emoji: '🏰', nivaa: 4, farge: 'bg-emerald-500' },
-  { id: 'verden', navn: 'Jeg kan Europa og vil lære hele verden', emoji: '🌍', nivaa: 7, farge: 'bg-amber-500' },
-]
-
 // Utforsk kartet: trykk på et land og se flagg og hovedstad.
 function Utforsk({ onClose }) {
   const [region, setRegion] = useState('norden')
@@ -83,7 +77,6 @@ export default function GeoStige({ go }) {
     verdener: GEO_OMRAADER,
     gen: genGeo,
     omraadeFor: geoOmraadeFor,
-    start: START,
     ikoner: (n) => geoOmraadeFor(n.id).emoji,
     ekstra: (
       <BigButton color="bg-teal-500" onClick={() => setUt(true)}>

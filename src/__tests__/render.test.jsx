@@ -80,11 +80,11 @@ describe('alle skjermer rendrer uten feil', () => {
     }
   })
 
-  it('mattestigen: plassering, nøttehula og alle oppgavetyper rendrer', () => {
-    expect(wrap(<MatteStige go={noop} onNoetter={noop} />)).toContain('Hvor vil du begynne')
+  it('mattestigen: første oppdrag, nøttehula og alle oppgavetyper rendrer', () => {
+    expect(wrap(<MatteStige go={noop} onNoetter={noop} />)).toContain('Eventyrkartet')
     expect(wrap(<Noettehula go={noop} />)).toContain('Nøttehula')
     expect(wrap(<LeseStige go={noop} />)).toContain('Skrive riktig')
-    expect(wrap(<LeseStige go={noop} start="lesing" />)).toContain('Hva passer best')
+    expect(wrap(<LeseStige go={noop} start="lesing" />)).toContain('Lese')
     const rngL = seeded(31)
     for (const n of [...NIVAER_LESING, ...NIVAER_SKRIVE, ...NIVAER_SPRAK]) {
       for (const t of n.typer) {
@@ -111,9 +111,9 @@ describe('alle skjermer rendrer uten feil', () => {
   })
 
   it('klokke-, geografi- og engelskstigen rendrer med alle oppgavetyper', () => {
-    expect(wrap(<KlokkeStige go={noop} />)).toContain('Hva passer best')
-    expect(wrap(<GeoStige go={noop} />)).toContain('Hva passer best')
-    expect(wrap(<EngelskStige go={noop} />)).toContain('Hva passer best')
+    expect(wrap(<KlokkeStige go={noop} />)).toContain('Klokkestigen')
+    expect(wrap(<GeoStige go={noop} />)).toContain('Geografistigen')
+    expect(wrap(<EngelskStige go={noop} />)).toContain('Engelskstigen')
     expect(renderToString(<VerdensKart region="norden" highlight="578" />)).toContain('<path')
     const rng = seeded(41)
     for (const [nivaer, gen, fag] of [

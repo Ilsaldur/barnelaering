@@ -54,7 +54,7 @@ function TapLine({ line, picked, answer, disabled, onPick }) {
 // Én oppgave: to forsøk, Hjelp-knapp, løsning med forklaring etter andre feil.
 // onAnswer({ ok, forste, hjelp }) kalles når oppgaven er ferdig (riktig eller etter to feil).
 // Bare første forsøk uten hjelp teller mot nivået; det regner den som kaller ut.
-export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index, total, fag = 'matte', noHelp = false, placement = false, practice = false, onLaer = null, frosset = false }) {
+export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index, total, fag = 'matte', noHelp = false, placement = false, practice = false, onLaer = null, frosset = false, siste = false }) {
   const { recordAttempt } = useStars()
   const [attempt, setAttempt] = useState(1)
   const [input, setInput] = useState('')
@@ -478,7 +478,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
             ) : null
           })()}
           <BigButton color="bg-amber-500" onClick={() => onDone(result)}>
-            {index != null && index + 1 >= total ? '🏁 Se resultat' : '➡️ Neste'}
+            {(index != null && index + 1 >= total) || siste ? '🏁 Se resultat' : '➡️ Neste'}
           </BigButton>
         </div>
       )}

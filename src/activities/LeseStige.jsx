@@ -12,13 +12,6 @@ import { genLesing, lagTekstOppgaver } from '../lib/lesing/generatorer.js'
 // Skrive riktig og Språk åpner når Lese har nådd nivå 8, og starter på nivå 1
 // med «Lær først».
 
-const START_LESE = [
-  { id: 'nybegynner', navn: 'Jeg lærer bokstavene', emoji: '🔤', nivaa: 1, tak: LESE_TAK, farge: 'bg-emerald-500' },
-  { id: 'lyder', navn: 'Jeg kan bokstavene og trekker sammen lyder', emoji: '🔊', nivaa: 4, tak: LESE_TAK, farge: 'bg-sky-500' },
-  { id: 'ord', navn: 'Jeg leser ord og korte setninger', emoji: '💬', nivaa: 6, tak: LESE_TAK, farge: 'bg-violet-500' },
-  { id: 'tekst', navn: 'Jeg leser bøker selv', emoji: '📖', nivaa: 8, tak: LESE_TAK, farge: 'bg-amber-500' },
-]
-
 // Når spilte barnet hvert spor sist?
 function sistSpilt(log, fagId) {
   for (let i = log.length - 1; i >= 0; i--) if (log[i].fag === fagId) return log[i].t
@@ -51,7 +44,7 @@ function SporStige({ def, go }) {
     tekstOppgaver: lagTekstOppgaver,
     emneMaks: def.id === 'skrive' ? 1 : undefined, // Skrive riktig: et ord høyst én gang per oppdrag
     omraadeFor: def.omraadeFor,
-    start: def.id === 'lesing' ? START_LESE : [],
+    tak: def.id === 'lesing' ? LESE_TAK : undefined, // reven plasserer aldri over Lese 9
     ikoner: (n) => def.omraadeFor(n.id).emoji,
   }
   return <Stige cfg={cfg} go={go} />

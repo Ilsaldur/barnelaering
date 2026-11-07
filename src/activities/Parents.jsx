@@ -128,6 +128,12 @@ function ChildPanel({ child, data, update, isActive }) {
   const s = d.settings
 
   const setSettings = (partial) => update((cur) => ({ ...cur, settings: { ...cur.settings, ...partial, updatedAt: Date.now() } }))
+  // Nullstiller plassert, så neste oppdrag i faget finner nivået på nytt.
+  const finnPaaNytt = (fag) =>
+    update((cur) => ({
+      ...cur,
+      fag: { ...cur.fag, [fag]: { ...cur.fag[fag], nivaa: null, plassert: false, paaRad: 0, svakRad: 0, hjelpNeste: false, sjef: null, updatedAt: Date.now() } },
+    }))
   const setNivaa = (fag, nivaa) =>
     update((cur) => ({
       ...cur,
@@ -174,7 +180,7 @@ function ChildPanel({ child, data, update, isActive }) {
                       onChange={(e) => setNivaa(f, e.target.value === '' ? null : Number(e.target.value))}
                       className="rounded-xl border-2 border-slate-200 px-3 py-2 font-bold text-slate-700 bg-white max-w-[60%]"
                     >
-                      <option value="">Ikke plassert (plasseringstest først)</option>
+                      <option value="">Ikke plassert (reven finner nivået i første oppdrag)</option>
                       {Array.from({ length: maks }, (_, i) => i + 1).map((n) => (
                         <option key={n} value={n}>
                           Nivå {n}: {nivaaNavn(f, n)}
@@ -182,6 +188,11 @@ function ChildPanel({ child, data, update, isActive }) {
                       ))}
                     </select>
                     {fd.hjelpNeste && <span className="text-xs font-bold text-amber-500">hjelp på neste oppdrag</span>}
+                    {fd.plassert && (
+                      <button type="button" onClick={() => finnPaaNytt(f)} className="text-xs font-bold text-sky-600 underline">
+                        La reven finne nivået på nytt
+                      </button>
+                    )}
                   </>
                 ) : (
                   <span className="text-sm font-bold text-slate-400">stigen kommer i en senere etappe</span>
