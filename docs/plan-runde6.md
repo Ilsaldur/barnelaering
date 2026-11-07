@@ -8,7 +8,7 @@
 | AA – Nivå opp krever at nivået er lært, klokka ut av kunnskapslaget | Ferdig og pushet (Jon valgte A). Se `docs/etappeAA.md`. | 2026-11-07 |
 | AB – Dagens økt står stille | Ferdig og pushet. Se `docs/etappeAB.md`. | 2026-11-07 |
 | AC – Uten nett | Ferdig og pushet. Se `docs/etappeAC.md`. | 2026-11-07 |
-| AD – Matteplasseringen kan angre | Ikke startet. | |
+| AD – Matteplasseringen kan angre | Ferdig og pushet. Se `docs/etappeAD.md` (avvik: første bom i opp-fasen angres uten krav om tre på rad). | 2026-11-07 |
 | AE – Innhold og småting | Ikke startet. | |
 
 ---

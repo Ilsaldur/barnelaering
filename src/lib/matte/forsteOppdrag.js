@@ -24,7 +24,11 @@ export function startForste({ stige, fag, rng = Math.random, tak } = {}) {
   const MAKS = stige.nivaer.length
   const klem = (n) => Math.max(1, Math.min(MAKS, n))
   const lengdeFor = (n) => oppdragLengde(stige, klem(n))
-  const finn = startFinn({ maks: MAKS, tak: tak ?? MAKS, lengdeFor })
+  // Angre-regelen (etappe AD) gjelder matte og lesing. I stigene med gjettbare
+  // svar (klokka, geografi, engelsk) ville et heldig gjett på det nye
+  // spørsmålet sende barnet for høyt, så der angres det ikke.
+  const gjettbar = !!(stige.kunnskap || stige.egneProver)
+  const finn = startFinn({ maks: MAKS, tak: tak ?? MAKS, lengdeFor, angre: !gjettbar })
   const kjent = new Set(fag?.kjent || [])
   const sett = fag?.sett || []
   const st = { stige, rng, finn, kjent, sett, vist: [], kommende: [], perTask: [], innfoering: false, fylt: false, fram: 0, ferdig: false, nivaa: null }

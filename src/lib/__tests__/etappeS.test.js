@@ -21,13 +21,16 @@ describe('S – reglene', () => {
     expect(s.steg).toHaveLength(9)
   })
   it('binært søk mellom siste riktige og første gale, så to på plassen, så vanlige oppgaver', () => {
-    // Kan til og med 20.
+    // Kan til og med 20. Første bom (32) gir ett nytt spørsmål på 32 (etappe AD).
     const { s, nivaaer } = kjor((n) => n <= 20)
-    expect(nivaaer.slice(0, 10)).toEqual([1, 2, 4, 8, 16, 32, 24, 20, 22, 21])
-    expect(nivaaer.slice(10, 12)).toEqual([20, 20])
+    expect(nivaaer.slice(0, 11)).toEqual([1, 2, 4, 8, 16, 32, 32, 24, 20, 22, 21])
+    expect(nivaaer.slice(11, 13)).toEqual([20, 20])
     expect(s.nivaa).toBe(20)
-    expect(s.steg.length).toBe(12)
-    expect(s.steg.slice(10).every((x) => x.ok)).toBe(true)
+    expect(s.steg.length).toBe(13)
+    expect(s.steg.slice(11).every((x) => x.ok)).toBe(true)
+    // Uten angre: som i runde 5.
+    const u = kjor((n) => n <= 20, { maks: 38, angre: false })
+    expect(u.nivaaer.slice(0, 10)).toEqual([1, 2, 4, 8, 16, 32, 24, 20, 22, 21])
   })
   it('bom på første oppgave: lander på 1 og fyller opp til åtte', () => {
     const { s, nivaaer } = kjor(() => false)
@@ -37,11 +40,11 @@ describe('S – reglene', () => {
     expect(nivaaer.every((n) => n === 1)).toBe(true)
   })
   it('slå fast: én feil flytter ett ned, høyst to ganger, aldri under 1', () => {
-    // Riktig på 1, 2, 4, 8; feil på 16; feil på 12, 10, 9 → lander på 8; så feil på 8 → 7; feil på 7 → 6; så alt riktig.
+    // Riktig på 1, 2, 4, 8; feil på 16 og på det nye spørsmålet på 16; feil på 12, 10, 9 → lander på 8; så feil på 8 → 7; feil på 7 → 6; så alt riktig.
     let teller = 0
-    const svarListe = [true, true, true, true, false, false, false, false, false, false, true, true, true, true, true, true, true, true]
+    const svarListe = [true, true, true, true, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true]
     const { s, nivaaer } = kjor(() => svarListe[teller++])
-    expect(nivaaer.slice(0, 11)).toEqual([1, 2, 4, 8, 16, 12, 10, 9, 8, 7, 6])
+    expect(nivaaer.slice(0, 12)).toEqual([1, 2, 4, 8, 16, 16, 12, 10, 9, 8, 7, 6])
     expect(s.nivaa).toBe(6)
     expect(s.nedflytt).toBe(2)
     // Fra 1 går det ikke lenger ned.

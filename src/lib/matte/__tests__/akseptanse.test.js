@@ -38,9 +38,9 @@ describe('akseptansetester etappe A', () => {
     expect(nivaa).toBe(38)
     expect(oppgaver.length).toBeLessThanOrEqual(14)
   })
-  it('2. kan alt til og med nivå 9: 1, 2, 4, 8, 16 (bom), 12 (bom), 10 (bom), 9, 9 → nivå 9', () => {
+  it('2. kan alt til og med nivå 9: 1, 2, 4, 8, 16 (bom), 16 igjen (bom, etappe AD), 12 (bom), 10 (bom), 9, 9 → nivå 9', () => {
     const { nivaa, oppgaver } = plasser(9, seeded(2))
-    expect(oppgaver.slice(0, 9).map((t) => t.nivaa)).toEqual([1, 2, 4, 8, 16, 12, 10, 9, 9])
+    expect(oppgaver.slice(0, 10).map((t) => t.nivaa)).toEqual([1, 2, 4, 8, 16, 16, 12, 10, 9, 9])
     expect(nivaa).toBe(9)
   })
 
