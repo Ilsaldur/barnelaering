@@ -20,6 +20,7 @@ import { kortstokk, trekkKort } from './kort.js'
 import { weakEntries, OPPDRAG_LENGDE, SJEF_LENGDE } from './stige.js'
 import { shuffle, randInt, seeded } from '../rng.js'
 import { tilVis } from '../kunnskap.js'
+import { erEgen } from '../nivaaTing.js'
 
 // Standard er mattestigen. Andre stiger sender { nivaer, gen, tekstOppgaver?, emneMaks? }.
 export const MATTE_STIGE = { nivaer: NIVAER_MATTE, gen: genMatte }
@@ -368,9 +369,17 @@ export function buildMission(fag, { rng = Math.random, stige = MATTE_STIGE, leng
 // Kjenner barnet færre enn to ting, vises to før det første spørsmålet, så
 // svaralternativene kan hentes blant kjente ting. Er alt på nivået kjent, er
 // oppdraget som vanlig.
-export function byggKunnskapsOppdrag(plan, rng, stige, { L, nivaa, kjent: kjentListe = [], sett = [], nyeMaks = 3 } = {}) {
+//
+// Runde 6 (etappe Z og AE): ingen oppgave stilles to ganger (`foer` er
+// oppgaver som alt er stilt tidligere i oppdraget), og emneregelen gjelder:
+// høyst `emneMaks` spørsmål om samme ting, aldri to på rad – unntatt vis og
+// spørsmål om det samme. Finnes ingen oppgave som holder reglene, blir
+// oppdraget heller kortere.
+export function byggKunnskapsOppdrag(plan, rng, stige, { L, nivaa, kjent: kjentListe = [], sett = [], nyeMaks = 3, foer = [], emneMaks = stige.emneMaks || EMNE_MAKS } = {}) {
   const kjent = new Set(kjentListe || [])
-  const brukt = new Set()
+  // `foer`: oppgaver som alt er stilt tidligere i oppdraget (det første
+  // oppdraget). De teller i emneregelen og kan ikke komme igjen.
+  const brukt = new Set(foer.map(nokkel))
   const tasks = []
   let nye = 0
   const lag = (p, ekstra) => (r) => {
@@ -383,6 +392,19 @@ export function byggKunnskapsOppdrag(plan, rng, stige, { L, nivaa, kjent: kjentL
     brukt.add(nokkel(t))
     tasks.push(t)
   }
+  const fersk = (t) => !!t && !brukt.has(nokkel(t))
+  // Spørsmål om et emne (vis-kort teller ikke: en ting kan vises og spørres om).
+  const antall = (emne) => (emne == null ? 0 : [...foer, ...tasks].filter((x) => x.emne === emne && x.form !== 'vis').length)
+  const sist = () => tasks[tasks.length - 1] || foer[foer.length - 1]
+  // Emneregelen for én oppgave til: plass til `ekstra` flere med samme emne, og
+  // ikke rett etter en oppgave om det samme (vis + spørsmål om det samme er ok).
+  const emneOk = (t, ekstra = 1) => {
+    if (t.emne == null) return true
+    if (antall(t.emne) + ekstra > emneMaks) return false
+    const s = sist()
+    if (s && s.emne === t.emne && !(s.form === 'vis' && s.kjent === t.kjent)) return false
+    return true
+  }
   // Spørsmål om `t` sin ting, med kjente feilsvar (etter at tingen er vist).
   const spm = (t) => ({ ...lagOppgaveOm(t, t.kjent, kjent, rng, stige), tag: t.tag })
   const verdi = (o) => (o && typeof o === 'object' ? o.value : o)
@@ -391,27 +413,31 @@ export function byggKunnskapsOppdrag(plan, rng, stige, { L, nivaa, kjent: kjentL
   // bunke, vises en ny ting til (`t2`) først: vis, vis, spm, spm. Går ikke det,
   // introduseres ikke `t` nå (returnerer false).
   const introduser = (p, t) => {
+    if (!emneOk(t, 1)) return false
     kjent.add(t.kjent)
     let q = spm(t)
     let t2 = null
+    const angre = () => {
+      kjent.delete(t.kjent)
+      if (t2) kjent.delete(t2.kjent)
+      return false
+    }
     if (!alleKjente(q)) {
       if (nye + 1 < nyeMaks && L - tasks.length >= 4) {
         // Samme type oppgave som `t`, så den andre tingen hører til samme bunke.
         for (let i = 0; i < 20 && !t2; i++) {
           const c = { ...lagOppgave(t.nivaa, rng, { type: t.genType, param: t.genParam, ekstra: { kjent, foretrekkUkjent: true } }, stige), tag: t.tag }
-          if (c.kjent && !kjent.has(c.kjent)) t2 = c
+          if (c.kjent && !kjent.has(c.kjent) && c.emne !== t.emne && antall(c.emne) === 0) t2 = c
         }
       }
       if (t2) {
         kjent.add(t2.kjent)
         q = spm(t)
       }
-      if (!t2 || !alleKjente(q)) {
-        kjent.delete(t.kjent)
-        if (t2) kjent.delete(t2.kjent)
-        return false
-      }
+      if (!t2 || !alleKjente(q)) return angre()
     }
+    const q2 = t2 ? spm(t2) : null
+    if (!fersk(q) || (t2 && !fersk(q2))) return angre()
     leggTil({ ...tilVis(t), tag: t.tag })
     nye++
     if (t2) {
@@ -419,36 +445,39 @@ export function byggKunnskapsOppdrag(plan, rng, stige, { L, nivaa, kjent: kjentL
       nye++
     }
     leggTil(q)
-    if (t2) leggTil(spm(t2))
+    if (t2) leggTil(q2)
     return true
   }
   // Spør om noe kjent i stedet; null om bunken ikke har noe kjent med kjente feilsvar.
   const kjentSpm = (p) => {
-    for (let i = 0; i < 10; i++) {
-      const t2 = velg(lag(p, { kjent, foretrekkUkjent: false }), rng, { brukt, sett })
-      if (!(t2.kjent && !kjent.has(t2.kjent)) && alleKjente(t2)) return t2
+    for (let i = 0; i < 3; i++) {
+      const t2 = velg(lag(p, { kjent, foretrekkUkjent: false }), rng, { brukt, sett, emneOk })
+      if (!(t2.kjent && !kjent.has(t2.kjent)) && alleKjente(t2) && fersk(t2) && emneOk(t2)) return t2
     }
     return null
   }
   while (slots.length && tasks.length < L) {
     const p = slots.shift()
     const kanNy = nye < nyeMaks && L - tasks.length >= 2
-    const t = velg(lag(p, { kjent, foretrekkUkjent: kanNy }), rng, { brukt, sett })
+    const t = velg(lag(p, { kjent, foretrekkUkjent: kanNy }), rng, { brukt, sett, emneOk })
     if (t.kjent && !kjent.has(t.kjent)) {
       if (kanNy && introduser(p, t)) continue
       const t2 = kjentSpm(p)
       if (t2) leggTil(t2)
-    } else if (alleKjente(t)) leggTil(t)
+    } else if (alleKjente(t) && fersk(t) && emneOk(t)) leggTil(t)
     else {
       const t2 = kjentSpm(p)
       if (t2) leggTil(t2)
     }
   }
-  // Fyll opp med kjente spørsmål fra nivået om slots ble droppet.
-  for (let i = 0; i < 30 && tasks.length < L; i++) {
-    const t = velg(lag({ nivaa, tag: 'eget' }, { kjent, foretrekkUkjent: false }), rng, { brukt, sett })
-    if (t.kjent && !kjent.has(t.kjent)) continue
-    if (!alleKjente(t)) continue
+  // Fyll opp med kjente spørsmål fra nivået om slots ble droppet. Går det
+  // ikke noen ganger på rad, er det ikke mer å spørre om.
+  for (let bom = 0; bom < 4 && tasks.length < L; ) {
+    const t = velg(lag({ nivaa, tag: 'eget' }, { kjent, foretrekkUkjent: false }), rng, { brukt, sett, emneOk })
+    if ((t.kjent && !kjent.has(t.kjent)) || !alleKjente(t) || !fersk(t) || !emneOk(t)) {
+      bom++
+      continue
+    }
     leggTil(t)
   }
   // Rekkefølgen beholdes: en ting vises alltid før det spørres om den.
@@ -491,7 +520,9 @@ export function buildBoss(nivaa, target, { rng = Math.random, stige = MATTE_STIG
 // Oppgave til plasseringstesten: aldri sant/usant, aldri typer som krever
 // fagord barnet ikke har lært (merket `ikkePlassering` i nivådataene).
 // `brukt` er oppgavene testen alt har vist, `sett` fagets husk-liste.
-export function oppgaveTilPlassering(nivaaId, rng = Math.random, stige = MATTE_STIGE, { brukt = [], sett = [], ekstra = null } = {}) {
+// `egen`: prøven skal handle om nivåets eget innhold (runde 6, etappe Z) –
+// en ting som først opptrer på nivået, se `nivaaTing.js`.
+export function oppgaveTilPlassering(nivaaId, rng = Math.random, stige = MATTE_STIGE, { brukt = [], sett = [], ekstra = null, egen = false } = {}) {
   const MAKS = stige.nivaer.length
   const id = Math.min(MAKS, Math.max(1, nivaaId))
   const def = nivaaDef(id, stige)
@@ -501,12 +532,16 @@ export function oppgaveTilPlassering(nivaaId, rng = Math.random, stige = MATTE_S
     return { ...task, nivaa: id, svarform: def.svar, hjelpAlltid: false, hjelp: undefined, tag: 'plassering', genType: t.type, genParam: t.param }
   }
   const bruktSett = new Set(brukt.map((t) => (typeof t === 'string' ? t : nokkel(t))))
-  const emner = new Set(brukt.map((t) => t?.emne).filter((e) => e != null))
+  // Helst et emne som ikke har vært med; aldri et emne som alt har vært med
+  // to ganger, og aldri samme emne som oppgaven rett før.
+  const emner = {}
+  for (const t of brukt) if (t?.emne != null) emner[t.emne] = (emner[t.emne] || 0) + 1
+  const forrige = brukt.length ? brukt[brukt.length - 1]?.emne : null
   return velg(lag, rng, {
     brukt: bruktSett,
     sett,
-    emneOk: (t) => t.emne == null || !emner.has(t.emne),
-    avvis: (t) => t.form === 'santusant' || t.type === 'fakta_mening',
+    emneOk: (t) => t.emne == null || !emner[t.emne],
+    avvis: (t) => t.form === 'santusant' || t.type === 'fakta_mening' || (t.emne != null && ((emner[t.emne] || 0) >= EMNE_MAKS || t.emne === forrige)) || (egen && !erEgen(stige, id, t)),
   })
 }
 

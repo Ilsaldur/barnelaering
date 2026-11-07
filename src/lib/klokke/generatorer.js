@@ -100,14 +100,22 @@ function poolFor(param) {
 const pad = (m) => String(m).padStart(2, '0')
 const keyTid = (t) => `tid:${h12(t.h)}:${pad(t.m)}`
 const keyDig = (t) => `digital:${digital(t.h24, t.m)}`
+const tiderCache = {}
 function tider(param) {
+  const k = param.minutes || 'whole'
+  if (tiderCache[k]) return tiderCache[k]
   const ut = []
   for (let h = 1; h <= 12; h++) for (const m of poolFor(param)) ut.push({ h, m })
+  tiderCache[k] = ut
   return ut
 }
+const tider24Cache = {}
 function tider24(param) {
+  const k = param.minutes || 'whole'
+  if (tider24Cache[k]) return tider24Cache[k]
   const ut = []
   for (let h24 = 0; h24 < 24; h24++) for (const m of poolFor(param)) ut.push({ h24, m, h: h12(h24) })
+  tider24Cache[k] = ut
   return ut
 }
 const visTid = (h, m) => ({ tekst: `${klokkeSetning(h, m)}.`, visual: { kind: 'klokke', h, m } })

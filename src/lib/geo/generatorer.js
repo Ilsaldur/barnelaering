@@ -1,13 +1,17 @@
 // Oppgavegeneratorer for geografistigen: flagg, land, hovedsteder, kart.
-// Kunnskapsstige: hver oppgave har `kjent` («land:se» / «hovedstad:se»),
-// `visning` (slik tingen vises første gang) og `optionsKjent`.
+// Kunnskapsstige: hver oppgave har `kjent`, `visning` (slik tingen vises
+// første gang) og `optionsKjent`. Nøkkelen er per ferdighet (runde 6):
+// «flagg:se», «kart:se», «hovedstad:se», «verdensdel:se». Gamle «land:xx»
+// migreres til «flagg:xx» i profilen.
 import { shuffle } from '../rng.js'
 import { landFor, VERDENSDELER } from '../../data/geo/land.js'
 import { kartPool, KART_NAVN } from './kart.js'
 import { velgKjent, kjenteFeil } from '../kunnskap.js'
 
-const keyLand = (l) => `land:${l.kode}`
-const keyHov = (l) => `hovedstad:${l.kode}`
+export const keyFlagg = (l) => `flagg:${l.kode}`
+export const keyKart = (l) => `kart:${l.kode}`
+export const keyHov = (l) => `hovedstad:${l.kode}`
+export const keyVerdensdel = (l) => `verdensdel:${l.kode}`
 
 const visFlagg = (l) => ({ tekst: `Dette er flagget til ${l.navn}.`, visual: { kind: 'flagg', kode: l.kode, navn: l.navn } })
 const visKart = (l, region) => ({ tekst: `Dette er ${l.navn}.`, visual: { kind: 'kart', region, highlight: l.id } })
@@ -22,17 +26,17 @@ export const GEN_GEO = {
   flagg_land: (param, rng) => {
     const region = param.region || 'norden'
     const pool = landFor(region)
-    const l = velgKjent(pool, keyLand, param, rng)
-    const feil = kjenteFeil(pool, l, keyLand, param, 3, rng)
+    const l = velgKjent(pool, keyFlagg, param, rng)
+    const feil = kjenteFeil(pool, l, keyFlagg, param, 3, rng)
     return {
       type: `flagg_${region}`,
-      ...felles(l, region, keyLand),
+      ...felles(l, region, keyFlagg),
       prompt: 'Hvilket land har dette flagget?',
       spoken: 'Hvilket land har dette flagget?',
       visual: { kind: 'flagg', kode: l.kode, navn: l.navn },
       answer: l.navn,
       options: shuffle([l.navn, ...feil.map((x) => x.navn)], rng),
-      optionsKjent: Object.fromEntries([l, ...feil].map((x) => [x.navn, keyLand(x)])),
+      optionsKjent: Object.fromEntries([l, ...feil].map((x) => [x.navn, keyFlagg(x)])),
       explain: `Dette er flagget til ${l.navn}.`,
       readOptions: true,
       visning: visFlagg(l),
@@ -42,17 +46,17 @@ export const GEN_GEO = {
   land_flagg: (param, rng) => {
     const region = param.region || 'norden'
     const pool = landFor(region)
-    const l = velgKjent(pool, keyLand, param, rng)
-    const feil = kjenteFeil(pool, l, keyLand, param, 3, rng)
+    const l = velgKjent(pool, keyFlagg, param, rng)
+    const feil = kjenteFeil(pool, l, keyFlagg, param, 3, rng)
     return {
       type: `flagg_${region}`,
-      ...felles(l, region, keyLand),
+      ...felles(l, region, keyFlagg),
       prompt: `Hvilket flagg er ${l.navn} sitt?`,
       spoken: `Hvilket flagg er ${l.navn} sitt?`,
       answer: l.kode,
       options: shuffle([l.kode, ...feil.map((x) => x.kode)], rng),
       optionFlagg: Object.fromEntries([l, ...feil].map((x) => [x.kode, x.navn])),
-      optionsKjent: Object.fromEntries([l, ...feil].map((x) => [x.kode, keyLand(x)])),
+      optionsKjent: Object.fromEntries([l, ...feil].map((x) => [x.kode, keyFlagg(x)])),
       explain: `Nå vet du hvordan flagget til ${l.navn} ser ut.`,
       visning: visFlagg(l),
     }
@@ -95,10 +99,10 @@ export const GEN_GEO = {
   finn_paa_kart: (param, rng) => {
     const region = param.region || 'norden'
     const pool = kartPool(region)
-    const l = velgKjent(pool, keyLand, param, rng)
+    const l = velgKjent(pool, keyKart, param, rng)
     return {
       type: `kart_${region}`,
-      ...felles(l, region, keyLand),
+      ...felles(l, region, keyKart),
       form: 'kart',
       prompt: `Trykk på ${l.navn} på kartet${KART_NAVN[region] && region !== 'norden' && region !== 'europa' && region !== 'verden' ? ` over ${KART_NAVN[region]}` : ''}.`,
       spoken: `Trykk på ${l.navn} på kartet.`,
@@ -112,18 +116,18 @@ export const GEN_GEO = {
   hvilket_land: (param, rng) => {
     const region = param.region || 'norden'
     const pool = kartPool(region)
-    const l = velgKjent(pool, keyLand, param, rng)
+    const l = velgKjent(pool, keyKart, param, rng)
     // Små kart (Oseania har tre land): feilsvar fra hele verden.
-    const feil = kjenteFeil(pool.length >= 4 ? pool : landFor('verden'), l, keyLand, param, 3, rng)
+    const feil = kjenteFeil(pool.length >= 4 ? pool : landFor('verden'), l, keyKart, param, 3, rng)
     return {
       type: `kart_${region}`,
-      ...felles(l, region, keyLand),
+      ...felles(l, region, keyKart),
       prompt: 'Hvilket land er markert med rosa?',
       spoken: 'Hvilket land er markert med rosa på kartet?',
       visual: { kind: 'kart', region, highlight: l.id },
       answer: l.navn,
       options: shuffle([l.navn, ...feil.map((x) => x.navn)], rng),
-      optionsKjent: Object.fromEntries([l, ...feil].map((x) => [x.navn, keyLand(x)])),
+      optionsKjent: Object.fromEntries([l, ...feil].map((x) => [x.navn, keyKart(x)])),
       explain: `Det rosa landet er ${l.navn}.`,
       readOptions: true,
       visning: visKart(l, region),
@@ -191,10 +195,10 @@ export const GEN_GEO = {
   // Verdensdel.
   verdensdel: (param, rng) => {
     const pool = landFor('verden').filter((l) => (l.region === 'verden' || l.region === 'norden') && !l.ikkeVerdensdel)
-    const l = velgKjent(pool, keyLand, param, rng)
+    const l = velgKjent(pool, keyVerdensdel, param, rng)
     return {
       type: 'verdensdel',
-      ...felles(l, 'verden', keyLand),
+      ...felles(l, 'verden', keyVerdensdel),
       prompt: `I hvilken verdensdel ligger ${l.navn}?`,
       spoken: `I hvilken verdensdel ligger ${l.navn}?`,
       visual: { kind: 'kart', region: 'verden', highlight: l.id },

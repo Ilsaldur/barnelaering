@@ -17,7 +17,7 @@ export function emptyFag() {
     bokser: {}, // kort-id -> { boks: 1–5, t }
     svake: {}, // oppgavetype -> { bom, riktig } (bom-lista)
     sett: [], // hash av de 40 siste oppgavene barnet fikk (eldst først)
-    kjent: [], // ting barnet har fått vist (kunnskapsstigene): «land:se», «ord:cat», «tid:3:00»
+    kjent: [], // ting barnet har fått vist (kunnskapsstigene): «flagg:se», «kart:se», «hovedstad:se», «ord:cat», «tid:3:00»
     sjef: null, // ikke i bruk lenger (sjefsoppgaven tilbys direkte)
     updatedAt: 0,
   }
@@ -99,6 +99,13 @@ export function migrerLesingSpor(fag) {
   return { lesing: { ...l, updatedAt: t }, skrive: { ...skrive, updatedAt: Math.max(skrive.updatedAt || 0, t) }, sprak: { ...sprak, updatedAt: Math.max(sprak.updatedAt || 0, t) } }
 }
 
+// Kjent-lista: bare strenger, uten dobbeltføringer. Gamle geografinøkler
+// «land:xx» (flagg, kart og verdensdel i ett) blir «flagg:xx» (runde 6).
+export function migrerKjent(liste) {
+  if (!Array.isArray(liste)) return []
+  return [...new Set(liste.filter((x) => typeof x === 'string').map((x) => (x.startsWith('land:') ? `flagg:${x.slice(5)}` : x)))]
+}
+
 // Gjør en lagret (kanskje gammel) profil komplett.
 export function normalize(raw) {
   const d = { ...emptyData(), ...(raw || {}) }
@@ -124,7 +131,7 @@ export function normalize(raw) {
     // Gamle bom-lister hadde { bom, til }; nå { bom, riktig }.
     g.svake = Object.fromEntries(Object.entries(g.svake || {}).map(([k, v]) => [k, { bom: v.bom || 1, riktig: v.riktig || 0, ...(v.nivaa != null ? { nivaa: v.nivaa } : {}) }]))
     g.sett = Array.isArray(g.sett) ? g.sett.filter((x) => typeof x === 'string').slice(-40) : []
-    g.kjent = Array.isArray(g.kjent) ? [...new Set(g.kjent.filter((x) => typeof x === 'string'))] : []
+    g.kjent = migrerKjent(g.kjent)
     fag[f] = g
   }
   d.fag = fag
@@ -166,7 +173,7 @@ function mergeFag(a, b) {
   const andre = (newest === a ? b : a).sett || []
   out.sett = [...andre.filter((h) => !nyeste.includes(h)), ...nyeste].slice(-40)
   // Kjent-lista: union – noe barnet har fått vist på én enhet, er kjent overalt.
-  out.kjent = [...new Set([...(a.kjent || []), ...(b.kjent || [])])]
+  out.kjent = migrerKjent([...(a.kjent || []), ...(b.kjent || [])])
   return out
 }
 

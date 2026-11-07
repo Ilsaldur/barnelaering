@@ -64,7 +64,7 @@ describe('T – kunnskapslaget', () => {
   it('generatorene setter kjent, visning og optionsKjent', () => {
     const rng = seeded(1)
     const g = genGeo('flagg_land', { region: 'norden' }, rng)
-    expect(g.kjent).toMatch(/^land:[a-z]{2}$/)
+    expect(g.kjent).toMatch(/^flagg:[a-z]{2}$/)
     expect(g.visning.tekst).toContain('Dette er flagget til')
     expect(Object.keys(g.optionsKjent)).toEqual(expect.arrayContaining(g.options))
     const h = genGeo('hovedstad', { region: 'norden' }, rng)
@@ -95,21 +95,21 @@ describe('T – kunnskapslaget', () => {
     expect(kjenteFeil(pool, pool[0], key, {}, 3, rng)).toHaveLength(3)
   })
   it('oppdaterKjent: vist og riktig blir kjent, bom på noe kjent fra før blir ukjent, vist i dag forblir kjent', () => {
-    const k = oppdaterKjent(['land:se'], [
-      { kjent: 'land:no', vis: true, counts: true },
-      { kjent: 'land:no', ok: false, forste: true, counts: false },
-      { kjent: 'land:se', ok: false, forste: true, counts: false },
-      { kjent: 'land:dk', ok: true, forste: true, counts: true },
+    const k = oppdaterKjent(['flagg:se'], [
+      { kjent: 'flagg:no', vis: true, counts: true },
+      { kjent: 'flagg:no', ok: false, forste: true, counts: false },
+      { kjent: 'flagg:se', ok: false, forste: true, counts: false },
+      { kjent: 'flagg:dk', ok: true, forste: true, counts: true },
     ])
-    expect(k.sort()).toEqual(['land:dk', 'land:no'])
+    expect(k.sort()).toEqual(['flagg:dk', 'flagg:no'])
   })
   it('kjent-lista normaliseres og flettes som union', () => {
-    expect(normalize({ fag: { geografi: { kjent: ['a', 'a', 3] } } }).fag.geografi.kjent).toEqual(['a'])
+    expect(normalize({ fag: { geografi: { kjent: ['a', 'a', 3, 'land:se'] } } }).fag.geografi.kjent).toEqual(['a', 'flagg:se'])
     const a = emptyData()
     a.fag.geografi = { ...emptyFag(), kjent: ['land:se'], updatedAt: 2 }
     const b = emptyData()
     b.fag.geografi = { ...emptyFag(), kjent: ['land:no'], updatedAt: 1 }
-    expect(mergeData(a, b).fag.geografi.kjent.sort()).toEqual(['land:no', 'land:se'])
+    expect(mergeData(a, b).fag.geografi.kjent.sort()).toEqual(['flagg:no', 'flagg:se'])
   })
 })
 
@@ -122,7 +122,7 @@ describe('Akseptansetester T', () => {
       expect(res.nivaa).toBe(1)
       sjekkOppdrag(st.vist, [], 4)
       const kjent = oppdaterKjent([], res.perTask)
-      expect(kjent.filter((x) => x.startsWith('land:')).length).toBeGreaterThanOrEqual(3)
+      expect(kjent.filter((x) => x.startsWith('flagg:')).length).toBeGreaterThanOrEqual(3)
     }
   })
   it('2. geografi, ny profil, alle riktige: nivå 9, og de to første oppgavene var vis og spørsmål om samme land', () => {
@@ -170,7 +170,7 @@ describe('Akseptansetester T', () => {
     const alle = []
     for (let i = 0; i < 400; i++) {
       const t = genGeo('flagg_land', { region: 'norden' }, rng)
-      alle.push(t.kjent, t.kjent.replace('land:', 'hovedstad:'))
+      alle.push(t.kjent, t.kjent.replace('flagg:', 'hovedstad:'))
     }
     const m = buildMission({ ...emptyFag(), nivaa: 1, plassert: true, kjent: [...new Set(alle)] }, { rng, stige: GEO })
     expect(m.tasks.filter((t) => t.form === 'vis')).toHaveLength(0)
