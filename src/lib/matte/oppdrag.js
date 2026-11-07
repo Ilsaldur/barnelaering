@@ -162,6 +162,7 @@ function fyll(plan, rng, stige, { sett = [], emneMaks = EMNE_MAKS, ekstraAvvis =
   const brukt = new Set()
   const out = []
   let medNull = 0
+  let formFarge = 0 // høyst to form-/fargeoppgaver per oppdrag
   for (const p of plan) {
     const lag = (r) => {
       const n = p.nivaaVelger ? p.nivaaVelger(r) : p.nivaa
@@ -174,9 +175,10 @@ function fyll(plan, rng, stige, { sett = [], emneMaks = EMNE_MAKS, ekstraAvvis =
       sett,
       emneOk: (x) => x.emne == null || (teller[x.emne] || 0) < emneMaks,
       // Høyst én oppgave med 0 som ledd i et oppdrag (matte 5–6).
-      avvis: (x) => (x.harNull && medNull >= 1) || ekstraAvvis(x),
+      avvis: (x) => (x.harNull && medNull >= 1) || (x.formFarge && formFarge >= 2) || ekstraAvvis(x),
     })
     if (t.harNull) medNull++
+    if (t.formFarge) formFarge++
     brukt.add(nokkel(t))
     out.push(t)
   }
@@ -202,7 +204,7 @@ function ordne(tasks, rng, stige, sett, emneMaks = EMNE_MAKS) {
     const teller = emneTeller(out.filter((_, k) => k !== i))
     const ok = (x) => x.emne == null || (!naboer.has(x.emne) && (teller[x.emne] || 0) < emneMaks)
     const lag = (r) => ({ ...(t.tag === 'svak' ? lagOppgaveAvType(t.nivaa, t.type, r, stige) : lagOppgave(t.nivaa, r, {}, stige)), tag: t.tag })
-    const ny = velg(lag, rng, { brukt, sett, emneOk: ok, avvis: (x) => !!x.harNull })
+    const ny = velg(lag, rng, { brukt, sett, emneOk: ok, avvis: (x) => !!x.harNull || !!x.formFarge })
     if (ok(ny)) out[i] = ny
   }
   return out

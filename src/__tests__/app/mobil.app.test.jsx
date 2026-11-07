@@ -13,7 +13,6 @@ import { SpeakButton } from '../../components/Speak.jsx'
 import { speech } from '../../speech.js'
 import { StarProvider } from '../../StarContext.jsx'
 import Home from '../../activities/Home.jsx'
-import { TOPICS } from '../../data/topics.js'
 
 afterEach(cleanup)
 
@@ -80,7 +79,7 @@ describe('bredder', () => {
   it('knappene under Fri lek lar lange ord brytes', () => {
     render(
       <StarProvider>
-        <Home topics={TOPICS} onPick={() => {}} onSamling={() => {}} onGarden={() => {}} onParents={() => {}} onSwitchProfile={() => {}} onMatte={() => {}} onLesing={() => {}} onNoetter={() => {}} onDagens={() => {}} onFag={() => {}} />
+        <Home onSamling={() => {}} onGarden={() => {}} onParents={() => {}} onSwitchProfile={() => {}} onMatte={() => {}} onLesing={() => {}} onNoetter={() => {}} onDagens={() => {}} onFag={() => {}} />
       </StarProvider>,
     )
     for (const navn of ['Geografi', 'Klokka', 'Engelsk', 'Matte']) {

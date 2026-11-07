@@ -40,7 +40,7 @@ function svarRiktig(task) {
     for (const c of String(task.answer)) fireEvent.click(tastKnapp(c === '-' ? '−' : c === '.' ? ',' : c))
     fireEvent.click(tastKnapp('✓'))
   } else if (task.form === 'santusant') klikk(task.answer ? '✅ Sant' : '❌ Usant')
-  else if (task.form === 'sorter') for (const v of task.answer) klikk(String(v))
+  else if (task.form === 'sorter') for (const v of task.answer) { const it = task.items.find((x) => (x && typeof x === 'object' ? x.id : x) === v); klikk(it && typeof it === 'object' ? `${it.label} ${it.id}` : String(v)) }
   else if (task.form === 'tallinje') klikk(String(task.answer))
   else throw new Error(`ukjent form ${task.form}`)
   const neste = knapp('➡️ Neste') || knapp('🏁 Se resultat')

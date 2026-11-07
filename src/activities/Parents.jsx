@@ -4,8 +4,6 @@ import AdultGate from '../components/AdultGate.jsx'
 import { useStars, GUEST_PROFILE } from '../StarContext.jsx'
 import { supabase } from '../lib/supabase.js'
 import { speech } from '../speech.js'
-import { TOPICS, recommendedIndex, topicProgress } from '../progress.js'
-import { topicById } from '../data/topics.js'
 import { emptyData, recentRounds, minutesLastWeek, weakestTypes, FAG, todayKey, effectiveAutoSpeak, nullstiltData } from '../lib/profil.js'
 import { ukestripe } from '../lib/dagen.js'
 import { FAG_LABELS, typeLabel } from '../lib/labels.js'
@@ -251,37 +249,11 @@ function ChildPanel({ child, data, update, isActive }) {
         </div>
       </Section>
 
-      <Section title="📚 Temastiger">
-        <div className="space-y-3">
-          {TOPICS.map((t) => {
-            const p = topicProgress(t, d.best)
-            const rec = recommendedIndex(t, d.best)
-            return (
-              <div key={t.id} className="flex items-center gap-3">
-                <span className="text-2xl w-8 shrink-0">{t.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between gap-2">
-                    <p className="font-extrabold text-slate-600 truncate">{t.title}</p>
-                    <p className="text-sm font-bold text-slate-400 shrink-0">
-                      {p.done}/{p.total} nivåer
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Bar value={p.done} max={p.total} color={t.color} />
-                    {rec >= 0 ? <span className="text-xs font-bold text-slate-400 shrink-0">øver på nivå {rec + 1}</span> : <span className="text-xs font-bold text-emerald-500 shrink-0">mestret! 🌟</span>}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </Section>
-
       {recent.length > 0 && (
         <Section title="🕐 Siste runder">
           <div className="space-y-1">
             {recent.map((e, i) => {
-              const t = e.topic ? topicById(e.topic) : null
+              const t = e.topic ? { emoji: e.topic === 'farger' ? '🎨' : '🔺', title: e.topic === 'farger' ? 'Farger' : 'Former og mønster' } : null
               const dt = new Date(e.t)
               const when = `${dt.getDate()}.${dt.getMonth() + 1}. kl. ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`
               const label = t

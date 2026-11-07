@@ -9,7 +9,6 @@ import { join } from 'node:path'
 import { render, screen, cleanup, within } from '@testing-library/react'
 import { StarProvider } from '../../StarContext.jsx'
 import Home from '../../activities/Home.jsx'
-import { TOPICS } from '../../data/topics.js'
 
 afterEach(cleanup)
 const FAG = { matte: ['Matte', '🔢'], lesing: ['Lesing', '📖'], klokke: ['Klokka', '🕐'], geografi: ['Geografi', '🌍'], engelsk: ['Engelsk', '🇬🇧'] }
@@ -17,7 +16,7 @@ const FAG = { matte: ['Matte', '🔢'], lesing: ['Lesing', '📖'], klokke: ['Kl
 function tegn() {
   return render(
     <StarProvider>
-      <Home topics={TOPICS} onPick={() => {}} onSamling={() => {}} onGarden={() => {}} onParents={() => {}} onSwitchProfile={() => {}} onMatte={() => {}} onLesing={() => {}} onNoetter={() => {}} onDagens={() => {}} onFag={() => {}} />
+      <Home onSamling={() => {}} onGarden={() => {}} onParents={() => {}} onSwitchProfile={() => {}} onMatte={() => {}} onLesing={() => {}} onNoetter={() => {}} onDagens={() => {}} onFag={() => {}} />
     </StarProvider>,
   )
 }

@@ -15,7 +15,7 @@ const KORT_INFO = {
 }
 
 // Barnets forside: «Dagens økt» øverst, fri lek under.
-export default function Home({ topics, onPick, onSamling, onGarden, onParents, onSwitchProfile, onMatte, onLesing, onNoetter, onDagens, onFag }) {
+export default function Home({ onSamling, onGarden, onParents, onSwitchProfile, onMatte, onLesing, onNoetter, onDagens, onFag }) {
   const { profile, onLine, session, fag, data, settings } = useStars()
   const fagTilgjengelig = Object.keys(STIGER)
   const kort = dagensKort({ log: data.log, fagTilgjengelig })
@@ -142,15 +142,6 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
             <span className="block text-xs md:text-sm opacity-90 break-words [overflow-wrap:anywhere]">Bruk stjernene</span>
           </span>
         </button>
-      </div>
-
-      <div className="grid grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
-        {topics.map((t) => (
-          <button key={t.id} onClick={() => { sound.click(); onPick(t.id) }} className={`kid-btn ${t.color} text-white p-3 md:p-4 flex flex-col items-center gap-1 hover:scale-105`}>
-            <span className="text-3xl md:text-5xl">{t.emoji}</span>
-            <span className="text-sm md:text-lg font-extrabold text-center leading-tight break-words [overflow-wrap:anywhere] max-w-full">{t.title}</span>
-          </button>
-        ))}
       </div>
 
       <div className="mt-5 text-center">
