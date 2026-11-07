@@ -69,7 +69,7 @@ export default function Stige({ cfg, go }) {
     if (cfg.kunnskap) nf.kjent = oppdaterKjent(nf.kjent, res.perTask)
     updateFag(cfg.id, nf)
     addStars(events.stars, { correct: res.correct, total: res.total, fag: cfg.id, nivaa: mission.nivaa, oppdrag: true })
-    const kort = delUtKort(nyeKort({ eier: data.kort, nivaa: cfg.kortPerNivaa ? mission.nivaa : 0, levelUp: events.levelUp, stars: events.stars }))
+    const kort = delUtKort(nyeKort({ eier: data.kort, nivaa: mission.nivaa, fag: cfg.id, levelUp: events.levelUp, stars: events.stars }))
     setResult({ ...res, stars: events.stars, levelUp: events.levelUp, levelDown: events.levelDown, toppKlart: !!events.toppKlart, nyttNivaa: nf.nivaa, boss: events.boss, kort, replay: !!mission.replay })
     setView('resultat')
   }
@@ -81,7 +81,8 @@ export default function Stige({ cfg, go }) {
     updateFag(cfg.id, nf)
     const stars = starsFor(res.correct, res.total)
     addStars(stars, { correct: res.correct, total: res.total, fag: cfg.id, nivaa: mission.target, oppdrag: true, sjef: true })
-    const kort = passed && cfg.kortPerNivaa ? delUtKort(Array.from({ length: mission.target - state.nivaa }, (_, i) => state.nivaa + i).flatMap((n) => nyeKort({ eier: data.kort, nivaa: n, levelUp: true, stars: 0, rng: () => 1 }))) : []
+    // Hopp gir kortene for nivåene som hoppes over, i alle stiger.
+    const kort = passed ? delUtKort(Array.from({ length: mission.target - state.nivaa }, (_, i) => state.nivaa + i).flatMap((n) => nyeKort({ eier: data.kort, nivaa: n, fag: cfg.id, levelUp: true, stars: 0, rng: () => 1 }))) : []
     setResult({ ...res, stars, sjefPassed: passed, nyttNivaa: nf.nivaa, target: mission.target, kort })
     setView('resultat')
   }

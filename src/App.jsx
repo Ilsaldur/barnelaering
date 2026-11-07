@@ -77,13 +77,13 @@ function AppInner() {
     content = <MatteStige go={goHome} onNoetter={() => setNav({ view: 'noetter' })} />
   } else if (nav.view === 'lesing') {
     bg = 'from-violet-400 via-fuchsia-400 to-rose-300'
-    content = <LeseStige go={goHome} />
+    content = <LeseStige go={goHome} start={nav.spor || null} />
   } else if (nav.view === 'noetter') {
     bg = 'from-amber-600 via-orange-500 to-yellow-400'
     content = <Noettehula go={goHome} />
   } else if (nav.view === 'samling') {
     bg = SAMLING_BG
-    content = <Samling go={goHome} onGarden={() => setNav({ view: 'garden' })} />
+    content = <Samling go={goHome} onGarden={() => setNav({ view: 'garden' })} onFag={(fagId) => setNav(['lesing', 'skrive', 'sprak'].includes(fagId) ? { view: 'lesing', spor: fagId } : { view: fagId })} />
   } else if (nav.view === 'garden') {
     bg = GARDEN_BG
     content = <Garden go={goHome} />

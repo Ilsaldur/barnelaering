@@ -5,12 +5,12 @@ import { kortForNivaa, BONUSKORT } from '../data/kort.js'
 
 export const BONUS_SJANSE = 0.15
 
-export function nyeKort({ eier = [], nivaa, levelUp = false, stars = 0, rng = Math.random }) {
+export function nyeKort({ eier = [], nivaa, fag = 'matte', levelUp = false, stars = 0, rng = Math.random }) {
   const out = []
   const legg = (k) => {
     if (k && !eier.includes(k.id) && !out.includes(k.id)) out.push(k.id)
   }
-  if (levelUp || stars === 3) legg(kortForNivaa(nivaa))
+  if (nivaa && (levelUp || stars === 3)) legg(kortForNivaa(nivaa, fag))
   if (stars >= 2 && rng() < BONUS_SJANSE) {
     const ledige = BONUSKORT.filter((k) => !eier.includes(k.id))
     if (ledige.length) legg(ledige[Math.floor(rng() * ledige.length)])
