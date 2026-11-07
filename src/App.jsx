@@ -1,5 +1,6 @@
 import { useEffect, useState, lazy, Suspense } from 'react'
 import { StarProvider, useStars } from './StarContext.jsx'
+import './data/alleStiger.js'
 import Home from './activities/Home.jsx'
 import MatteStige from './activities/MatteStige.jsx'
 import Noettehula from './activities/Noettehula.jsx'

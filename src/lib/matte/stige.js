@@ -112,6 +112,26 @@ export function settNivaa(fag, nivaa) {
   return { ...fag, nivaa, plassert: true, paaRad: 0, svakRad: 0, hjelpNeste: false, sjef: null, svake: {} }
 }
 
+// Hva som skal til for neste nivå, i klartekst (kartet). null på toppen.
+export function nesteNivaaTekst(fag, maks, { lengde = OPPDRAG_LENGDE } = {}) {
+  const n = fag.nivaa || 1
+  if (n >= maks) return null
+  const gode = lengde === 5 ? '4 eller 5 riktige' : '7 eller 8 riktige'
+  if (fag.hjelpNeste) return `Neste oppdrag er med hjelp. Etterpå åpner nivå ${n + 1} etter to gode oppdrag på rad (${gode}).`
+  if ((fag.paaRad || 0) >= 1) return `Ett godt oppdrag til (${gode}), så åpner nivå ${n + 1}!`
+  return `To gode oppdrag på rad (${gode}) åpner nivå ${n + 1}. Alle riktige gir sjefsoppgave.`
+}
+
+// Samme på resultatskjermen, ut fra faget slik det er etter oppdraget.
+export function resultatNivaaTekst(fag, maks, { lengde = OPPDRAG_LENGDE } = {}) {
+  const n = fag.nivaa || 1
+  if (n >= maks) return null
+  const gode = lengde === 5 ? '4 eller 5 riktige' : '7 eller 8 riktige'
+  if (fag.hjelpNeste) return `Neste oppdrag blir med hjelp, så det blir litt lettere. Nivå ${n + 1} åpner etter to gode oppdrag på rad.`
+  if ((fag.paaRad || 0) >= 1) return `1 av 2 gode oppdrag på rad! Ett til med ${gode}, så åpner nivå ${n + 1}.`
+  return `Nivå ${n + 1} åpner etter to gode oppdrag på rad (${gode}).`
+}
+
 // Hvilke svake typer gjelder nå (alle på lista), med nivået bommen kom fra.
 export function activeWeakTypes(fag) {
   return Object.keys(fag.svake || {})
