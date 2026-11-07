@@ -15,6 +15,7 @@ export function emptyFag() {
     bokser: {}, // kort-id -> { boks: 1–5, t }
     svake: {}, // oppgavetype -> { bom, riktig } (bom-lista)
     sett: [], // hash av de 40 siste oppgavene barnet fikk (eldst først)
+    kjent: [], // ting barnet har fått vist (kunnskapsstigene): «land:se», «ord:cat», «tid:3:00»
     sjef: null, // ikke i bruk lenger (sjefsoppgaven tilbys direkte)
     updatedAt: 0,
   }
@@ -119,6 +120,7 @@ export function normalize(raw) {
     // Gamle bom-lister hadde { bom, til }; nå { bom, riktig }.
     g.svake = Object.fromEntries(Object.entries(g.svake || {}).map(([k, v]) => [k, { bom: v.bom || 1, riktig: v.riktig || 0, ...(v.nivaa != null ? { nivaa: v.nivaa } : {}) }]))
     g.sett = Array.isArray(g.sett) ? g.sett.filter((x) => typeof x === 'string').slice(-40) : []
+    g.kjent = Array.isArray(g.kjent) ? [...new Set(g.kjent.filter((x) => typeof x === 'string'))] : []
     fag[f] = g
   }
   d.fag = fag
@@ -159,6 +161,8 @@ function mergeFag(a, b) {
   const nyeste = newest.sett || []
   const andre = (newest === a ? b : a).sett || []
   out.sett = [...andre.filter((h) => !nyeste.includes(h)), ...nyeste].slice(-40)
+  // Kjent-lista: union – noe barnet har fått vist på én enhet, er kjent overalt.
+  out.kjent = [...new Set([...(a.kjent || []), ...(b.kjent || [])])]
   return out
 }
 

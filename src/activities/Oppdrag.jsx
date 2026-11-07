@@ -65,6 +65,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
   const [usedHelp, setUsedHelp] = useState(false)
   const [result, setResult] = useState(null)
   const [seq, setSeq] = useState([]) // sortering: valgt rekkefølge
+  const [visMeg, setVisMeg] = useState(false) // «👀 Vis meg» i kunnskapsoppgaver
 
   const spoken = task.spoken || task.prompt
   const lang = task.lang || 'nb-NO'
@@ -157,6 +158,34 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
   // Låst: ferdig, i «prøv igjen»-pausen, eller mens et kort ligger oppå.
   const laast = done || feedback === 'retry' || frosset
   const canHelp = !!task.hjelp && !noHelp
+  const kanVisMeg = !!task.visning && !canHelp && !noHelp && !placement
+
+  // Vis-oppgave: ett bilde med navn, lest høyt, og én knapp. Teller alltid som riktig.
+  if (task.form === 'vis') {
+    return (
+      <div className="bg-white/95 rounded-3xl p-5 md:p-8 shadow-xl" data-testid="vis-oppgave">
+        <p className="text-center text-sm font-bold text-slate-400 mb-1">👀 Se her</p>
+        {task.visual && (
+          <div className="mb-3">
+            <Visual visual={task.visual} avslort />
+          </div>
+        )}
+        <div className="flex items-start justify-center gap-2 mb-1">
+          <p className={`text-center font-extrabold text-slate-700 ${task.prompt.length > 30 ? 'text-2xl md:text-3xl' : 'text-4xl md:text-5xl'}`} lang={lang}>
+            {task.prompt}
+          </p>
+          <SpeakButton text={spoken} lang={lang} />
+        </div>
+        {task.under && <p className="text-center text-lg font-bold text-slate-500 mb-2">{task.under}</p>}
+        <div className="mt-5 flex justify-center">
+          <BigButton color="bg-amber-500" onClick={() => onDone({ ok: true, forste: true, hjelp: false, vis: true })}>
+            {siste ? '🏁 Se resultat' : '➡️ Neste'}
+          </BigButton>
+        </div>
+        <AutoSpeakToggle current={spokenFull} />
+      </div>
+    )
+  }
 
   return (
     <div className="bg-white/95 rounded-3xl p-5 md:p-8 shadow-xl">
@@ -214,6 +243,32 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
           >
             📚 Lær
           </button>
+        </div>
+      )}
+
+      {kanVisMeg && !done && (
+        <div className="text-center my-2">
+          <button
+            type="button"
+            onClick={() => {
+              sound.click()
+              if (!visMeg) setUsedHelp(true)
+              setVisMeg((v) => !v)
+              if (!visMeg) speech.speak(task.visning.spoken || task.visning.tekst, { lang: task.visning.lang || lang })
+            }}
+            className="kid-btn bg-sky-100 text-sky-700 text-base px-4 py-2"
+          >
+            {visMeg ? '🙈 Skjul' : '👀 Vis meg'}
+          </button>
+          {visMeg && (
+            <div data-testid="vis-meg" className="mt-3 bg-sky-50 rounded-2xl p-3">
+              {task.visning.visual && <Visual visual={task.visning.visual} avslort />}
+              <p className="mt-2 font-extrabold text-slate-700 text-xl" lang={task.visning.lang || lang}>
+                {task.visning.tekst}
+              </p>
+              {task.visning.under && <p className="text-slate-500 font-bold">{task.visning.under}</p>}
+            </div>
+          )}
         </div>
       )}
 
@@ -496,7 +551,8 @@ export default function Oppdrag({ tasks, title, hjelpStart = false, onDone, onHo
   const task = tasks[i]
 
   function next(res) {
-    const entry = { type: task.type, nivaa: task.nivaa, tag: task.tag, kortId: task.kortId, ...res, counts: !!(res.ok && res.forste && !res.hjelp) }
+    const vis = task.form === 'vis'
+    const entry = { type: task.type, nivaa: task.nivaa, tag: task.tag, kortId: task.kortId, kjent: task.kjent, vis, ...res, counts: vis || !!(res.ok && res.forste && !res.hjelp) }
     const all = [...perTask, entry]
     if (i + 1 >= tasks.length) {
       const correct = all.filter((r) => r.counts).length

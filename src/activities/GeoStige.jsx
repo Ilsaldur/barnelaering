@@ -72,6 +72,7 @@ export default function GeoStige({ go }) {
     id: 'geografi',
     tittel: 'Geografi',
     kartTittel: 'Geografistigen',
+    kunnskap: true, // ting vises før det spørres om dem
     emoji: '🌍',
     nivaer: NIVAER_GEO,
     verdener: GEO_OMRAADER,

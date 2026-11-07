@@ -52,7 +52,7 @@ function Ovelse({ onClose }) {
 
 export default function KlokkeStige({ go }) {
   const [ov, setOv] = useState(false)
-  const cfg = {
+  const cfg = { kunnskap: true,
     id: 'klokke',
     tittel: 'Klokka',
     kartTittel: 'Klokkestigen',

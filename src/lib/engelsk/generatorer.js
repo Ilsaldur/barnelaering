@@ -3,26 +3,35 @@
 import { pick, shuffle } from '../rng.js'
 import { registerTypeLabels } from '../labels.js'
 import { ORD, SETNINGER, FYLL_INN, SPORSMAAL, TEKSTER_EN } from '../../data/engelsk/innhold.js'
+import { velgKjent, kjenteFeil } from '../kunnskap.js'
+
+// Kunnskapsstige: nøkler «ord:cat», «setning:…», «fyll:…», «spm:…».
+const keyOrd = (w) => `ord:${w.en}`
+const keySetning = (s) => `setning:${s.en}`
+const keyFyll = (f) => `fyll:${f.en}`
+const keySpm = (q) => `spm:${q.q}`
+const visOrd = (w) => ({ tekst: w.en, spoken: w.en, lang: 'en-GB', under: w.no, visual: { kind: 'ikon', emoji: w.emoji } })
 
 function pool(grupper) {
   return grupper.flatMap((g) => ORD[g] || [])
 }
-function andre(p, w, n, rng) {
-  return shuffle(
-    p.filter((x) => x.en !== w.en),
-    rng,
-  ).slice(0, n)
+function andre(p, w, n, rng, param) {
+  return kjenteFeil(p, w, keyOrd, param, n, rng)
 }
 
 export const GEN_ENGELSK = {
   // Hør det engelske ordet, finn bildet.
-  hor_finn_bilde: ({ grupper = ['dyr'] }, rng) => {
+  hor_finn_bilde: (param, rng) => {
+    const { grupper = ['dyr'] } = param
     const p = pool(grupper)
-    const w = pick(p, rng)
-    const feil = andre(p, w, 3, rng)
+    const w = velgKjent(p, keyOrd, param, rng)
+    const feil = andre(p, w, 3, rng, param)
     return {
       type: 'hor_finn_bilde',
       emne: w.en,
+      kjent: keyOrd(w),
+      visning: visOrd(w),
+      optionsKjent: Object.fromEntries([w, ...feil].map((x) => [x.emoji, keyOrd(x)])),
       form: 'valg',
       kreverLyd: true,
       prompt: `Hvilket bilde er «${w.en}»?`,
@@ -36,13 +45,17 @@ export const GEN_ENGELSK = {
     }
   },
   // Se bildet, finn det engelske ordet.
-  bilde_finn_ord: ({ grupper = ['dyr'] }, rng) => {
+  bilde_finn_ord: (param, rng) => {
+    const { grupper = ['dyr'] } = param
     const p = pool(grupper)
-    const w = pick(p, rng)
-    const feil = andre(p, w, 3, rng)
+    const w = velgKjent(p, keyOrd, param, rng)
+    const feil = andre(p, w, 3, rng, param)
     return {
       type: 'bilde_finn_ord',
       emne: w.en,
+      kjent: keyOrd(w),
+      visning: visOrd(w),
+      optionsKjent: Object.fromEntries([w, ...feil].map((x) => [x.en, keyOrd(x)])),
       form: 'valg',
       prompt: 'Hva heter dette på engelsk?',
       spoken: 'What is this?',
@@ -55,13 +68,17 @@ export const GEN_ENGELSK = {
     }
   },
   // Oversett: norsk ord → engelsk.
-  oversett: ({ grupper = ['dyr'] }, rng) => {
+  oversett: (param, rng) => {
+    const { grupper = ['dyr'] } = param
     const p = pool(grupper)
-    const w = pick(p, rng)
-    const feil = andre(p, w, 3, rng)
+    const w = velgKjent(p, keyOrd, param, rng)
+    const feil = andre(p, w, 3, rng, param)
     return {
       type: 'oversett',
       emne: w.en,
+      kjent: keyOrd(w),
+      visning: visOrd(w),
+      optionsKjent: Object.fromEntries([w, ...feil].map((x) => [x.en, keyOrd(x)])),
       form: 'valg',
       prompt: `Hva er «${w.no}» på engelsk?`,
       spoken: `Hva er ${w.no} på engelsk?`,
@@ -73,11 +90,13 @@ export const GEN_ENGELSK = {
     }
   },
   // Engelsk setning → bilde.
-  setning_bilde: (_, rng) => {
-    const s = pick(SETNINGER, rng)
+  setning_bilde: (param, rng) => {
+    const s = velgKjent(SETNINGER, keySetning, param, rng)
     return {
       type: 'setning_bilde_en',
       emne: s.en,
+      kjent: keySetning(s),
+      visning: { tekst: s.en, spoken: s.en, lang: 'en-GB', under: s.no, visual: { kind: 'ikon', emoji: s.svar } },
       form: 'valg',
       prompt: s.en,
       spoken: s.en,
@@ -90,11 +109,13 @@ export const GEN_ENGELSK = {
     }
   },
   // Fyll inn ordet som mangler.
-  fyll_inn: (_, rng) => {
-    const f = pick(FYLL_INN, rng)
+  fyll_inn: (param, rng) => {
+    const f = velgKjent(FYLL_INN, keyFyll, param, rng)
     return {
       type: 'fyll_inn',
       emne: f.en,
+      kjent: keyFyll(f),
+      visning: { tekst: f.en.replace('___', f.svar), spoken: f.en.replace('___', f.svar), lang: 'en-GB', visual: { kind: 'ikon', emoji: f.emoji } },
       form: 'valg',
       prompt: f.en,
       spoken: f.en.replace('___', 'hmm'),
@@ -108,11 +129,13 @@ export const GEN_ENGELSK = {
     }
   },
   // Spørsmål og svar.
-  sporsmaal: (_, rng) => {
-    const q = pick(SPORSMAAL, rng)
+  sporsmaal: (param, rng) => {
+    const q = velgKjent(SPORSMAAL, keySpm, param, rng)
     return {
       type: 'sporsmaal_en',
       emne: q.q,
+      kjent: keySpm(q),
+      visning: { tekst: `${q.q} – ${q.svar}`, spoken: `${q.q} ${q.svar}`, lang: 'en-GB', visual: { kind: 'ikon', emoji: '💬' } },
       form: 'valg',
       prompt: q.q,
       spoken: q.q,
@@ -160,12 +183,15 @@ Object.assign(GEN_ENGELSK, {
     }
   },
   // Nivå 9: skriv det engelske ordet du hører. maks/min = antall bokstaver.
-  stav_en: ({ maks = 99, min = 1, grupper = Object.keys(ORD) }, rng) => {
+  stav_en: (param, rng) => {
+    const { maks = 99, min = 1, grupper = Object.keys(ORD) } = param
     const p = pool(grupper).filter((w) => w.en.length >= min && w.en.length <= maks && !w.en.includes(' '))
-    const w = pick(p.length ? p : pool(grupper), rng)
+    const w = velgKjent(p.length ? p : pool(grupper), keyOrd, param, rng)
     return {
       type: 'stav_en',
       emne: w.en,
+      kjent: keyOrd(w),
+      visning: visOrd(w),
       form: 'skriv',
       kreverLyd: true,
       prompt: 'Skriv det engelske ordet du hører.',
@@ -178,12 +204,14 @@ Object.assign(GEN_ENGELSK, {
     }
   },
   // Nivå 10: sett ordene i riktig rekkefølge.
-  lag_setning: (_, rng) => {
-    const s = pick(SETNINGER_BRIKKER, rng)
+  lag_setning: (param, rng) => {
+    const s = velgKjent(SETNINGER_BRIKKER, keySetning, param, rng)
     const ord = setningsBrikker(s)
     return {
       type: 'lag_setning',
       emne: s.en,
+      kjent: keySetning(s),
+      visning: { tekst: s.en, spoken: s.en, lang: 'en-GB', under: s.no, visual: { kind: 'ikon', emoji: s.svar } },
       form: 'sorter',
       prompt: 'Sett ordene i riktig rekkefølge.',
       spoken: 'Sett ordene i riktig rekkefølge, så det blir en engelsk setning.',

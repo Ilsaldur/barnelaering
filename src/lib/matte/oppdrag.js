@@ -19,6 +19,7 @@ import { NIVAER as NIVAER_MATTE } from '../../data/matte/nivaer.js'
 import { kortstokk, trekkKort } from './kort.js'
 import { weakEntries, OPPDRAG_LENGDE, SJEF_LENGDE } from './stige.js'
 import { shuffle, randInt, seeded } from '../rng.js'
+import { tilVis } from '../kunnskap.js'
 
 // Standard er mattestigen. Andre stiger sender { nivaer, gen, tekstOppgaver?, emneMaks? }.
 export const MATTE_STIGE = { nivaer: NIVAER_MATTE, gen: genMatte }
@@ -45,11 +46,19 @@ function trekkType(def, rng, filter = null) {
   return liste[liste.length - 1]
 }
 
-function lagOppgave(nivaaId, rng, { type, param } = {}, stige = MATTE_STIGE) {
+// `ekstra` sendes til generatoren (kunnskapsstigene: kjent, foretrekkUkjent, kun).
+function lagOppgave(nivaaId, rng, { type, param, ekstra } = {}, stige = MATTE_STIGE) {
   const def = nivaaDef(nivaaId, stige)
   const t = type ? { type, param: param || {} } : trekkType(def, rng)
-  const task = stige.gen(t.type, t.param, rng)
-  return { ...task, nivaa: nivaaId, svarform: def.svar, hjelpAlltid: !!def.hjelpAlltid }
+  const task = stige.gen(t.type, ekstra ? { ...t.param, ...ekstra } : t.param, rng)
+  return { ...task, nivaa: nivaaId, svarform: def.svar, hjelpAlltid: !!def.hjelpAlltid, genType: t.type, genParam: t.param }
+}
+
+// Samme oppgavetype som `task`, men om én bestemt ting (`kun`) og med kjente feilsvar.
+export function lagOppgaveOm(task, kun, kjent, rng, stige = MATTE_STIGE) {
+  const def = nivaaDef(task.nivaa, stige)
+  const ny = stige.gen(task.genType, { ...(task.genParam || {}), kun, kjent }, rng)
+  return { ...ny, nivaa: task.nivaa, svarform: def.svar, hjelpAlltid: !!def.hjelpAlltid, genType: task.genType, genParam: task.genParam, tag: task.tag }
 }
 
 // Finn nivået der en oppgavetype hører hjemme (brukes når bommen mangler nivå).
@@ -61,7 +70,7 @@ export function nivaaForType(type, stige = MATTE_STIGE) {
 // Lag en oppgave av en bestemt type fra et nivå. Mange typer får et annet navn
 // når de lages (skriv_diftonger, les_analog_whole …), så vi prøver nivåets
 // generatorer til vi treffer typen; ellers en vanlig oppgave fra nivået.
-function lagOppgaveAvType(nivaaId, type, rng, stige = MATTE_STIGE) {
+function lagOppgaveAvType(nivaaId, type, rng, stige = MATTE_STIGE, ekstra = null) {
   const def = nivaaDef(nivaaId, stige)
   // Generatoren som har typen i navnet først; den kan likevel gi en annen
   // variant (velg_regneart gir også tekst_ett_steg), så vi prøver til typen
@@ -70,8 +79,8 @@ function lagOppgaveAvType(nivaaId, type, rng, stige = MATTE_STIGE) {
   let sist = null
   for (let i = 0; i < 40; i++) {
     const t = direkte || trekkType(def, rng)
-    const task = stige.gen(t.type, t.param, rng)
-    sist = { ...task, nivaa: nivaaId, svarform: def.svar, hjelpAlltid: !!def.hjelpAlltid }
+    const task = stige.gen(t.type, ekstra ? { ...t.param, ...ekstra } : t.param, rng)
+    sist = { ...task, nivaa: nivaaId, svarform: def.svar, hjelpAlltid: !!def.hjelpAlltid, genType: t.type, genParam: t.param }
     if (task.type === type) return sist
   }
   return direkte ? sist : lagOppgave(nivaaId, rng, {}, stige)
@@ -156,7 +165,7 @@ function fyll(plan, rng, stige, { sett = [], emneMaks = EMNE_MAKS, ekstraAvvis =
   for (const p of plan) {
     const lag = (r) => {
       const n = p.nivaaVelger ? p.nivaaVelger(r) : p.nivaa
-      const t = p.svak ? lagOppgaveAvType(n, p.type, r, stige) : lagOppgave(n, r, p, stige)
+      const t = p.svak ? lagOppgaveAvType(n, p.type, r, stige, p.ekstra) : lagOppgave(n, r, p, stige)
       return { ...t, tag: p.tag, kortId: p.kortId || undefined }
     }
     const teller = emneTeller(out)
@@ -321,11 +330,109 @@ export function buildMission(fag, { rng = Math.random, stige = MATTE_STIGE, leng
     kortIds = kort.map((x) => x.id)
   }
 
+  // Kunnskapsstigene: vis det barnet ikke kjenner før det spørres.
+  if (stige.kunnskap) {
+    const tasks = byggKunnskapsOppdrag(plan, rng, stige, { L, nivaa, kjent: fag.kjent, sett, nyeMaks: fag.nyeMaks })
+    return { nivaa, hjelp, tasks, kortIds }
+  }
   // Kortene først, så de andre oppgavene unngår dem.
   const rekkef = [...plan.filter((p) => p.tag === 'kort'), ...plan.filter((p) => p.tag !== 'kort')]
   let tasks = fyll(rekkef, rng, stige, { sett, emneMaks: stige.emneMaks || EMNE_MAKS })
   tasks = ordne(tasks, rng, stige, sett, stige.emneMaks || EMNE_MAKS)
   return { nivaa, hjelp, tasks: tasks.slice(0, L), kortIds }
+}
+
+// Oppdrag i en kunnskapsstige (geografi, engelsk, klokka). Spørsmål stilles
+// bare om ting barnet kjenner (`kjent`); det barnet ikke kjenner, vises først
+// (vis-oppgave) og spørres om rett etterpå. Høyst `nyeMaks` nye per oppdrag.
+// Kjenner barnet færre enn to ting, vises to før det første spørsmålet, så
+// svaralternativene kan hentes blant kjente ting. Er alt på nivået kjent, er
+// oppdraget som vanlig.
+export function byggKunnskapsOppdrag(plan, rng, stige, { L, nivaa, kjent: kjentListe = [], sett = [], nyeMaks = 3 } = {}) {
+  const kjent = new Set(kjentListe || [])
+  const brukt = new Set()
+  const tasks = []
+  let nye = 0
+  const lag = (p, ekstra) => (r) => {
+    const n = p.nivaaVelger ? p.nivaaVelger(r) : p.nivaa
+    const t = p.svak ? lagOppgaveAvType(n, p.type, r, stige, ekstra) : lagOppgave(n, r, { ...p, ekstra }, stige)
+    return { ...t, tag: p.tag }
+  }
+  const slots = [...plan]
+  const leggTil = (t) => {
+    brukt.add(nokkel(t))
+    tasks.push(t)
+  }
+  // Spørsmål om `t` sin ting, med kjente feilsvar (etter at tingen er vist).
+  const spm = (t) => ({ ...lagOppgaveOm(t, t.kjent, kjent, rng, stige), tag: t.tag })
+  const verdi = (o) => (o && typeof o === 'object' ? o.value : o)
+  const alleKjente = (q) => !q.optionsKjent || !q.options || q.options.every((o) => kjent.has(q.optionsKjent[verdi(o)]))
+  // Vis + spørsmål om tingen i `t`. Har spørsmålet ingen kjente feilsvar i sin
+  // bunke, vises en ny ting til (`t2`) først: vis, vis, spm, spm. Går ikke det,
+  // introduseres ikke `t` nå (returnerer false).
+  const introduser = (p, t) => {
+    kjent.add(t.kjent)
+    let q = spm(t)
+    let t2 = null
+    if (!alleKjente(q)) {
+      if (nye + 1 < nyeMaks && L - tasks.length >= 4) {
+        // Samme type oppgave som `t`, så den andre tingen hører til samme bunke.
+        for (let i = 0; i < 20 && !t2; i++) {
+          const c = { ...lagOppgave(t.nivaa, rng, { type: t.genType, param: t.genParam, ekstra: { kjent, foretrekkUkjent: true } }, stige), tag: t.tag }
+          if (c.kjent && !kjent.has(c.kjent)) t2 = c
+        }
+      }
+      if (t2) {
+        kjent.add(t2.kjent)
+        q = spm(t)
+      }
+      if (!t2 || !alleKjente(q)) {
+        kjent.delete(t.kjent)
+        if (t2) kjent.delete(t2.kjent)
+        return false
+      }
+    }
+    leggTil({ ...tilVis(t), tag: t.tag })
+    nye++
+    if (t2) {
+      leggTil({ ...tilVis(t2), tag: t2.tag })
+      nye++
+    }
+    leggTil(q)
+    if (t2) leggTil(spm(t2))
+    return true
+  }
+  // Spør om noe kjent i stedet; null om bunken ikke har noe kjent med kjente feilsvar.
+  const kjentSpm = (p) => {
+    for (let i = 0; i < 10; i++) {
+      const t2 = velg(lag(p, { kjent, foretrekkUkjent: false }), rng, { brukt, sett })
+      if (!(t2.kjent && !kjent.has(t2.kjent)) && alleKjente(t2)) return t2
+    }
+    return null
+  }
+  while (slots.length && tasks.length < L) {
+    const p = slots.shift()
+    const kanNy = nye < nyeMaks && L - tasks.length >= 2
+    const t = velg(lag(p, { kjent, foretrekkUkjent: kanNy }), rng, { brukt, sett })
+    if (t.kjent && !kjent.has(t.kjent)) {
+      if (kanNy && introduser(p, t)) continue
+      const t2 = kjentSpm(p)
+      if (t2) leggTil(t2)
+    } else if (alleKjente(t)) leggTil(t)
+    else {
+      const t2 = kjentSpm(p)
+      if (t2) leggTil(t2)
+    }
+  }
+  // Fyll opp med kjente spørsmål fra nivået om slots ble droppet.
+  for (let i = 0; i < 30 && tasks.length < L; i++) {
+    const t = velg(lag({ nivaa, tag: 'eget' }, { kjent, foretrekkUkjent: false }), rng, { brukt, sett })
+    if (t.kjent && !kjent.has(t.kjent)) continue
+    if (!alleKjente(t)) continue
+    leggTil(t)
+  }
+  // Rekkefølgen beholdes: en ting vises alltid før det spørres om den.
+  return tasks.slice(0, Math.max(L, 2))
 }
 
 // Sjefsoppgave: fem oppgaver fra nivåene mellom barnets nivå og målet –
@@ -354,7 +461,7 @@ export function buildBoss(nivaa, target, { rng = Math.random, stige = MATTE_STIG
   else fordeling = [5]
   const plan = []
   nivaaer.slice(0, fordeling.length).forEach((n, i) => {
-    for (let k = 0; k < fordeling[i]; k++) plan.push({ nivaa: n, tag: 'sjef' })
+    for (let k = 0; k < fordeling[i]; k++) plan.push({ nivaa: n, tag: 'sjef', ekstra: stige.kunnskap ? { kjent: new Set(fag?.kjent || []) } : undefined })
   })
   let tasks = fyll(plan, rng, stige, { sett, emneMaks: stige.emneMaks || EMNE_MAKS })
   tasks = ordne(tasks, rng, stige, sett, stige.emneMaks || EMNE_MAKS)
@@ -364,14 +471,14 @@ export function buildBoss(nivaa, target, { rng = Math.random, stige = MATTE_STIG
 // Oppgave til plasseringstesten: aldri sant/usant, aldri typer som krever
 // fagord barnet ikke har lært (merket `ikkePlassering` i nivådataene).
 // `brukt` er oppgavene testen alt har vist, `sett` fagets husk-liste.
-export function oppgaveTilPlassering(nivaaId, rng = Math.random, stige = MATTE_STIGE, { brukt = [], sett = [] } = {}) {
+export function oppgaveTilPlassering(nivaaId, rng = Math.random, stige = MATTE_STIGE, { brukt = [], sett = [], ekstra = null } = {}) {
   const MAKS = stige.nivaer.length
   const id = Math.min(MAKS, Math.max(1, nivaaId))
   const def = nivaaDef(id, stige)
   const lag = (r) => {
     const t = trekkType(def, r, (x) => !x.ikkePlassering)
-    const task = stige.gen(t.type, t.param, r)
-    return { ...task, nivaa: id, svarform: def.svar, hjelpAlltid: false, hjelp: undefined, tag: 'plassering' }
+    const task = stige.gen(t.type, ekstra ? { ...t.param, ...ekstra } : t.param, r)
+    return { ...task, nivaa: id, svarform: def.svar, hjelpAlltid: false, hjelp: undefined, tag: 'plassering', genType: t.type, genParam: t.param }
   }
   const bruktSett = new Set(brukt.map((t) => (typeof t === 'string' ? t : nokkel(t))))
   const emner = new Set(brukt.map((t) => t?.emne).filter((e) => e != null))
@@ -385,10 +492,10 @@ export function oppgaveTilPlassering(nivaaId, rng = Math.random, stige = MATTE_S
 
 // Én oppgave fra et gitt nivå (fri bruk, f.eks. «Prøv selv»). `brukt` er
 // oppgaver som alt er vist, `sett` fagets husk-liste.
-export function oppgaveFraNivaa(nivaaId, rng = Math.random, stige = MATTE_STIGE, { brukt = [], sett = [] } = {}) {
+export function oppgaveFraNivaa(nivaaId, rng = Math.random, stige = MATTE_STIGE, { brukt = [], sett = [], ekstra = null } = {}) {
   const MAKS = stige.nivaer.length
   const id = Math.min(MAKS, Math.max(1, nivaaId))
   const bruktSett = new Set(brukt.map((t) => (typeof t === 'string' ? t : nokkel(t))))
   const emner = new Set(brukt.map((t) => t?.emne).filter((e) => e != null))
-  return velg((r) => lagOppgave(id, r, {}, stige), rng, { brukt: bruktSett, sett, emneOk: (t) => t.emne == null || !emner.has(t.emne) })
+  return velg((r) => lagOppgave(id, r, { ekstra }, stige), rng, { brukt: bruktSett, sett, emneOk: (t) => t.emne == null || !emner.has(t.emne) })
 }

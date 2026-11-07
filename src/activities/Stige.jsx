@@ -7,8 +7,9 @@ import Oppdrag, { TaskCard } from './Oppdrag.jsx'
 import Kart from './Kart.jsx'
 import { useStars } from '../StarContext.jsx'
 import { sound } from '../sound.js'
-import { buildMission, buildBoss, oppgaveTilPlassering, oppgaveFraNivaa, huskOppgaver, oppdragLengde } from '../lib/matte/oppdrag.js'
-import { startFinn, stegFinn, framdrift } from '../lib/matte/finnNivaa.js'
+import { buildMission, buildBoss, huskOppgaver, oppdragLengde } from '../lib/matte/oppdrag.js'
+import { startForste, gjeldende, svarForste, resultatForste, framdriftForste } from '../lib/matte/forsteOppdrag.js'
+import { oppdaterKjent } from '../lib/kunnskap.js'
 import { applyResult, applyBoss, settNivaa } from '../lib/matte/stige.js'
 import { oppdaterBoks } from '../lib/matte/kort.js'
 import { starsFor } from '../lib/scoring.js'
@@ -24,7 +25,7 @@ import LaerKort from '../components/LaerKort.jsx'
 export default function Stige({ cfg, go }) {
   const { fag, updateFag, addStars, updateSettings, profile, data, giKort, markHistorie, markLaerkort } = useStars()
   const state = fag[cfg.id]
-  const STIGE = { nivaer: cfg.nivaer, gen: cfg.gen, tekstOppgaver: cfg.tekstOppgaver, emneMaks: cfg.emneMaks }
+  const STIGE = { nivaer: cfg.nivaer, gen: cfg.gen, tekstOppgaver: cfg.tekstOppgaver, emneMaks: cfg.emneMaks, kunnskap: !!cfg.kunnskap }
   const MAKS = cfg.nivaer.length
   const [view, setView] = useState('hub')
   const [mission, setMission] = useState(null)
@@ -65,6 +66,7 @@ export default function Stige({ cfg, go }) {
     for (const r of res.perTask) if (r.kortId) bokser = oppdaterBoks(bokser, r.kortId, r.ok && r.forste)
     nf.bokser = bokser
     nf = huskOppgaver(nf, mission.tasks)
+    if (cfg.kunnskap) nf.kjent = oppdaterKjent(nf.kjent, res.perTask)
     updateFag(cfg.id, nf)
     addStars(events.stars, { correct: res.correct, total: res.total, fag: cfg.id, nivaa: mission.nivaa, oppdrag: true })
     const kort = delUtKort(nyeKort({ eier: data.kort, nivaa: cfg.kortPerNivaa ? mission.nivaa : 0, levelUp: events.levelUp, stars: events.stars }))
@@ -75,6 +77,7 @@ export default function Stige({ cfg, go }) {
   function ferdigSjef(res) {
     const { fag: nf0, passed } = applyBoss(state, { correct: res.correct, target: mission.target })
     const nf = huskOppgaver(nf0, mission.tasks)
+    if (cfg.kunnskap) nf.kjent = oppdaterKjent(nf.kjent, res.perTask)
     updateFag(cfg.id, nf)
     const stars = starsFor(res.correct, res.total)
     addStars(stars, { correct: res.correct, total: res.total, fag: cfg.id, nivaa: mission.target, oppdrag: true, sjef: true })
@@ -86,8 +89,10 @@ export default function Stige({ cfg, go }) {
   // ---- Første oppdrag: reven finner nivået (usynlig plassering) ----
   function ferdigFinn(res) {
     let nf = huskOppgaver(settNivaa(state, res.nivaa), res.tasks)
+    if (cfg.kunnskap) nf.kjent = oppdaterKjent(nf.kjent, res.perTask)
     updateFag(cfg.id, nf)
-    const stars = starsFor(res.correct, res.total)
+    // Innføring (bom på nivå 1 i en kunnskapsstige) gir tre stjerner når det er fullført.
+    const stars = res.innfoering ? 3 : starsFor(res.correct, res.total)
     addStars(stars, { correct: res.correct, total: res.total, fag: cfg.id, nivaa: res.nivaa, oppdrag: true })
     setResult({ correct: res.correct, total: res.total, perTask: res.perTask, stars, funnet: res.nivaa, nyttNivaa: res.nivaa, levelUp: false, levelDown: false, boss: null, kort: [] })
     setView('resultat')
@@ -233,37 +238,25 @@ export default function Stige({ cfg, go }) {
 // vanlige oppgaver). Framdriftslinja har ingen tall. Ingenting barnet ser
 // nevner at nivået blir funnet før resultatskjermen.
 function FinnNivaa({ cfg, stige, state, onDone, onHome }) {
-  const MAKS = cfg.nivaer.length
-  const lengdeFor = (n) => oppdragLengde(stige, Math.max(1, Math.min(MAKS, n)))
-  const sett = state.sett || []
-  const [finn, setFinn] = useState(() => startFinn({ maks: MAKS, tak: cfg.tak ?? MAKS, lengdeFor }))
-  const [vist, setVist] = useState(() => [oppgaveTilPlassering(1, Math.random, stige, { brukt: [], sett })])
-  const [perTask, setPerTask] = useState([])
-  const task = vist[vist.length - 1]
+  const [st, setSt] = useState(() => startForste({ stige, fag: state, tak: cfg.tak }))
+  const task = gjeldende(st)
 
   function svar(res) {
-    const entry = { type: task.type, nivaa: task.nivaa, tag: task.tag, ...res, counts: !!(res.ok && res.forste && !res.hjelp) }
-    const alle = [...perTask, entry]
-    const neste = stegFinn(finn, entry.counts)
+    const neste = svarForste(st, res)
     if (neste.ferdig) {
-      onDone({ correct: alle.filter((r) => r.counts).length, total: alle.length, perTask: alle, tasks: vist, nivaa: neste.nivaa })
+      onDone(resultatForste(neste))
       return
     }
-    const ny = neste.fase === 'vanlig' ? { ...oppgaveFraNivaa(neste.nivaa, Math.random, stige, { brukt: vist, sett }), tag: 'eget' } : oppgaveTilPlassering(neste.pos, Math.random, stige, { brukt: vist, sett })
-    setPerTask(alle)
-    setFinn(neste)
-    setVist([...vist, ny])
+    setSt(neste)
   }
 
-  const o = cfg.omraadeFor(task.nivaa)
   return (
     <div className="animate-pop-in">
       <TopBar title={`${cfg.kartTittel || cfg.tittel} ${cfg.emoji}`} onHome={onHome} />
       <div className="bg-white/80 rounded-full h-5 overflow-hidden mb-4 shadow-inner" aria-label="Framdrift">
-        <div className="bg-amber-400 h-full transition-all duration-300" style={{ width: `${Math.round(framdrift(finn) * 100)}%` }} />
+        <div className="bg-amber-400 h-full transition-all duration-300" style={{ width: `${Math.round(framdriftForste(st) * 100)}%` }} />
       </div>
-      <TaskCard key={vist.length} task={task} fag={cfg.id} onDone={svar} siste={false} />
-      <p className="sr-only">{o.navn}</p>
+      <TaskCard key={st.vist.length} task={task} fag={cfg.id} onDone={svar} />
     </div>
   )
 }

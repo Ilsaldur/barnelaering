@@ -6,7 +6,7 @@
 |--------|--------|----------------|
 | R – Én dør per fag, Dagens økt velger seg selv | Ferdig og pushet. Se `docs/etappeR.md`. | 2026-11-07 |
 | S – Usynlig plassering | Ferdig og pushet. Se `docs/etappeS.md`. | 2026-11-07 |
-| T – Innføring i kunnskapsstigene | Ikke startet. | |
+| T – Innføring i kunnskapsstigene | Ferdig og pushet. Se `docs/etappeT.md`. | 2026-11-07 |
 | U – Former og farger inn i matte | Ikke startet. | |
 | V – Samlingen forklarer seg selv, alle stiger gir kort | Ikke startet. | |
 | W – Reven kan ha på flere ting (spør Jon først) | Ikke startet. | |

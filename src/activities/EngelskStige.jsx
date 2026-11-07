@@ -3,6 +3,6 @@ import { NIVAER_ENGELSK, ENGELSK_OMRAADER, engelskOmraadeFor } from '../data/eng
 import { genEngelsk } from '../lib/engelsk/generatorer.js'
 
 export default function EngelskStige({ go }) {
-  const cfg = { id: 'engelsk', tittel: 'Engelsk', kartTittel: 'Engelskstigen', emoji: '🇬🇧', nivaer: NIVAER_ENGELSK, verdener: ENGELSK_OMRAADER, gen: genEngelsk, omraadeFor: engelskOmraadeFor, ikoner: (n) => engelskOmraadeFor(n.id).emoji }
+  const cfg = { kunnskap: true, id: 'engelsk', tittel: 'Engelsk', kartTittel: 'Engelskstigen', emoji: '🇬🇧', nivaer: NIVAER_ENGELSK, verdener: ENGELSK_OMRAADER, gen: genEngelsk, omraadeFor: engelskOmraadeFor, ikoner: (n) => engelskOmraadeFor(n.id).emoji }
   return <Stige cfg={cfg} go={go} />
 }
