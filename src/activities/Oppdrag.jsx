@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { TopBar, Mascot, BigButton } from '../components/ui.jsx'
 import { SpeakButton, AutoSpeakToggle } from '../components/Speak.jsx'
 import Keypad, { parseAnswer } from '../components/Keypad.jsx'
 import { Visual, Help } from '../components/TaskVisual.jsx'
 import AnalogClock from '../components/AnalogClock.jsx'
-import VerdensKart from '../components/VerdensKart.jsx'
+const VerdensKart = lazy(() => import('../components/VerdensKart.jsx'))
 import Flagg from '../components/Flagg.jsx'
 import { landById } from '../data/geo/land.js'
 import { laerkortForType, stegForType } from '../data/laerkort.js'
@@ -407,7 +407,9 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
 
       {task.form === 'kart' && (
         <div className="mt-3">
-          <VerdensKart region={task.region} picked={picked} answer={done ? task.answer : null} disabled={laast} onPick={(id) => submit(id)} />
+          <Suspense fallback={<div className="w-full aspect-[4/3] max-h-[60vh] rounded-2xl bg-sky-100 animate-pulse" aria-label="Henter kartet" />}>
+            <VerdensKart region={task.region} picked={picked} answer={done ? task.answer : null} disabled={laast} onPick={(id) => submit(id)} />
+          </Suspense>
           {picked && !done && feedback === 'retry' && <p className="text-center text-sm font-bold text-slate-500 mt-1">Du trykket på {landById(picked)?.navn || 'et annet land'}.</p>}
         </div>
       )}

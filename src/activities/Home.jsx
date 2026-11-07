@@ -73,8 +73,8 @@ export default function Home({ onSamling, onGarden, onParents, onSwitchProfile, 
 
       {/* Dagens økt */}
       <section className="bg-white/95 rounded-3xl p-4 md:p-5 shadow-xl mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-xl md:text-2xl font-extrabold text-slate-700">📅 Dagens økt</h2>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-2">
+          <h2 className="text-xl md:text-2xl font-extrabold text-slate-700 whitespace-nowrap">📅 Dagens økt</h2>
           <div className="flex gap-1" title="Ukestripe: et stempel for hver dag du gjorde dagens økt">
             {uke.map((d) => (
               <div key={d.key} className={`w-7 h-9 md:w-8 md:h-10 rounded-lg flex flex-col items-center justify-center text-[10px] font-extrabold ${d.ferdig ? 'bg-emerald-400 text-white' : d.idag ? 'bg-amber-100 text-amber-600 ring-2 ring-amber-300' : d.framtid ? 'bg-slate-50 text-slate-300' : 'bg-slate-100 text-slate-400'}`}>
@@ -97,8 +97,8 @@ export default function Home({ onSamling, onGarden, onParents, onSwitchProfile, 
                 {k.fast && <span className="absolute top-1 left-2 text-sm" title="Fast oppdrag">📌</span>}
                 {gjort && <span className="absolute top-1 right-2 bg-white text-emerald-500 rounded-full w-6 h-6 flex items-center justify-center text-sm font-extrabold">✓</span>}
                 <span className="text-4xl md:text-5xl">{k.overraskelse ? '🎁' : info.emoji}</span>
-                <span className="text-base md:text-xl font-extrabold text-center leading-tight break-words [overflow-wrap:anywhere] max-w-full">{k.overraskelse ? 'Overraskelse' : info.navn}</span>
-                {k.overraskelse && <span className="text-xs opacity-90">{info.emoji} {info.navn}</span>}
+                <span className="text-base md:text-xl font-extrabold text-center leading-tight break-words [overflow-wrap:anywhere] max-w-full">{k.overraskelse ? 'Gave' : info.navn}</span>
+                {k.overraskelse && <span className="text-xs opacity-90 whitespace-nowrap">{info.emoji} {info.navn}</span>}
                 {k.fag !== 'nott' && !k.overraskelse && <span className="text-xs opacity-90">{fag?.[k.fag]?.plassert && fag?.[k.fag]?.nivaa ? `nivå ${fag[k.fag].nivaa}` : 'Ny!'}</span>}
               </button>
             )

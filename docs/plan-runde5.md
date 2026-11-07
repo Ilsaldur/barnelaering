@@ -11,7 +11,7 @@
 | V – Samlingen forklarer seg selv, alle stiger gir kort | Ferdig og pushet. Se `docs/etappeV.md`. Nye kort er UTKAST. | 2026-11-07 |
 | W – Reven kan ha på flere ting | Ferdig og pushet (Jon valgte A: tegnet rev). Se `docs/etappeW.md`. | 2026-11-07 |
 | X – Innhold | Ferdig og pushet. Se `docs/etappeX.md`. Nye tekster er UTKAST. | 2026-11-07 |
-| Y – Småfeil | Ikke startet. | |
+| Y – Småfeil | Ferdig og pushet. Se `docs/etappeY.md`. | 2026-11-07 |
 
 ---
 

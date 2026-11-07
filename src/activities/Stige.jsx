@@ -212,7 +212,14 @@ export default function Stige({ cfg, go }) {
             <p className="text-sm font-bold text-slate-500">
               {omr.navn} · {profile?.name || ''}
             </p>
-            <h2 className="text-xl md:text-2xl font-extrabold text-slate-800">Nivå {state.nivaa} av {MAKS}</h2>
+            <h2 className="text-xl md:text-2xl font-extrabold text-slate-800">
+              Nivå {state.nivaa} av {MAKS}
+              {state.toppKlart && (
+                <span data-testid="topp-merke" className="ml-2 align-middle inline-block bg-amber-100 text-amber-700 text-xs font-extrabold rounded-full px-2 py-1">
+                  🏆 Hele stigen klart
+                </span>
+              )}
+            </h2>
             <p className="text-base font-bold text-slate-600">{def.tittel}</p>
           </div>
           <SpeakButton text={hei} />

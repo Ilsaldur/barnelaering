@@ -71,8 +71,8 @@ export function applyResult(fag, { correct, total = OPPDRAG_LENGDE, nivaa, perTa
         next.nivaa = nivaa + 1
         events.levelUp = true
       } else {
-        // Toppnivået klart to ganger: hele stigen er klart.
-        events.toppKlart = true
+        // Toppnivået klart to ganger: hele stigen er klart. Meldingen vises én gang.
+        if (!fag.toppKlart) events.toppKlart = true
         next.toppKlart = true
       }
     }

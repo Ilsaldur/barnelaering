@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { StarProvider, useStars } from './StarContext.jsx'
 import Home from './activities/Home.jsx'
 import MatteStige from './activities/MatteStige.jsx'
@@ -7,7 +7,8 @@ import LeseStige from './activities/LeseStige.jsx'
 import Personvern from './activities/Personvern.jsx'
 import Samling from './activities/Samling.jsx'
 import KlokkeStige from './activities/KlokkeStige.jsx'
-import GeoStige from './activities/GeoStige.jsx'
+// Kartdataene er store: geografistigen lastes først når den åpnes.
+const GeoStige = lazy(() => import('./activities/GeoStige.jsx'))
 import EngelskStige from './activities/EngelskStige.jsx'
 import Garden from './activities/Garden.jsx'
 import Parents from './activities/Parents.jsx'
@@ -68,7 +69,11 @@ function AppInner() {
     content = <KlokkeStige go={goHome} />
   } else if (nav.view === 'geografi') {
     bg = 'from-emerald-400 via-teal-400 to-sky-400'
-    content = <GeoStige go={goHome} />
+    content = (
+      <Suspense fallback={<div className="text-white font-extrabold text-2xl text-center p-10 animate-pulse">Henter kartet …</div>}>
+        <GeoStige go={goHome} />
+      </Suspense>
+    )
   } else if (nav.view === 'engelsk') {
     bg = 'from-rose-400 via-pink-400 to-indigo-400'
     content = <EngelskStige go={goHome} />
