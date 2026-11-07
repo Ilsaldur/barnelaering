@@ -15,7 +15,7 @@ function Fox({ className = '' }) {
   )
 }
 
-export default function Kart({ matte, onStart, onReplay, nivaer = NIVAER_MATTE, verdener = VERDENER_MATTE, ikoner }) {
+export default function Kart({ matte, onStart, onReplay, nivaer = NIVAER_MATTE, verdener = VERDENER_MATTE, ikoner, nesteTekst = null }) {
   const NIVAER = nivaer
   const VERDENER = verdener
   const cur = matte.nivaa || 1
@@ -30,7 +30,7 @@ export default function Kart({ matte, onStart, onReplay, nivaer = NIVAER_MATTE, 
       onReplay(n.id)
     } else {
       sound.wrong()
-      setMsg(`🔒 Nivå ${n.id} åpner seg når reven kommer dit. Klar nivå ${cur} først!`)
+      setMsg(`🔒 Nivå ${n.id} åpner seg når reven kommer dit. ${nesteTekst || `Klar nivå ${cur} først!`}`)
       setTimeout(() => setMsg(null), 2500)
     }
   }
@@ -100,6 +100,11 @@ export default function Kart({ matte, onStart, onReplay, nivaer = NIVAER_MATTE, 
               })}
             </div>
             </div>
+            {here && nesteTekst && (
+              <p data-testid="neste-nivaa" className="text-center text-sm font-bold text-slate-600 bg-white/70 rounded-2xl px-3 py-2 mt-3">
+                🪜 {nesteTekst}
+              </p>
+            )}
           </section>
         )
       })}

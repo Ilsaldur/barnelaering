@@ -10,7 +10,7 @@ import { sound } from '../sound.js'
 import { buildMission, buildBoss, huskOppgaver, oppdragLengde } from '../lib/matte/oppdrag.js'
 import { startForste, gjeldende, svarForste, resultatForste, framdriftForste } from '../lib/matte/forsteOppdrag.js'
 import { oppdaterKjent } from '../lib/kunnskap.js'
-import { applyResult, applyBoss, settNivaa } from '../lib/matte/stige.js'
+import { applyResult, applyBoss, settNivaa, nesteNivaaTekst, resultatNivaaTekst } from '../lib/matte/stige.js'
 import { oppdaterBoks } from '../lib/matte/kort.js'
 import { starsFor } from '../lib/scoring.js'
 import { nyeKort } from '../lib/samling.js'
@@ -70,7 +70,8 @@ export default function Stige({ cfg, go }) {
     updateFag(cfg.id, nf)
     addStars(events.stars, { correct: res.correct, total: res.total, fag: cfg.id, nivaa: mission.nivaa, oppdrag: true })
     const kort = delUtKort(nyeKort({ eier: data.kort, nivaa: mission.nivaa, fag: cfg.id, levelUp: events.levelUp, stars: events.stars }))
-    setResult({ ...res, stars: events.stars, levelUp: events.levelUp, levelDown: events.levelDown, toppKlart: !!events.toppKlart, nyttNivaa: nf.nivaa, boss: events.boss, kort, replay: !!mission.replay })
+    const nesteTekst = mission.replay || events.levelUp || events.levelDown || events.toppKlart ? null : resultatNivaaTekst(nf, MAKS, { lengde: oppdragLengde(STIGE, nf.nivaa) })
+    setResult({ ...res, stars: events.stars, levelUp: events.levelUp, levelDown: events.levelDown, toppKlart: !!events.toppKlart, nyttNivaa: nf.nivaa, boss: events.boss, kort, replay: !!mission.replay, nesteTekst })
     setView('resultat')
   }
 
@@ -165,6 +166,11 @@ export default function Stige({ cfg, go }) {
               </div>
             )}
             {result.sjefPassed === true && <div className="bg-amber-100 text-amber-700 rounded-2xl px-5 py-3 font-extrabold text-lg">👑 Du klarte sjefsoppgaven og hoppet til nivå {result.nyttNivaa}!</div>}
+            {result.nesteTekst && (
+              <div data-testid="neste-nivaa-resultat" className="bg-white rounded-2xl px-5 py-3 font-bold text-slate-600 shadow">
+                🪜 {result.nesteTekst}
+              </div>
+            )}
             {result.sjefPassed === false && <div className="bg-sky-100 text-sky-700 rounded-2xl px-5 py-3 font-extrabold text-lg">Godt forsøk! Du fortsetter der du var, og får nytt tilbud neste gang du klarer alle {oppdragLengde(STIGE, state.nivaa) === 5 ? 'fem' : 'åtte'}.</div>}
             {result.kort?.length > 0 && (
               <div className="bg-white rounded-2xl px-5 py-3 shadow flex flex-wrap items-center justify-center gap-3">
@@ -236,7 +242,7 @@ export default function Stige({ cfg, go }) {
         </p>
       </div>
       {cfg.hubEkstra}
-      <Kart matte={state} onStart={startOppdrag} onReplay={startReplay} nivaer={cfg.nivaer} verdener={cfg.verdener} ikoner={cfg.ikoner} />
+      <Kart matte={state} onStart={startOppdrag} onReplay={startReplay} nivaer={cfg.nivaer} verdener={cfg.verdener} ikoner={cfg.ikoner} nesteTekst={nesteNivaaTekst(state, MAKS, { lengde: oppdragLengde(STIGE, state.nivaa) })} />
     </div>
   )
 }
