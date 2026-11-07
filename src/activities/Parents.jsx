@@ -133,12 +133,6 @@ function ChildPanel({ child, data, update, isActive }) {
       ...cur,
       fag: { ...cur.fag, [fag]: { ...settNivaa(cur.fag[fag], nivaa), updatedAt: Date.now() } },
     }))
-  const toggleFag = (f) => {
-    const cur = s.fagblanding || []
-    const next = cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f]
-    if (next.length === 0) return
-    setSettings({ fagblanding: next })
-  }
 
   return (
     <>
@@ -242,30 +236,7 @@ function ChildPanel({ child, data, update, isActive }) {
               ))}
             </div>
           </div>
-          <div>
-            <p className="font-bold text-slate-600 mb-2">Fag i «Dagens økt»</p>
-            <div className="flex flex-wrap gap-2">
-              {['matte', 'lesing', 'klokke', 'geografi', 'engelsk', 'overraskelse'].map((f) => (
-                <Chip key={f} active={(s.fagblanding || []).includes(f)} onClick={() => toggleFag(f)}>
-                  {f === 'overraskelse' ? '🎁 Overraskelse' : `${FAG_LABELS[f].emoji} ${FAG_LABELS[f].navn}`}
-                </Chip>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="font-bold text-slate-600 mb-2">Fast oppdrag hver dag</p>
-            <div className="flex flex-wrap gap-2">
-              <Chip active={!s.fast} onClick={() => setSettings({ fast: null })}>
-                Barnet velger fritt
-              </Chip>
-              <Chip active={s.fast === 'matte'} onClick={() => setSettings({ fast: 'matte' })}>
-                🔢 Alltid matte
-              </Chip>
-              <Chip active={s.fast === 'lesing'} onClick={() => setSettings({ fast: 'lesing' })}>
-                📖 Alltid lesing
-              </Chip>
-            </div>
-          </div>
+          <p className="text-xs text-slate-400">Reven velger kortene i «Dagens økt» selv: de to fagene det er lengst siden barnet spilte, og en overraskelse.</p>
         </div>
       </Section>
 

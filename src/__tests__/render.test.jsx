@@ -45,7 +45,7 @@ describe('alle skjermer rendrer uten feil', () => {
   it('forside, kart, stjerner, hage, voksenside, profilvalg', () => {
     const home = wrap(<Home topics={TOPICS} onPick={noop} onSamling={noop} onGarden={noop} onParents={noop} onSwitchProfile={noop} onMatte={noop} onLesing={noop} onNoetter={noop} onDagens={noop} onFag={noop} />)
     expect(home).toContain('Dagens økt')
-    expect(home).toContain('Eventyrkartet')
+    expect(home).toContain('Fri lek')
     expect(wrap(<Samling go={noop} onGarden={noop} />)).toContain('Familiekisten')
     const kart = wrap(<Kart matte={{ ...emptyFag(), nivaa: 12, beste: { 7: 3 } }} onStart={noop} onReplay={noop} />)
     expect(kart).toContain('Det blå havet')

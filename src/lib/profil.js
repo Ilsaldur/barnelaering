@@ -24,9 +24,7 @@ export function emptySettings() {
   return {
     autoSpeak: false,
     autoSpeakSet: false, // true når en voksen (eller profilskjemaet) har valgt
-    fast: null, // 'matte' | 'lesing' | null – fast oppdrag i «Dagens økt»
     oppdragPerDag: 2,
-    fagblanding: ['matte', 'lesing', 'overraskelse'],
     updatedAt: 0,
   }
 }
