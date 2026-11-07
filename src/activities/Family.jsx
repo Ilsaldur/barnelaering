@@ -1,3 +1,4 @@
+import Rev from '../components/Rev.jsx'
 import { useState } from 'react'
 import { Mascot } from '../components/ui.jsx'
 import { useStars, GUEST_PROFILE } from '../StarContext.jsx'
@@ -234,7 +235,9 @@ export default function Family({ onPicked, onPrivacy }) {
   return (
     <div className="animate-pop-in">
       <header className="text-center mb-6 mt-4">
-        <div className="text-7xl md:text-8xl animate-bouncey mb-2">🦊</div>
+        <div className="animate-bouncey mb-2 flex justify-center">
+          <Rev kostymer={[]} className="w-28 md:w-32" />
+        </div>
         <h1 className="text-white font-extrabold text-4xl md:text-6xl drop-shadow-lg">Selmas skole</h1>
         <p className="text-white/95 font-bold text-2xl md:text-3xl mt-3">Hvem skal spille? 👇</p>
       </header>

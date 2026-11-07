@@ -9,7 +9,7 @@
 | T – Innføring i kunnskapsstigene | Ferdig og pushet. Se `docs/etappeT.md`. | 2026-11-07 |
 | U – Former og farger inn i matte | Ferdig og pushet. Se `docs/etappeU.md`. Innholdet i `src/data/matte/former.js` er UTKAST. | 2026-11-07 |
 | V – Samlingen forklarer seg selv, alle stiger gir kort | Ferdig og pushet. Se `docs/etappeV.md`. Nye kort er UTKAST. | 2026-11-07 |
-| W – Reven kan ha på flere ting (spør Jon først) | Ikke startet. | |
+| W – Reven kan ha på flere ting | Ferdig og pushet (Jon valgte A: tegnet rev). Se `docs/etappeW.md`. | 2026-11-07 |
 | X – Innhold | Ikke startet. | |
 | Y – Småfeil | Ikke startet. | |
 

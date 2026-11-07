@@ -8,7 +8,9 @@ import { SETT, KORT, fagForKort } from '../data/kort.js'
 import { FAG_LABELS } from '../lib/labels.js'
 import { nivaaNavn } from '../data/stiger.js'
 import Flagg from '../components/Flagg.jsx'
-import { KOSTYMER } from '../data/kostymer.js'
+import { KOSTYMER, PLASSER } from '../data/kostymer.js'
+import { harPaa } from '../lib/kostyme.js'
+import Rev from '../components/Rev.jsx'
 import { kisteStatus } from '../lib/samling.js'
 
 // Samlingen: samlekort, revens garderobe og familiekisten.
@@ -25,10 +27,11 @@ export default function Samling({ go, onGarden, onFag }) {
   const kiste = kisteStatus(familyStars)
   const eier = new Set(data.kort)
 
+  const paa = data.kostymerPaa || []
   function kjop(k) {
     if (data.kostymer.includes(k.id)) {
       sound.click()
-      setKostyme(data.kostyme === k.id ? null : k.id)
+      setKostyme(k.id, !harPaa(paa, k.id))
       return
     }
     if (balance < k.pris) {
@@ -36,12 +39,13 @@ export default function Samling({ go, onGarden, onFag }) {
       setMsg(`Du trenger ${k.pris - balance} stjerner til for ${k.navn.toLowerCase()}.`)
       return
     }
-    if (buyKostyme(k)) {
-      sound.fanfare()
-      setConfetti(true)
-      setMsg(`${k.emoji} ${k.navn}! Reven har den på nå.`)
-      setTimeout(() => setConfetti(false), 2000)
-    }
+    // Saldoen er sjekket over, så kjøpet går gjennom.
+    buyKostyme(k)
+    sound.fanfare()
+    setConfetti(true)
+    const byttet = paa.map((id) => KOSTYMER.find((x) => x.id === id)).find((x) => x && x.plass === k.plass)
+    setMsg(`${k.emoji} ${k.navn}! Reven har den ${PLASSER[k.plass]} nå${byttet ? `, i stedet for ${byttet.navn.toLowerCase()}` : ''}.`)
+    setTimeout(() => setConfetti(false), 2000)
   }
 
   return (
@@ -163,10 +167,13 @@ export default function Samling({ go, onGarden, onFag }) {
           <h2 className="text-xl md:text-2xl font-extrabold text-slate-700">🎩 Revens garderobe</h2>
           <span className="bg-amber-100 text-amber-600 font-extrabold rounded-full px-4 py-1">Du kan bruke: {balance} ⭐</span>
         </div>
+        <div className="flex justify-center mb-3">
+          <Rev className="w-32 md:w-40 drop-shadow-lg" />
+        </div>
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 md:gap-3">
           {KOSTYMER.map((k) => {
             const owned = data.kostymer.includes(k.id)
-            const on = data.kostyme === k.id
+            const on = harPaa(paa, k.id)
             const affordable = balance >= k.pris
             return (
               <button
@@ -176,12 +183,13 @@ export default function Samling({ go, onGarden, onFag }) {
               >
                 <span className="text-3xl md:text-4xl">{k.emoji}</span>
                 <span className="text-xs md:text-sm font-bold text-slate-600">{k.navn}</span>
+                <span className="text-[10px] font-bold text-slate-400">{PLASSER[k.plass]}</span>
                 <span className={`text-sm font-extrabold ${on ? 'text-amber-600' : owned ? 'text-emerald-600' : 'text-amber-500'}`}>{on ? 'på' : owned ? 'ta på' : `${k.pris} ⭐`}</span>
               </button>
             )
           })}
         </div>
-        <p className="text-center text-sm text-slate-400 font-semibold mt-3">Kostymene vises på reven inne i oppgavene. Trykk på det reven har på for å ta det av.</p>
+        <p className="text-center text-sm text-slate-400 font-semibold mt-3">Reven kan ha på én ting på hodet, én foran øynene, én rundt halsen, én i hånda og én på kroppen. Kjøper du noe nytt, tar det bare av det som lå på samme plass. Trykk på noe reven har på for å ta det av.</p>
       </div>
 
       {/* Familiekisten */}

@@ -1,4 +1,5 @@
 import { StarCounter } from '../components/ui.jsx'
+import Rev from '../components/Rev.jsx'
 import { SpeakButton } from '../components/Speak.jsx'
 import { useStars } from '../StarContext.jsx'
 import { sound } from '../sound.js'
@@ -64,7 +65,9 @@ export default function Home({ onSamling, onGarden, onParents, onSwitchProfile, 
       </div>
 
       <header className="text-center mb-4">
-        <div className="text-6xl md:text-7xl animate-bouncey mb-1">🦊</div>
+        <div className="animate-bouncey mb-1 flex justify-center">
+          <Rev className="w-24 md:w-32" />
+        </div>
         <h1 className="text-white font-extrabold text-3xl md:text-5xl drop-shadow-lg">Selmas skole</h1>
       </header>
 

@@ -1,3 +1,5 @@
+import { migrerKostyme } from './kostyme.js'
+
 // Barnets fremgang som ren data: tom profil, normalisering av gamle
 // lagringer og fletting av to utgaver (lokal og sky) uten å miste noe.
 
@@ -45,7 +47,7 @@ export function emptyData() {
     dager: {}, // 'YYYY-MM-DD' -> { oppdrag: n, fag: { matte: 1 } }
     kort: [], // samlekort-id
     kostymer: [], // kjøpte kostymer
-    kostyme: null, // kostyme reven har på
+    kostymerPaa: [], // kostymene reven har på (høyst ett per plass)
     kostymeT: 0,
     historier: [], // historiebiter barnet har sett
     laerkort: [], // «Lær først»-kort barnet har sett
@@ -111,6 +113,8 @@ export function normalize(raw) {
   d.dager = d.dager || {}
   d.kort = d.kort || []
   d.kostymer = d.kostymer || []
+  d.kostymerPaa = migrerKostyme(raw)
+  delete d.kostyme
   d.historier = d.historier || []
   d.laerkort = d.laerkort || []
   const fag = {}
@@ -209,10 +213,10 @@ export function mergeData(rawA, rawB) {
   out.historier = [...new Set([...a.historier, ...b.historier])]
   out.laerkort = [...new Set([...a.laerkort, ...b.laerkort])]
   if ((a.kostymeT || 0) >= (b.kostymeT || 0)) {
-    out.kostyme = a.kostyme
+    out.kostymerPaa = a.kostymerPaa
     out.kostymeT = a.kostymeT
   } else {
-    out.kostyme = b.kostyme
+    out.kostymerPaa = b.kostymerPaa
     out.kostymeT = b.kostymeT
   }
   return out

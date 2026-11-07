@@ -1,42 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import { rullTil } from '../lib/tallinje.js'
-import { useStars, useStarsOptional } from '../StarContext.jsx'
-import { kostymeById } from '../data/kostymer.js'
+import { useStars } from '../StarContext.jsx'
+import Rev from './Rev.jsx'
 import { sound } from '../sound.js'
 
 // Maskot – en glad rev som heier og reagerer på det som skjer.
 // mood: 'happy' | 'cheer' | 'think' | 'oops'
 export function Mascot({ mood = 'happy', message, size = 'text-7xl' }) {
-  const ctx = useStarsOptional()
-  const kostyme = ctx?.data?.kostyme ? kostymeById(ctx.data.kostyme) : null
-  const face = '🦊'
-  const anim =
-    mood === 'cheer'
-      ? 'animate-bouncey'
-      : mood === 'oops'
-        ? 'animate-shake'
-        : 'animate-wiggle'
-  const bubble =
-    mood === 'cheer'
-      ? '🎉 Bra jobba!'
-      : mood === 'oops'
-        ? '💪 Prøv igjen!'
-        : mood === 'think'
-          ? '🤔 Hmm...'
-          : '👋 Hei!'
+  const anim = mood === 'cheer' ? 'animate-bouncey' : mood === 'oops' ? 'animate-shake' : 'animate-wiggle'
+  const bredde = size === 'text-5xl' ? 'w-16 md:w-20' : size === 'text-6xl' ? 'w-20 md:w-24' : 'w-24 md:w-28'
+  const bubble = mood === 'cheer' ? '🎉 Bra jobba!' : mood === 'oops' ? '💪 Prøv igjen!' : mood === 'think' ? '🤔 Hmm...' : '👋 Hei!'
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className={`${size} ${anim} drop-shadow-lg relative inline-block`}>
-        {face}
-        {kostyme && (
-          <span className="absolute -top-[0.35em] left-1/2 -translate-x-1/2 text-[0.55em]" title={kostyme.navn}>
-            {kostyme.emoji}
-          </span>
-        )}
+      <div className={`${anim} drop-shadow-lg`}>
+        <Rev mood={mood} className={bredde} />
       </div>
-      <div className="bg-white text-slate-700 font-bold rounded-2xl px-4 py-2 shadow text-lg md:text-xl">
-        {message || bubble}
-      </div>
+      <div className="bg-white text-slate-700 font-bold rounded-2xl px-4 py-2 shadow text-lg md:text-xl">{message || bubble}</div>
     </div>
   )
 }
