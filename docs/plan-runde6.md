@@ -6,7 +6,7 @@
 |--------|--------|----------------|
 | Z – Plasseringen måler nivået | Ferdig og pushet. Se `docs/etappeZ.md`. AA2 (nøkler per ferdighet i geografi) ble tatt her fordi Z trenger det. | 2026-11-07 |
 | AA – Nivå opp krever at nivået er lært, klokka ut av kunnskapslaget | Ferdig og pushet (Jon valgte A). Se `docs/etappeAA.md`. | 2026-11-07 |
-| AB – Dagens økt står stille | Ikke startet. | |
+| AB – Dagens økt står stille | Ferdig og pushet. Se `docs/etappeAB.md`. | 2026-11-07 |
 | AC – Uten nett | Ikke startet. | |
 | AD – Matteplasseringen kan angre | Ikke startet. | |
 | AE – Innhold og småting | Ikke startet. | |

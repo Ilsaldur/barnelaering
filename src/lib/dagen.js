@@ -46,6 +46,28 @@ export function dagensKort({ log = [], dayKey = todayKey(), fagTilgjengelig = FA
   return kort.slice(0, 3)
 }
 
+// Dagens kort står stille (runde 6, etappe AB): de regnes ut første gang
+// forsiden vises den dagen og lagres i dager[dato].kort. Resten av dagen
+// vises de samme kortene, også når loggen endrer seg. `kortForDagen` gir
+// kortene som skal vises og om de må lagres (`ny`).
+export function gyldigeKort(kort, fagTilgjengelig = FAG_I_DAGEN) {
+  if (!Array.isArray(kort) || kort.length !== 3) return false
+  return kort.every((k) => k && typeof k.fag === 'string' && (k.fag === 'nott' || fagTilgjengelig.includes(k.fag)))
+}
+
+export function kortForDagen({ data, dayKey = todayKey(), fagTilgjengelig = FAG_I_DAGEN } = {}) {
+  const lagret = data?.dager?.[dayKey]?.kort
+  if (gyldigeKort(lagret, fagTilgjengelig)) return { kort: lagret, ny: false }
+  return { kort: dagensKort({ log: data?.log || [], dayKey, fagTilgjengelig }), ny: true }
+}
+
+// Lagre dagens kort i data (uendret om de alt er lagret).
+export function lagreDagensKort(data, kort, dayKey = todayKey()) {
+  const dag = data.dager?.[dayKey] || { oppdrag: 0, fag: {} }
+  if (gyldigeKort(dag.kort)) return data
+  return { ...data, dager: { ...(data.dager || {}), [dayKey]: { ...dag, kort } } }
+}
+
 // Status for dagen ut fra dager[today] = { oppdrag, fag: { matte: 1 } }.
 export function dagStatus({ dager, settings, dayKey = todayKey() }) {
   const d = dager?.[dayKey] || { oppdrag: 0, fag: {} }

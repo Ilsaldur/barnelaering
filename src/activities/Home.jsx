@@ -1,9 +1,11 @@
+import { useEffect } from 'react'
 import { StarCounter } from '../components/ui.jsx'
 import Rev from '../components/Rev.jsx'
 import { SpeakButton } from '../components/Speak.jsx'
 import { useStars } from '../StarContext.jsx'
 import { sound } from '../sound.js'
-import { dagensKort, dagStatus, ukestripe, FAG_I_DAGEN } from '../lib/dagen.js'
+import { kortForDagen, lagreDagensKort, dagStatus, ukestripe, FAG_I_DAGEN } from '../lib/dagen.js'
+import { todayKey } from '../lib/profil.js'
 import { STIGER } from '../data/stiger.js'
 
 const KORT_INFO = {
@@ -17,9 +19,15 @@ const KORT_INFO = {
 
 // Barnets forside: «Dagens økt» øverst, fri lek under.
 export default function Home({ onSamling, onGarden, onParents, onSwitchProfile, onMatte, onLesing, onNoetter, onDagens, onFag }) {
-  const { profile, onLine, session, fag, data, settings } = useStars()
+  const { profile, onLine, session, fag, data, settings, updateData } = useStars()
   const fagTilgjengelig = Object.keys(STIGER)
-  const kort = dagensKort({ log: data.log, fagTilgjengelig })
+  // Dagens kort regnes ut første gang forsiden vises i dag og lagres; resten
+  // av dagen står de stille (runde 6, etappe AB).
+  const dayKey = todayKey()
+  const { kort, ny } = kortForDagen({ data, dayKey, fagTilgjengelig })
+  useEffect(() => {
+    if (ny) updateData((d) => lagreDagensKort(d, kort, dayKey))
+  }, [ny, dayKey]) // eslint-disable-line react-hooks/exhaustive-deps
   const status = dagStatus({ dager: data.dager, settings })
   const uke = ukestripe({ dager: data.dager, settings })
 
@@ -93,7 +101,7 @@ export default function Home({ onSamling, onGarden, onParents, onSwitchProfile, 
             const info = KORT_INFO[k.fag]
             const gjort = (status.fag[k.fag] || 0) > 0
             return (
-              <button key={k.id} onClick={() => velg(k)} className={`kid-btn ${info.farge} text-white p-3 md:p-4 flex flex-col items-center gap-1 hover:scale-105 relative`}>
+              <button key={k.id} data-testid="dagens-kort" onClick={() => velg(k)} className={`kid-btn ${info.farge} text-white p-3 md:p-4 flex flex-col items-center gap-1 hover:scale-105 relative`}>
                 {k.fast && <span className="absolute top-1 left-2 text-sm" title="Fast oppdrag">📌</span>}
                 {gjort && <span className="absolute top-1 right-2 bg-white text-emerald-500 rounded-full w-6 h-6 flex items-center justify-center text-sm font-extrabold">✓</span>}
                 <span className="text-4xl md:text-5xl">{k.overraskelse ? '🎁' : info.emoji}</span>

@@ -405,7 +405,8 @@ export function StarProvider({ children }) {
         entry.oppdrag = true
         const key = todayKey()
         const dag = d.dager[key] || { oppdrag: 0, fag: {} }
-        nd.dager = { ...d.dager, [key]: { oppdrag: (dag.oppdrag || 0) + 1, fag: { ...(dag.fag || {}), ...(fagId ? { [fagId]: ((dag.fag || {})[fagId] || 0) + 1 } : {}) } } }
+        // `...dag` beholder dagens kort (etappe AB).
+        nd.dager = { ...d.dager, [key]: { ...dag, oppdrag: (dag.oppdrag || 0) + 1, fag: { ...(dag.fag || {}), ...(fagId ? { [fagId]: ((dag.fag || {})[fagId] || 0) + 1 } : {}) } } }
       }
       if (meta) {
         if (meta.topicId) {
