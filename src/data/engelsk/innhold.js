@@ -173,7 +173,7 @@ export const FYLL_INN = [
   { en: 'A ___ has two legs.', svar: 'bird', feil: ['dog', 'cow', 'horse'], emoji: '🐦' },
   { en: 'The ___ is orange.', svar: 'carrot', feil: ['milk', 'egg', 'bread'], emoji: '🥕' },
   { en: 'We drive a ___.', svar: 'car', feil: ['bed', 'lamp', 'book'], emoji: '🚗' },
-  { en: 'I put the key in the ___.', svar: 'door', feil: ['egg', 'sock', 'cake'], emoji: '🔑' },
+  { en: 'I put the key in the ___.', svar: 'door', feil: ['egg', 'sock', 'cake'], emoji: '🚪' },
   { en: 'The ___ says oink.', svar: 'pig', feil: ['cow', 'cat', 'bird'], emoji: '🐷' },
   { en: 'I walk with my ___.', svar: 'legs', feil: ['ears', 'eyes', 'nose'], emoji: '🦵' },
   { en: 'The frog is ___.', svar: 'green', feil: ['pink', 'purple', 'white'], emoji: '🐸' },

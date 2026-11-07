@@ -267,6 +267,73 @@ export const TEKSTER = [
       { q: 'Hvor svømmer Iver?', alternativer: ['Til flåten', 'Til stranda', 'Til båten', 'Rundt holmen'], svar: 'Til flåten', type: 'fakta' },
     ],
   },
+  // ---- UTKAST (runde 5, etappe X): tekster på 90–130 ord til Lese 9 ----
+  {
+    id: 'n9-bever',
+    tittel: 'Beveren bygger',
+    tekst: 'Beveren er Norges største gnager. Den kan bli over tjue kilo og lever ved elver og innsjøer. Med de store, oransje tennene gnager den ned trær som er tykkere enn et bein. Trærne bruker den til å bygge demninger på tvers av elva. Bak demningen blir vannet dypt og stille, og der bygger beveren hytta si av kvister og gjørme. Inngangen ligger under vann, så reven og gaupa ikke kommer inn. Om vinteren spiser beveren bark fra kvister den har lagret på bunnen. Beveren var nesten utryddet i Norge for hundre år siden, men nå finnes det mange tusen igjen.',
+    sporsmaal: [
+      { q: 'Hva bygger beveren på tvers av elva?', alternativer: ['En demning', 'En bro', 'Et reir', 'En båt'], svar: 'En demning', type: 'fakta' },
+      { q: 'Hvor ligger inngangen til hytta?', alternativer: ['Under vann', 'På taket', 'Oppe i et tre', 'Bak en stein'], svar: 'Under vann', type: 'fakta' },
+      { q: 'Hva spiser beveren om vinteren?', alternativer: ['Bark fra kvister', 'Fisk fra elva', 'Gress fra enga', 'Nøtter fra lageret'], svar: 'Bark fra kvister', type: 'fakta' },
+      { q: '«Beveren er Norges største gnager.» Er det fakta eller mening?', alternativer: ['Fakta', 'Mening'], svar: 'Fakta', type: 'faktamening' },
+    ],
+  },
+  {
+    id: 'n9-sykkeltur',
+    tittel: 'Sykkelturen til vannet',
+    tekst: 'I sommerferien bestemte Ida og storebror Lukas seg for å sykle til badevannet alene for første gang. Mamma pakket matpakker og ga dem en kartskisse med blyant. Turen var ni kilometer. Den første bakken var så bratt at de måtte trille syklene. Lukas fikk punktering etter fem kilometer, men Ida hadde lappesaker i sekken, og sammen fikk de hullet tettet. Da de endelig så vannet glitre mellom trærne, jublet de høyt. De badet, spiste brødskiver med brunost og lå i sola til klokka ble fire. På vei hjem gikk det nesten bare nedover. Mamma sto i porten og ventet med saft.',
+    sporsmaal: [
+      { q: 'Hvor langt var det til badevannet?', alternativer: ['Ni kilometer', 'Fem kilometer', 'Tre kilometer', 'Tolv kilometer'], svar: 'Ni kilometer', type: 'fakta' },
+      { q: 'Hva skjedde med sykkelen til Lukas?', alternativer: ['Den punkterte', 'Kjedet falt av', 'Bremsen røk', 'Setet løsnet'], svar: 'Den punkterte', type: 'fakta' },
+      { q: 'Hva spiste de ved vannet?', alternativer: ['Brødskiver med brunost', 'Pølser på bål', 'Is fra kiosken', 'Pannekaker med syltetøy'], svar: 'Brødskiver med brunost', type: 'fakta' },
+      { q: '«Turen var ni kilometer.» Er det fakta eller mening?', alternativer: ['Fakta', 'Mening'], svar: 'Fakta', type: 'faktamening' },
+    ],
+  },
+  {
+    id: 'n9-nordlys',
+    tittel: 'Lyset på himmelen',
+    tekst: 'Nordlyset er et av de vakreste synene man kan se i Norge. Det oppstår når små partikler fra sola treffer lufta høyt over jorda. Da begynner lufta å lyse, oftest grønt, men noen ganger også rosa og lilla. Nordlyset beveger seg over himmelen som gardiner i vind. Du ser det best om vinteren, langt fra byens lys, på netter uten skyer. I Nord-Norge kan man se det nesten hver klar kveld, mens det i sør er sjeldent. Før i tiden trodde mange at nordlyset var sjeler som danset. I dag vet vi hva det er, men mange syns det er like trolsk likevel.',
+    sporsmaal: [
+      { q: 'Hva lager nordlyset?', alternativer: ['Partikler fra sola som treffer lufta', 'Lys fra byene som speiles i skyene', 'Månen som skinner på snøen', 'Stjerner som faller ned'], svar: 'Partikler fra sola som treffer lufta', type: 'fakta' },
+      { q: 'Hvilken farge er vanligst?', alternativer: ['Grønn', 'Rosa', 'Lilla', 'Blå'], svar: 'Grønn', type: 'fakta' },
+      { q: 'Hvor ser man nordlyset oftest?', alternativer: ['I Nord-Norge', 'I Oslo', 'I Sør-Norge', 'Ved kysten i vest'], svar: 'I Nord-Norge', type: 'fakta' },
+      { q: '«Nordlyset er et av de vakreste synene man kan se.» Er det fakta eller mening?', alternativer: ['Mening', 'Fakta'], svar: 'Mening', type: 'faktamening' },
+    ],
+  },
+  {
+    id: 'n9-bibliotek',
+    tittel: 'En dag på biblioteket',
+    tekst: 'På biblioteket er alt gratis. Du kan låne bøker, tegneserier, lydbøker og til og med brettspill, og du får ha dem i fire uker. Da Amina var åtte, fikk hun sitt eget lånekort med navnet sitt på. Hun syntes det var det fineste kortet hun eide. Hver lørdag går hun dit med pappa. Først leser hun i den myke stolen ved vinduet, så velger hun tre bøker til uka. Bibliotekaren heter Jon og vet alltid hvilken bok som passer. Hvis en bok ikke finnes, kan han bestille den fra et annet bibliotek. Amina har bestemt seg for å lese alle bøkene om hester før hun fyller ni.',
+    sporsmaal: [
+      { q: 'Hvor lenge kan man låne en bok?', alternativer: ['Fire uker', 'To uker', 'En uke', 'Tre måneder'], svar: 'Fire uker', type: 'fakta' },
+      { q: 'Hvor mange bøker velger Amina hver lørdag?', alternativer: ['Tre', 'Fire', 'To', 'Fem'], svar: 'Tre', type: 'fakta' },
+      { q: 'Hva gjør Jon hvis en bok mangler?', alternativer: ['Bestiller den fra et annet bibliotek', 'Kjøper den i bokhandelen', 'Sier at hun må velge en annen', 'Skriver den selv'], svar: 'Bestiller den fra et annet bibliotek', type: 'fakta' },
+      { q: '«Lånekortet er det fineste kortet hun eier.» Er det fakta eller mening?', alternativer: ['Mening', 'Fakta'], svar: 'Mening', type: 'faktamening' },
+    ],
+  },
+  {
+    id: 'n9-maur',
+    tittel: 'Maurtua',
+    tekst: 'En maurtue kan se ut som en haug med barnåler, men inni er den en by med tusenvis av innbyggere. Dronningen legger egg hele sommeren. Arbeiderne henter mat, bygger ganger og passer på de små larvene. Soldatene vokter inngangene med sterke kjever. Maurene snakker sammen med lukt: når en maur finner mat, legger den igjen et luktspor som de andre kan følge. Derfor går maurene ofte i lange rekker. En maur kan bære noe som veier femti ganger mer enn den selv. Om vinteren samler alle seg dypt nede i tua, der frosten ikke når, og venter på våren.',
+    sporsmaal: [
+      { q: 'Hvem legger eggene?', alternativer: ['Dronningen', 'Arbeiderne', 'Soldatene', 'Larvene'], svar: 'Dronningen', type: 'fakta' },
+      { q: 'Hvordan finner maurene veien til maten?', alternativer: ['De følger et luktspor', 'De ser hverandre på lang avstand', 'De roper til hverandre', 'De husker kartet over skogen'], svar: 'De følger et luktspor', type: 'fakta' },
+      { q: 'Hvor er maurene om vinteren?', alternativer: ['Dypt nede i tua', 'Oppe i trærne', 'Under snøen på enga', 'I husene til folk'], svar: 'Dypt nede i tua', type: 'fakta' },
+      { q: '«En maur kan bære femti ganger sin egen vekt.» Er det fakta eller mening?', alternativer: ['Fakta', 'Mening'], svar: 'Fakta', type: 'faktamening' },
+    ],
+  },
+  {
+    id: 'n9-skoleorkester',
+    tittel: 'Konserten',
+    tekst: 'Skoleorkesteret skulle holde konsert i gymsalen, og Theo skulle spille trompet alene i én låt. Han hadde øvd hver dag i tre uker, men nå skalv hendene. Salen var full av foreldre, søsken og besteforeldre. Dirigenten løftet pinnen, og musikken startet. Da det ble Theos tur, lukket han øynene et øyeblikk, trakk pusten og blåste. Den første tonen kom litt skjevt ut, men så satt de alle sammen. Etterpå klappet salen så lenge at dirigenten måtte vinke dem stille. Bestefar sa at det var den fineste trompeten han hadde hørt. Theo visste at det ikke var helt sant, men han ble glad likevel.',
+    sporsmaal: [
+      { q: 'Hvilket instrument spiller Theo?', alternativer: ['Trompet', 'Fiolin', 'Trommer', 'Fløyte'], svar: 'Trompet', type: 'fakta' },
+      { q: 'Hvor lenge hadde han øvd?', alternativer: ['Tre uker', 'Tre dager', 'En uke', 'To måneder'], svar: 'Tre uker', type: 'fakta' },
+      { q: 'Hva gjorde han rett før han spilte?', alternativer: ['Lukket øynene og trakk pusten', 'Drakk et glass vann', 'Vinket til bestefar', 'Tørket av trompeten'], svar: 'Lukket øynene og trakk pusten', type: 'fakta' },
+      { q: '«Det var den fineste trompeten han hadde hørt.» Er det fakta eller mening?', alternativer: ['Mening', 'Fakta'], svar: 'Mening', type: 'faktamening' },
+    ],
+  },
 ]
 
 // Rettskriving: ord gruppert etter det som er vanskelig. `feil` er vanlige
@@ -334,13 +401,13 @@ export const RETTSKRIVING = {
     { ord: 'hatt', emoji: '🎩', feil: ['hat', 'haat', 'hatte'] },
     { ord: 'buss', emoji: '🚌', feil: ['bus', 'buus', 'busse'] },
     { ord: 'sokk', emoji: '🧦', feil: ['sok', 'sock', 'sokke'] },
-    { ord: 'egg', emoji: '🥚', feil: ['eg', 'ægg', 'egge'] },
+    { ord: 'egg', emoji: '🥚', feil: ['eg', 'ægg', 'eggg'] },
     { ord: 'natt', emoji: '🌙', feil: ['nat', 'naat', 'natte'] },
     { ord: 'klokke', emoji: '⏰', feil: ['kloke', 'klocke', 'klokk'] },
     { ord: 'vann', emoji: '💧', feil: ['van', 'vaan', 'vand'] },
     { ord: 'troll', emoji: '👹', feil: ['trol', 'trold', 'trolll'] },
-    { ord: 'bukk', emoji: '🐐', feil: ['buk', 'buck', 'bukke'] },
-    { ord: 'sommer', emoji: '☀️', feil: ['somer', 'sommar', 'såmmer'] },
+    { ord: 'bukk', emoji: '🐐', feil: ['buk', 'buck', 'bukh'] },
+    { ord: 'sommer', emoji: '☀️', feil: ['somer', 'sommerr', 'såmmer'] },
     // UTKAST (runde 4, etappe M)
     { ord: 'bakke', emoji: '⛰️', feil: ['backe', 'bakkee', 'båkke'] },
     { ord: 'kopp', emoji: '☕', feil: ['kop', 'copp', 'kåpp'] },
@@ -365,7 +432,7 @@ export const RETTSKRIVING = {
     { ord: 'hjem', emoji: '🏠', feil: ['jem', 'hjæm', 'hem'] },
     { ord: 'gjest', emoji: '🙋', feil: ['jest', 'gest', 'gjæst'] },
     { ord: 'gjerde', emoji: '🚧', feil: ['jerde', 'gerde', 'gjære'] },
-    { ord: 'deig', emoji: '🍞', feil: ['dei', 'deik', 'dæig'] },
+    { ord: 'deig', emoji: '🍞', feil: ['deeg', 'deik', 'dæig'] },
     { ord: 'gjøre', emoji: '🔨', feil: ['jøre', 'gøre', 'gjore'] },
     // UTKAST (runde 4, etappe M)
     { ord: 'hjort', emoji: '🦌', feil: ['jort', 'hjårt', 'hort'] },

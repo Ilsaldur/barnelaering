@@ -35,6 +35,7 @@ function Utforsk({ onClose }) {
       </div>
       <VerdensKart
         region={region}
+        visAlle
         picked={valgt}
         onPick={(id) => {
           sound.click()
@@ -54,7 +55,7 @@ function Utforsk({ onClose }) {
             <SpeakButton text={`${l.navn}. Hovedstaden er ${l.hovedstad}.`} />
           </div>
         ) : (
-          <p className="text-slate-500 font-bold">👆 Trykk på et grønt land! {kartPool(region).length} land å finne.</p>
+          <p className="text-slate-500 font-bold">👆 Trykk på et grønt land! {kartPool(region, { alle: true }).length} land å finne.</p>
         )}
       </div>
       <div className="flex justify-center mt-3">

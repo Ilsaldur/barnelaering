@@ -170,9 +170,9 @@ export const GEN_LESING = {
     }
   },
   // Tekst med spørsmål.
-  tekst_sporsmaal: ({ maksOrd = 80 }, rng) => {
-    const pool = TEKSTER.filter((t) => antallOrd(t.tekst) <= maksOrd)
-    const t = pick(pool.length ? pool : TEKSTER, rng)
+  tekst_sporsmaal: (param, rng) => {
+    const pool = tekstPool('tekst_sporsmaal', param)
+    const t = pick(pool, rng)
     const q = pick(t.sporsmaal, rng)
     return {
       type: q.type === 'faktamening' ? 'fakta_mening' : 'tekst_sporsmaal',
@@ -344,15 +344,35 @@ export const GEN_LESING = {
 function tekstPool(type, param) {
   if (type === 'tekst2') return teksterAvType(param.type || 'slutning')
   const maksOrd = param.maksOrd || 80
-  const pool = TEKSTER.filter((t) => antallOrd(t.tekst) <= maksOrd && t.sporsmaal.some((q) => q.type !== 'mening'))
+  const minOrd = param.minOrd || 0
+  const pool = TEKSTER.filter((t) => antallOrd(t.tekst) <= maksOrd && antallOrd(t.tekst) >= minOrd && t.sporsmaal.some((q) => q.type !== 'mening'))
   return pool.length ? pool : TEKSTER
 }
 
-export function lagTekstOppgaver(type, param = {}, antall = 3, rng = Math.random, unntatt = []) {
+// Hash av en tekst-id slik husk-lista lagrer den (samme som i oppdrag.js).
+export function tekstHash(id) {
+  const s = `tekst:${id}`
+  let h = 0x811c9dc5
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i)
+    h = Math.imul(h, 0x01000193) >>> 0
+  }
+  return h.toString(36)
+}
+
+// Velg tekst: først en barnet ikke nettopp hadde (ikke i `sett`); ellers den
+// det er lengst siden.
+export function velgTekst(pool, rng, sett = []) {
+  const nye = pool.filter((t) => !sett.includes(tekstHash(t.id)))
+  if (nye.length) return pick(nye, rng)
+  return [...pool].sort((a, b) => sett.indexOf(tekstHash(a.id)) - sett.indexOf(tekstHash(b.id)))[0]
+}
+
+export function lagTekstOppgaver(type, param = {}, antall = 3, rng = Math.random, unntatt = [], sett = []) {
   const nok = (t) => t.sporsmaal.filter((q) => q.type !== 'mening').length >= antall
   const alle = tekstPool(type, param)
   const pool = alle.filter((t) => !unntatt.includes(t.id) && nok(t))
-  const t = pick(pool.length ? pool : alle.filter(nok).length ? alle.filter(nok) : alle, rng)
+  const t = velgTekst(pool.length ? pool : alle.filter(nok).length ? alle.filter(nok) : alle, rng, sett)
   const sporsmaal = shuffle(
     t.sporsmaal.filter((q) => q.type !== 'mening'),
     rng,

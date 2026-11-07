@@ -105,14 +105,31 @@ export function hashNokkel(task) {
   return h.toString(36)
 }
 
+function hashStreng(s) {
+  let h = 0x811c9dc5
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i)
+    h = Math.imul(h, 0x01000193) >>> 0
+  }
+  return h.toString(36)
+}
+// Tekstene huskes som oppgavene (tekstnivåene og engelsk 8).
+export function hashTekst(id) {
+  return hashStreng(`tekst:${id}`)
+}
+
 // Legg oppgavene barnet nettopp fikk inn i fagets husk-liste (eldst først).
+// Tekst-id-er legges inn sammen med spørsmålene.
 export function huskOppgaver(fag, tasks) {
   const sett = [...(fag.sett || [])]
-  for (const t of tasks) {
-    const h = hashNokkel(t)
+  const legg = (h) => {
     const i = sett.indexOf(h)
     if (i >= 0) sett.splice(i, 1)
     sett.push(h)
+  }
+  for (const t of tasks) {
+    legg(hashNokkel(t))
+    if (t.tekstId) legg(hashTekst(t.tekstId))
   }
   return { ...fag, sett: sett.slice(-SETT_MAKS) }
 }
@@ -139,7 +156,8 @@ function velg(lag, rng, { brukt, sett = [], emneOk = () => true, avvis = () => f
     if (avvis(t)) continue
     if (!besteUbrukt) besteUbrukt = t
     if (!emneOk(t)) continue
-    const idx = sett.indexOf(hashNokkel(t))
+    // Oppgaven, og teksten den hører til, må ikke være nylig brukt.
+    const idx = Math.max(sett.indexOf(hashNokkel(t)), t.tekstId ? sett.indexOf(hashTekst(t.tekstId)) : -1)
     if (idx < 0) return t
     // Lavere indeks = lengst siden.
     const alder = sett.length - idx
@@ -249,11 +267,11 @@ export function oppdragLengde(stige, nivaaId) {
 // ---- Oppdrag ----------------------------------------------------------------------
 
 // Tekstoppdrag: to ulike tekster, tre spørsmål til den ene og to til den andre.
-function byggTekstOppdrag(nivaaId, stige, rng, tag = 'eget') {
+function byggTekstOppdrag(nivaaId, stige, rng, tag = 'eget', sett = []) {
   const def = nivaaDef(nivaaId, stige)
   const t = def.typer[0]
-  const a = stige.tekstOppgaver(t.type, t.param, 3, rng, [])
-  const b = stige.tekstOppgaver(t.type, t.param, 2, rng, a.map((x) => x.tekstId))
+  const a = stige.tekstOppgaver(t.type, t.param, 3, rng, [], sett)
+  const b = stige.tekstOppgaver(t.type, t.param, 2, rng, a.map((x) => x.tekstId), sett)
   return [...a, ...b].map((task) => ({ ...task, nivaa: nivaaId, svarform: def.svar, hjelpAlltid: false, tag }))
 }
 
@@ -266,7 +284,7 @@ export function buildMission(fag, { rng = Math.random, stige = MATTE_STIGE, leng
   const sett = fag.sett || []
   if (def.tekstOppdrag && stige.tekstOppgaver) {
     // Ingen repetisjon eller smakebit på tekstnivåene.
-    return { nivaa, hjelp, tasks: byggTekstOppdrag(nivaa, stige, rng), kortIds: [] }
+    return { nivaa, hjelp, tasks: byggTekstOppdrag(nivaa, stige, rng, 'eget', sett), kortIds: [] }
   }
   const under = Math.max(1, nivaa - 1)
   const neste = Math.min(MAKS, nivaa + 1)
@@ -450,9 +468,9 @@ export function buildBoss(nivaa, target, { rng = Math.random, stige = MATTE_STIG
     const forste = Math.min(maal, nivaa + 1)
     const d1 = nivaaDef(forste, stige)
     const t1 = d1.tekstOppdrag ? d1.typer[0] : maalDef.typer[0]
-    const a = stige.tekstOppgaver(t1.type, t1.param, 3, rng, []).map((x) => ({ ...x, nivaa: d1.tekstOppdrag ? forste : maal, svarform: 'valg', hjelpAlltid: false, tag: 'sjef' }))
+    const a = stige.tekstOppgaver(t1.type, t1.param, 3, rng, [], sett).map((x) => ({ ...x, nivaa: d1.tekstOppdrag ? forste : maal, svarform: 'valg', hjelpAlltid: false, tag: 'sjef' }))
     const t2 = maalDef.typer[0]
-    const b = stige.tekstOppgaver(t2.type, t2.param, 2, rng, a.map((x) => x.tekstId)).map((x) => ({ ...x, nivaa: maal, svarform: 'valg', hjelpAlltid: false, tag: 'sjef' }))
+    const b = stige.tekstOppgaver(t2.type, t2.param, 2, rng, a.map((x) => x.tekstId), sett).map((x) => ({ ...x, nivaa: maal, svarform: 'valg', hjelpAlltid: false, tag: 'sjef' }))
     return { target: maal, tasks: [...a, ...b] }
   }
   const nivaaer = []
