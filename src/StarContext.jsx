@@ -89,6 +89,7 @@ export function StarProvider({ children }) {
   // Innlogget forelder (Supabase-session) og barneprofilene deres.
   const [session, setSession] = useState(null)
   const [authReady, setAuthReady] = useState(!supabase)
+  const [sessionKjent, setSessionKjent] = useState(!supabase) // har Supabase faktisk svart på om noen er innlogget?
   const [childProfiles, setChildProfiles] = useState(() => loadJSON(CHILDREN_KEY, []))
   const [onLine, setOnLine] = useState(typeof navigator === 'undefined' ? true : navigator.onLine)
   const [passwordRecovery, setPasswordRecovery] = useState(false)
@@ -123,23 +124,38 @@ export function StarProvider({ children }) {
   }, [])
 
   // ---- Supabase: auth -------------------------------------------------------
+  // Uten nett (eller om biblioteket ikke kan hentes) venter vi ikke: de lokale
+  // profilene vises med én gang, og «Laster …» vises bare mens det faktisk
+  // hentes (runde 6, etappe AC).
   useEffect(() => {
     if (!supabase) return
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setAuthReady(true)
-    })
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) setAuthReady(true)
+    const frist = setTimeout(() => setAuthReady(true), 4000)
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session)
+        setSessionKjent(true)
+        setAuthReady(true)
+      })
+      .catch(() => setAuthReady(true))
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
+      setSessionKjent(true)
       setAuthReady(true)
       if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true)
     })
-    return () => sub.subscription.unsubscribe()
+    return () => {
+      clearTimeout(frist)
+      sub.subscription.unsubscribe()
+    }
   }, [])
 
   const refreshChildren = useCallback(async () => {
     if (!supabase || !session) {
-      if (!session) {
+      // Profilene på enheten slettes bare når Supabase faktisk har svart at
+      // ingen er innlogget. Uten nett (eller før svaret kommer) står de.
+      if (!session && sessionKjent) {
         setChildProfiles([])
         saveJSON(CHILDREN_KEY, [])
       }
@@ -151,7 +167,7 @@ export function StarProvider({ children }) {
     saveJSON(CHILDREN_KEY, rows)
     return rows
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session])
+  }, [session, sessionKjent])
 
   useEffect(() => {
     if (!authReady) return

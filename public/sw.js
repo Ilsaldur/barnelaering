@@ -1,11 +1,14 @@
 // Service worker for Selmas skole: lagrer appskallet så appen starter uten nett
 // etter første besøk. Hashede filer i /assets/ caches først (de endrer seg
 // aldri), sider hentes fra nettet først med cachet index.html som reserve.
-const CACHE = 'selmas-skole-v4'
+const CACHE = 'selmas-skole-v5'
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png']
+const LISTE = '/assets-liste.json' // skrives ved bygging: alle filene i /assets/
 
-// Ved installasjon: lagre skallet, og hent skriptene og stilarkene som
-// index.html peker på, så appen starter uten nett allerede etter første besøk.
+// Ved installasjon: lagre skallet og alle filene i /assets/ (runde 6, etappe
+// AC) – også dem som lastes først når de trengs (geografi, kartet, Supabase),
+// så de virker uten nett selv om de aldri har vært åpnet. Lista skrives ved
+// bygging; mangler den, brukes filene index.html peker på.
 async function hentSkall() {
   const c = await caches.open(CACHE)
   await c.addAll(SHELL)
@@ -13,7 +16,14 @@ async function hentSkall() {
     const res = await fetch('/index.html', { cache: 'no-cache' })
     const html = await res.text()
     await c.put('/index.html', new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } }))
-    const filer = [...html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map((m) => m[1])
+    let filer = []
+    try {
+      filer = await (await fetch(LISTE, { cache: 'no-cache' })).json()
+      if (!Array.isArray(filer)) filer = []
+    } catch {
+      filer = []
+    }
+    if (!filer.length) filer = [...html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map((m) => m[1])
     await Promise.all(filer.map((f) => c.add(f).catch(() => {})))
   } catch {
     /* uten nett ved installasjon: skallet fylles ved neste besøk */

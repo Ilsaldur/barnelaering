@@ -14,6 +14,7 @@ import EngelskStige from './activities/EngelskStige.jsx'
 import Garden from './activities/Garden.jsx'
 import Parents from './activities/Parents.jsx'
 import Family from './activities/Family.jsx'
+import Feilgrense from './components/Feilgrense.jsx'
 
 // Bakgrunner for de faste skjermene.
 const HOME_BG = 'from-sky-400 via-fuchsia-400 to-amber-300'
@@ -115,17 +116,35 @@ function AppInner() {
     )
   }
 
+  // Feilgrense rundt hver stige og skjerm: en feil gir et kort, ikke hvit skjerm.
   return (
     <div className={`min-h-screen w-full overflow-x-hidden bg-gradient-to-br ${bg} transition-colors duration-500`}>
-      <div className="max-w-5xl mx-auto p-3 md:p-6">{content}</div>
+      <div className="max-w-5xl mx-auto p-3 md:p-6">
+        <Feilgrense nokkel={nav.view} onHome={goHome}>
+          {content}
+        </Feilgrense>
+      </div>
     </div>
   )
 }
 
+// Feil utenfor skjermene (profilvalg, lagring): kortet vises, og «Hjem» laster appen på nytt.
+function heleAppenHjem() {
+  try {
+    window.location.assign('/')
+  } catch {
+    /* ikke i en nettleser */
+  }
+}
+
 export default function App() {
   return (
-    <StarProvider>
-      <AppInner />
-    </StarProvider>
+    <div className={`min-h-screen w-full overflow-x-hidden bg-gradient-to-br ${HOME_BG}`}>
+      <Feilgrense onHome={heleAppenHjem}>
+        <StarProvider>
+          <AppInner />
+        </StarProvider>
+      </Feilgrense>
+    </div>
   )
 }

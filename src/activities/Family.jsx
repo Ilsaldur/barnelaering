@@ -310,7 +310,7 @@ export default function Family({ onPicked, onPrivacy }) {
         </p>
       )}
 
-      {supabase && !authReady && (
+      {supabase && !authReady && onLine && (
         <div className="flex justify-center mt-6">
           <Mascot mood="think" message="Laster …" />
         </div>
