@@ -52,7 +52,12 @@ function Ovelse({ onClose }) {
 
 export default function KlokkeStige({ go }) {
   const [ov, setOv] = useState(false)
-  const cfg = { kunnskap: true,
+  // Klokka er ute av kunnskapslaget (runde 6, etappe AA, valg A): nivåene er
+  // ferdigheter. Det første oppdraget på et nytt nivå starter med to vis-kort,
+  // og plasseringen prøver nivåets eget innhold.
+  const cfg = {
+    visFoerst: true,
+    egneProver: true,
     id: 'klokke',
     tittel: 'Klokka',
     kartTittel: 'Klokkestigen',

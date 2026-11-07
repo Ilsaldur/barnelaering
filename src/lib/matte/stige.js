@@ -42,17 +42,23 @@ export function oppdaterSvake(svake, perTask, nivaa) {
   return out
 }
 
-export function applyResult(fag, { correct, total = OPPDRAG_LENGDE, nivaa, perTask = [], hjelpModus = false }, maks) {
+// `correct`/`total` er spørsmålene (vis-kort og prøv-plassen teller ikke, se
+// `tellOppdrag`); `stars` kan gis når stjernene regnes av noe annet.
+// `krav` (kunnskapsstigene): { ok, kjent, av, trengs } – nivå opp krever at
+// barnet kjenner nok av nivåets egne ting (runde 6, etappe AA). Rekka på to
+// gode oppdrag holdes til kravet er oppfylt.
+export function applyResult(fag, { correct, total = OPPDRAG_LENGDE, nivaa, perTask = [], hjelpModus = false, stars = null, krav = null }, maks) {
   const next = { ...fag, beste: { ...fag.beste } }
   delete next.perfektRad
-  const events = { levelUp: false, levelDown: false, boss: null, toppKlart: false, stars: starsFor(correct, total) }
+  const events = { levelUp: false, levelDown: false, boss: null, toppKlart: false, kravMangler: false, stars: stars ?? starsFor(correct, total) }
 
   next.beste[nivaa] = Math.max(next.beste[nivaa] || 0, events.stars)
   next.svake = oppdaterSvake(fag.svake, perTask, nivaa)
 
-  // 8 oppgaver: 7–8 godt, 5–6 nøytralt, 0–4 svakt. 5 oppgaver: 4–5 godt, 3 nøytralt, 0–2 svakt.
-  const oppGrense = total === 5 ? 4 : Math.ceil((total * 7) / 8)
-  const sammeGrense = total === 5 ? 3 : Math.ceil((total * 5) / 8)
+  // Godt: alle spørsmål riktige unntatt høyst ett (8: 7–8, 5: 4–5).
+  // Svakt: halvparten eller færre (8: 0–4, 5: 0–2). Ellers nøytralt.
+  const oppGrense = Math.max(1, total - 1)
+  const sammeGrense = Math.floor(total / 2) + 1
   if (hjelpModus && correct >= sammeGrense) {
     // Et oppdrag i hjelpemodus gir aldri paaRad + 1 og aldri sjefsoppgave.
     // Går det bra, slås hjelpemodus av.
@@ -65,7 +71,11 @@ export function applyResult(fag, { correct, total = OPPDRAG_LENGDE, nivaa, perTa
     next.paaRad = (fag.paaRad || 0) + 1
     next.svakRad = 0
     next.hjelpNeste = false
-    if (next.paaRad >= 2) {
+    if (next.paaRad >= 2 && krav && !krav.ok) {
+      // To gode på rad, men nivåets ting er ikke lært ennå: rekka holdes.
+      next.paaRad = 2
+      events.kravMangler = true
+    } else if (next.paaRad >= 2) {
       next.paaRad = 0
       if (nivaa < maks) {
         next.nivaa = nivaa + 1
@@ -95,7 +105,8 @@ export function applyResult(fag, { correct, total = OPPDRAG_LENGDE, nivaa, perTa
     }
   }
   next.sjef = null
-  if (correct >= total) events.boss = sjefMaal(next.nivaa, maks)
+  // Sjefsoppgaven: alle spørsmål riktige, og (i kunnskapsstigene) nivåets ting kjent.
+  if (total > 0 && correct >= total && (!krav || krav.ok)) events.boss = sjefMaal(next.nivaa, maks)
   return { fag: next, events }
 }
 
@@ -113,23 +124,41 @@ export function settNivaa(fag, nivaa) {
 }
 
 // Hva som skal til for neste nivå, i klartekst (kartet). null på toppen.
-export function nesteNivaaTekst(fag, maks, { lengde = OPPDRAG_LENGDE } = {}) {
+// `krav` ({ kjent, av, trengs, ok }) og `navn` («land», «ord») i kunnskapsstigene.
+export function kjentTekst(krav, navn = 'ting') {
+  if (!krav || !krav.av) return null
+  return `Du kjenner ${krav.kjent} av ${krav.av} ${navn}.`
+}
+
+export function nesteNivaaTekst(fag, maks, { lengde = OPPDRAG_LENGDE, krav = null, navn = 'ting' } = {}) {
   const n = fag.nivaa || 1
   if (n >= maks) return null
-  const gode = lengde === 5 ? '4 eller 5 riktige' : '7 eller 8 riktige'
-  if (fag.hjelpNeste) return `Neste oppdrag er med hjelp. Etterpå åpner nivå ${n + 1} etter to gode oppdrag på rad (${gode}).`
-  if ((fag.paaRad || 0) >= 1) return `Ett godt oppdrag til (${gode}), så åpner nivå ${n + 1}!`
-  return `To gode oppdrag på rad (${gode}) åpner nivå ${n + 1}. Alle riktige gir sjefsoppgave.`
+  const gode = krav?.av ? 'alle spørsmål riktige, eller alle unntatt ett' : lengde === 5 ? '4 eller 5 riktige' : '7 eller 8 riktige'
+  const kj = kjentTekst(krav, navn)
+  const pre = kj ? `${kj} ` : ''
+  if (krav?.av && !krav.ok) {
+    const rad = (fag.paaRad || 0) >= 2 ? '' : ' og har to gode oppdrag på rad'
+    return `${pre}Nivå ${n + 1} åpner når du kjenner ${krav.trengs}${rad}.${fag.hjelpNeste ? ' Neste oppdrag er med hjelp.' : ''}`
+  }
+  if (fag.hjelpNeste) return `${pre}Neste oppdrag er med hjelp. Etterpå åpner nivå ${n + 1} etter to gode oppdrag på rad (${gode}).`
+  if ((fag.paaRad || 0) >= 1) return `${pre}Ett godt oppdrag til (${gode}), så åpner nivå ${n + 1}!`
+  return `${pre}To gode oppdrag på rad (${gode}) åpner nivå ${n + 1}. Alle riktige gir sjefsoppgave.`
 }
 
 // Samme på resultatskjermen, ut fra faget slik det er etter oppdraget.
-export function resultatNivaaTekst(fag, maks, { lengde = OPPDRAG_LENGDE } = {}) {
+export function resultatNivaaTekst(fag, maks, { lengde = OPPDRAG_LENGDE, krav = null, navn = 'ting' } = {}) {
   const n = fag.nivaa || 1
   if (n >= maks) return null
-  const gode = lengde === 5 ? '4 eller 5 riktige' : '7 eller 8 riktige'
-  if (fag.hjelpNeste) return `Neste oppdrag blir med hjelp, så det blir litt lettere. Nivå ${n + 1} åpner etter to gode oppdrag på rad.`
-  if ((fag.paaRad || 0) >= 1) return `1 av 2 gode oppdrag på rad! Ett til med ${gode}, så åpner nivå ${n + 1}.`
-  return `Nivå ${n + 1} åpner etter to gode oppdrag på rad (${gode}).`
+  const gode = krav?.av ? 'alle spørsmål riktige, eller alle unntatt ett' : lengde === 5 ? '4 eller 5 riktige' : '7 eller 8 riktige'
+  const kj = kjentTekst(krav, navn)
+  const pre = kj ? `${kj} ` : ''
+  if (krav?.av && !krav.ok) {
+    if ((fag.paaRad || 0) >= 2) return `${pre}To gode oppdrag på rad! Nivå ${n + 1} åpner når du kjenner ${krav.trengs}.`
+    return `${pre}Nivå ${n + 1} åpner når du kjenner ${krav.trengs} og har to gode oppdrag på rad.`
+  }
+  if (fag.hjelpNeste) return `${pre}Neste oppdrag blir med hjelp, så det blir litt lettere. Nivå ${n + 1} åpner etter to gode oppdrag på rad.`
+  if ((fag.paaRad || 0) >= 1) return `${pre}1 av 2 gode oppdrag på rad! Ett til med ${gode}, så åpner nivå ${n + 1}.`
+  return `${pre}Nivå ${n + 1} åpner etter to gode oppdrag på rad (${gode}).`
 }
 
 // Hvilke svake typer gjelder nå (alle på lista), med nivået bommen kom fra.

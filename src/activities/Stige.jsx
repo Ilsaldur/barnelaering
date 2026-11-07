@@ -10,8 +10,8 @@ import { sound } from '../sound.js'
 import { buildMission, buildBoss, huskOppgaver, oppdragLengde } from '../lib/matte/oppdrag.js'
 import { startForste, gjeldende, svarForste, resultatForste, framdriftForste } from '../lib/matte/forsteOppdrag.js'
 import { oppdaterKjent } from '../lib/kunnskap.js'
-import { applyResult, applyBoss, settNivaa, nesteNivaaTekst, resultatNivaaTekst } from '../lib/matte/stige.js'
-import { oppdaterBoks } from '../lib/matte/kort.js'
+import { applyBoss, settNivaa, nesteNivaaTekst, resultatNivaaTekst, kjentTekst } from '../lib/matte/stige.js'
+import { etterOppdrag, kravForFag } from '../lib/matte/etterOppdrag.js'
 import { starsFor } from '../lib/scoring.js'
 import { nyeKort } from '../lib/samling.js'
 import { kortById } from '../data/kort.js'
@@ -25,7 +25,8 @@ import LaerKort from '../components/LaerKort.jsx'
 export default function Stige({ cfg, go }) {
   const { fag, updateFag, addStars, updateSettings, profile, data, giKort, markHistorie, markLaerkort } = useStars()
   const state = fag[cfg.id]
-  const STIGE = { nivaer: cfg.nivaer, gen: cfg.gen, tekstOppgaver: cfg.tekstOppgaver, emneMaks: cfg.emneMaks, kunnskap: !!cfg.kunnskap }
+  const STIGE = { nivaer: cfg.nivaer, gen: cfg.gen, tekstOppgaver: cfg.tekstOppgaver, emneMaks: cfg.emneMaks, kunnskap: !!cfg.kunnskap, visFoerst: !!cfg.visFoerst, egneProver: !!(cfg.kunnskap || cfg.egneProver) }
+  const tingNavn = (n) => (cfg.tingNavn ? cfg.tingNavn(n) : 'ting')
   const MAKS = cfg.nivaer.length
   const [view, setView] = useState('hub')
   const [mission, setMission] = useState(null)
@@ -54,23 +55,11 @@ export default function Stige({ cfg, go }) {
   }
 
   function ferdigOppdrag(res) {
-    let nf, events
-    if (mission.replay) {
-      const stars = starsFor(res.correct, res.total)
-      nf = { ...state, beste: { ...state.beste, [mission.nivaa]: Math.max(state.beste?.[mission.nivaa] || 0, stars) } }
-      events = { stars, levelUp: false, levelDown: false, boss: null }
-    } else {
-      ;({ fag: nf, events } = applyResult(state, { correct: res.correct, total: res.total, nivaa: mission.nivaa, perTask: res.perTask, hjelpModus: !!mission.hjelp }, MAKS))
-    }
-    let bokser = nf.bokser || {}
-    for (const r of res.perTask) if (r.kortId) bokser = oppdaterBoks(bokser, r.kortId, r.ok && r.forste)
-    nf.bokser = bokser
-    nf = huskOppgaver(nf, mission.tasks)
-    if (cfg.kunnskap) nf.kjent = oppdaterKjent(nf.kjent, res.perTask)
+    const { fag: nf, events } = etterOppdrag(state, { mission, res, stige: STIGE, maks: MAKS, replay: !!mission.replay })
     updateFag(cfg.id, nf)
     addStars(events.stars, { correct: res.correct, total: res.total, fag: cfg.id, nivaa: mission.nivaa, oppdrag: true })
     const kort = delUtKort(nyeKort({ eier: data.kort, nivaa: mission.nivaa, fag: cfg.id, levelUp: events.levelUp, stars: events.stars }))
-    const nesteTekst = mission.replay || events.levelUp || events.levelDown || events.toppKlart ? null : resultatNivaaTekst(nf, MAKS, { lengde: oppdragLengde(STIGE, nf.nivaa) })
+    const nesteTekst = mission.replay || events.levelUp || events.levelDown || events.toppKlart ? null : resultatNivaaTekst(nf, MAKS, { lengde: oppdragLengde(STIGE, nf.nivaa), krav: kravForFag(STIGE, nf), navn: tingNavn(nf.nivaa) })
     setResult({ ...res, stars: events.stars, levelUp: events.levelUp, levelDown: events.levelDown, toppKlart: !!events.toppKlart, nyttNivaa: nf.nivaa, boss: events.boss, kort, replay: !!mission.replay, nesteTekst })
     setView('resultat')
   }
@@ -204,6 +193,8 @@ export default function Stige({ cfg, go }) {
   }
 
   // ---- Hub: kartet ----
+  const krav = kravForFag(STIGE, state)
+  const kjentLinje = kjentTekst(krav, tingNavn(state.nivaa))
   const historie = cfg.historieFor ? cfg.historieFor(omr.id) : null
   const visHistorie = historie && !(data.historier || []).includes(historie.id)
   const hei = `${profile?.name || ''}, du er på nivå ${state.nivaa} i ${cfg.tittel.toLowerCase()}: ${def.tittel}.`
@@ -227,6 +218,11 @@ export default function Stige({ cfg, go }) {
               )}
             </h2>
             <p className="text-base font-bold text-slate-600">{def.tittel}</p>
+            {kjentLinje && (
+              <p data-testid="kjent-av" className="text-sm font-bold text-sky-700">
+                👀 {kjentLinje}
+              </p>
+            )}
           </div>
           <SpeakButton text={hei} />
         </div>
@@ -237,12 +233,13 @@ export default function Stige({ cfg, go }) {
           {cfg.ekstra}
         </div>
         <p className="text-center text-sm font-bold text-slate-500 mt-3">
-          {oppdragLengde(STIGE, state.nivaa) === 5 ? 'Fem oppgaver, to forsøk på hver.' : 'Åtte oppgaver, to forsøk på hver.'}{' '}
+          {STIGE.visFoerst && state.beste?.[state.nivaa] == null ? 'Først to kort å se på, så ' : ''}
+          {oppdragLengde(STIGE, state.nivaa) === 5 ? (STIGE.visFoerst && state.beste?.[state.nivaa] == null ? 'fem' : 'Fem') : STIGE.visFoerst && state.beste?.[state.nivaa] == null ? 'åtte' : 'Åtte'} oppgaver, to forsøk på hver.{' '}
           {state.nivaa >= MAKS ? 'Du er på toppnivået – her er det bare å øve videre!' : `Alle ${oppdragLengde(STIGE, state.nivaa) === 5 ? 'fem' : 'åtte'} riktige gir tilbud om sjefsoppgave.`} Trykk på et nivå du har passert for å øve mer.
         </p>
       </div>
       {cfg.hubEkstra}
-      <Kart matte={state} onStart={startOppdrag} onReplay={startReplay} nivaer={cfg.nivaer} verdener={cfg.verdener} ikoner={cfg.ikoner} nesteTekst={nesteNivaaTekst(state, MAKS, { lengde: oppdragLengde(STIGE, state.nivaa) })} />
+      <Kart matte={state} onStart={startOppdrag} onReplay={startReplay} nivaer={cfg.nivaer} verdener={cfg.verdener} ikoner={cfg.ikoner} nesteTekst={nesteNivaaTekst(state, MAKS, { lengde: oppdragLengde(STIGE, state.nivaa), krav, navn: tingNavn(state.nivaa) })} />
     </div>
   )
 }

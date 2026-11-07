@@ -24,9 +24,10 @@ export function velgKjent(pool, keyOf, param = {}, rng = Math.random) {
 
 // Feilsvar: blant kjente ting når barnet kjenner noen; ellers vanlige feilsvar.
 // Er det færre kjente enn `n`, blir det færre alternativer (minst to).
+// `vanligeFeil` gir alltid vanlige feilsvar (prøv-plassen og sjefsoppgaven).
 export function kjenteFeil(pool, item, keyOf, param = {}, n = 3, rng = Math.random) {
   const andre = pool.filter((x) => keyOf(x) !== keyOf(item))
-  if (!param.kjent) return shuffle(andre, rng).slice(0, n)
+  if (!param.kjent || param.vanligeFeil) return shuffle(andre, rng).slice(0, n)
   const kj = andre.filter((x) => param.kjent.has(keyOf(x)))
   if (kj.length) return shuffle(kj, rng).slice(0, n)
   return shuffle(andre, rng).slice(0, 1)

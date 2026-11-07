@@ -70,6 +70,7 @@ function Utforsk({ onClose }) {
 export default function GeoStige({ go }) {
   const [ut, setUt] = useState(false)
   const cfg = {
+    tingNavn: (n) => ([2, 5, 8].includes(n) ? 'hovedsteder' : n === 7 ? 'land og verdensdeler' : 'land'),
     id: 'geografi',
     tittel: 'Geografi',
     kartTittel: 'Geografistigen',

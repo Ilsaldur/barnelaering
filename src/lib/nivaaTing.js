@@ -126,3 +126,12 @@ export function kjenteAvNivaa(stige, nivaa, kjent) {
   for (const t of egne) if (s.has(t)) n++
   return { kjent: n, av: egne.size }
 }
+
+// Kravet for nivå opp i en kunnskapsstige (runde 6, etappe AA): barnet må
+// kjenne minst tre firedeler av nivåets egne ting – alle når nivået har tolv
+// eller færre. Nivåer uten egne ting har ikke noe krav (av = 0, ok = true).
+export function kravFor(stige, nivaa, kjent) {
+  const { kjent: k, av } = kjenteAvNivaa(stige, nivaa, kjent)
+  const trengs = av <= 12 ? av : Math.ceil(av * 0.75)
+  return { kjent: k, av, trengs, ok: k >= trengs }
+}

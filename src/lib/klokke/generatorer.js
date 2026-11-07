@@ -121,7 +121,7 @@ function tider24(param) {
 const visTid = (h, m) => ({ tekst: `${klokkeSetning(h, m)}.`, visual: { kind: 'klokke', h, m } })
 // Feilsvar blant kjente tider når barnet kjenner noen; ellers de vanlige feilsvarene.
 function feilTiderKjent(h, m, pool, param, rng) {
-  if (!param.kjent) return feilTider(h, m, pool, rng)
+  if (!param.kjent || param.vanligeFeil) return feilTider(h, m, pool, rng)
   const alle = tider(param)
   const kj = kjenteFeil(alle, { h, m }, keyTid, param, 3, rng)
   if (kj.length && param.kjent.has(keyTid(kj[0]))) return kj.map((t) => norm(t.h, t.m))
@@ -195,7 +195,7 @@ export const GEN_KLOKKE = {
     const dagdel = h24 < 6 ? 'om natta' : h24 < 12 ? 'om formiddagen' : h24 < 18 ? 'om ettermiddagen' : 'om kvelden'
     const svar = digital(h24, m)
     const vanlige = [digital((h24 + 12) % 24, m), digital((h24 + 1) % 24, m), digital(h24, (m + 30) % 60), digital((h24 + 23) % 24, m)].filter((x, i, a) => x !== svar && a.indexOf(x) === i).slice(0, 3)
-    const kj = param.kjent ? kjenteFeil(tider24(param), t0, keyDig, param, 3, rng) : []
+    const kj = param.kjent && !param.vanligeFeil ? kjenteFeil(tider24(param), t0, keyDig, param, 3, rng) : []
     const feil = kj.length && param.kjent.has(keyDig(kj[0])) ? kj.map((t) => digital(t.h24, t.m)) : vanlige
     return {
       type: 'digital',

@@ -42,7 +42,7 @@ const knapper = () => screen.getAllByRole('button')
 const knapp = (tekst) => knapper().find((b) => b.textContent.trim() === tekst || b.getAttribute('aria-label') === tekst)
 const klikk = (tekst) => {
   const b = knapp(tekst)
-  if (!b) throw new Error(`Fant ikke knapp «${tekst}»`)
+  if (!b) throw new Error(`Fant ikke knapp «${tekst}». Knapper: ${knapper().map((x) => x.textContent.trim() || x.getAttribute('aria-label')).join(', ')} | ${document.body.textContent.slice(0, 300)}`)
   fireEvent.click(b)
 }
 const helTime = (task) => task.form === 'vis' || /:00$/.test(task.kjent || '')
@@ -61,7 +61,7 @@ function svar(task, riktig) {
     const el = screen.getAllByTestId('klokke').find((k) => k.getAttribute('data-tid') === `${valg.h}:${valg.m}`)
     fireEvent.click(el.closest('button'))
   } else if (task.form === 'still') {
-    const h = riktig ? task.answer.h : (task.answer.h % 12) + 1
+    const h = riktig ? task.answer.h : ((task.answer.h + 1) % 12) + 1 // to timer unna, utenfor toleransen
     klikk(`time ${h}`)
     klikk(`minutt ${task.answer.m}`)
     klikk('✓ Ferdig')
@@ -118,11 +118,8 @@ describe('Z4: klokka, barn som bare kan hele timer', () => {
     // Ingen oppgave to ganger.
     const prompts = fanget.tasks.filter((t) => t.form !== 'vis').map((t) => `${t.prompt}|${JSON.stringify(t.visual || null)}|${JSON.stringify(t.answer)}`)
     expect(new Set(prompts).size).toBe(prompts.length)
-    // Hele timer det ble spurt om utenom prøvene, var vist eller kjent først.
-    const kjent = new Set()
-    for (const t of fanget.tasks) {
-      if (t.form === 'vis' || t.tag === 'plassering') kjent.add(t.kjent)
-      else expect(kjent.has(t.kjent), `${t.prompt} om ${t.kjent}`).toBe(true)
-    }
+    // Klokka er ute av kunnskapslaget (AA, valg A): oppdraget åpner med vis + spørsmål om det samme.
+    expect(fanget.tasks[0].form).toBe('vis')
+    expect(fanget.tasks[1].kjent).toBe(fanget.tasks[0].kjent)
   })
 })

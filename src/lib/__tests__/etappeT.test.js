@@ -39,6 +39,7 @@ function sjekkOppdrag(tasks, kjentStart, maksVis = 3) {
       kjent.add(t.kjent)
       continue
     }
+    if (t.tag === 'prov') continue // prøv-plassen (runde 6, etappe AA) spør om en ukjent ting med vanlige feilsvar
     if (t.kjent) expect(kjent.has(t.kjent), `spørsmål om ukjent: ${t.kjent} (${t.type}: ${t.prompt})`).toBe(true)
     if (t.optionsKjent && t.options && kjent.size >= 2) {
       for (const o0 of t.options) {

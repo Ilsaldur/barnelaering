@@ -20,7 +20,7 @@ import { kortstokk, trekkKort } from './kort.js'
 import { weakEntries, OPPDRAG_LENGDE, SJEF_LENGDE } from './stige.js'
 import { shuffle, randInt, seeded } from '../rng.js'
 import { tilVis } from '../kunnskap.js'
-import { erEgen } from '../nivaaTing.js'
+import { erEgen, egneTing } from '../nivaaTing.js'
 
 // Standard er mattestigen. Andre stiger sender { nivaer, gen, tekstOppgaver?, emneMaks? }.
 export const MATTE_STIGE = { nivaer: NIVAER_MATTE, gen: genMatte }
@@ -351,16 +351,52 @@ export function buildMission(fag, { rng = Math.random, stige = MATTE_STIGE, leng
     kortIds = kort.map((x) => x.id)
   }
 
-  // Kunnskapsstigene: vis det barnet ikke kjenner før det spørres.
+  // Kunnskapsstigene: vis det barnet ikke kjenner før det spørres. Med fire
+  // nye (etappe AA) får oppdraget én oppgave ekstra, så prøv-plassen får plass.
   if (stige.kunnskap) {
-    const tasks = byggKunnskapsOppdrag(plan, rng, stige, { L, nivaa, kjent: fag.kjent, sett, nyeMaks: fag.nyeMaks })
+    const nyeMaks = fag.nyeMaks || 3
+    if (nyeMaks >= 4) plan.push({ nivaa, tag: 'eget' })
+    const tasks = byggKunnskapsOppdrag(plan, rng, stige, { L: nyeMaks >= 4 ? L + 1 : L, nivaa, kjent: fag.kjent, sett, nyeMaks })
     return { nivaa, hjelp, tasks, kortIds }
   }
   // Kortene først, så de andre oppgavene unngår dem.
   const rekkef = [...plan.filter((p) => p.tag === 'kort'), ...plan.filter((p) => p.tag !== 'kort')]
   let tasks = fyll(rekkef, rng, stige, { sett, emneMaks: stige.emneMaks || EMNE_MAKS })
-  tasks = ordne(tasks, rng, stige, sett, stige.emneMaks || EMNE_MAKS)
-  return { nivaa, hjelp, tasks: tasks.slice(0, L), kortIds }
+  tasks = ordne(tasks, rng, stige, sett, stige.emneMaks || EMNE_MAKS).slice(0, L)
+  // Stiger med vis-kort først (klokka, runde 6): det første oppdraget på et
+  // nytt nivå starter med to vis-kort som viser nivåets nye ting.
+  if (stige.visFoerst && fag.beste?.[nivaa] == null) tasks = [...visKort(nivaa, rng, stige, { antall: 2 }), ...tasks]
+  return { nivaa, hjelp, tasks, kortIds }
+}
+
+// Vis-kort for nivåets egne ting: `antall` ulike ting som kan vises.
+export function visKort(nivaaId, rng = Math.random, stige = MATTE_STIGE, { antall = 2, foer = [] } = {}) {
+  const ut = []
+  const emner = new Set(foer.map((t) => t.emne).filter((e) => e != null))
+  const brukt = new Set()
+  for (let runde = 0; runde < 2 && ut.length < antall; runde++) {
+    for (let i = 0; i < 40 && ut.length < antall; i++) {
+      const t = lagOppgave(nivaaId, rng, {}, stige)
+      if (!t.visning || !t.kjent || brukt.has(t.kjent) || emner.has(t.emne)) continue
+      // Første runde: bare nivåets egne ting. Går ikke det, hva som helst fra nivået.
+      if (runde === 0 && !erEgen(stige, nivaaId, t)) continue
+      brukt.add(t.kjent)
+      emner.add(t.emne)
+      ut.push({ ...tilVis(t), tag: 'vis', grunnlag: t })
+    }
+  }
+  return ut
+}
+
+// Innføring uten kunnskapslag (klokka): vis-kort og spørsmål om det samme,
+// `antall` par, med vanlige feilsvar.
+export function visOgSpor(nivaaId, rng = Math.random, stige = MATTE_STIGE, { antall = 2, foer = [] } = {}) {
+  const ut = []
+  for (const v of visKort(nivaaId, rng, stige, { antall, foer })) {
+    const { grunnlag, ...vis } = v
+    ut.push(vis, { ...lagOppgaveOm(grunnlag, grunnlag.kjent, undefined, rng, stige), tag: 'eget', hjelp: undefined })
+  }
+  return ut
 }
 
 // Oppdrag i en kunnskapsstige (geografi, engelsk, klokka). Spørsmål stilles
@@ -388,11 +424,14 @@ export function byggKunnskapsOppdrag(plan, rng, stige, { L, nivaa, kjent: kjentL
     return { ...t, tag: p.tag }
   }
   const slots = [...plan]
+  // Samme tekst (engelsk 8) ikke to ganger i ett oppdrag.
+  const bruktTekst = new Set(foer.map((t) => t.tekstId).filter(Boolean))
   const leggTil = (t) => {
     brukt.add(nokkel(t))
+    if (t.tekstId) bruktTekst.add(t.tekstId)
     tasks.push(t)
   }
-  const fersk = (t) => !!t && !brukt.has(nokkel(t))
+  const fersk = (t) => !!t && !brukt.has(nokkel(t)) && !(t.tekstId && bruktTekst.has(t.tekstId))
   // Spørsmål om et emne (vis-kort teller ikke: en ting kan vises og spørres om).
   const antall = (emne) => (emne == null ? 0 : [...foer, ...tasks].filter((x) => x.emne === emne && x.form !== 'vis').length)
   const sist = () => tasks[tasks.length - 1] || foer[foer.length - 1]
@@ -451,16 +490,61 @@ export function byggKunnskapsOppdrag(plan, rng, stige, { L, nivaa, kjent: kjentL
   // Spør om noe kjent i stedet; null om bunken ikke har noe kjent med kjente feilsvar.
   const kjentSpm = (p) => {
     for (let i = 0; i < 3; i++) {
-      const t2 = velg(lag(p, { kjent, foretrekkUkjent: false }), rng, { brukt, sett, emneOk })
-      if (!(t2.kjent && !kjent.has(t2.kjent)) && alleKjente(t2) && fersk(t2) && emneOk(t2)) return t2
+      const t2 = velg(lag(p, { kjent, foretrekkUkjent: false }), rng, { brukt, sett, emneOk, avvis: (x) => !fersk(x) })
+      if (!(t2.kjent && !kjent.has(t2.kjent)) && alleKjente(t2) && fersk(t2) && emneOk(t2) && !(prov && t2.kjent === prov.kjent)) return t2
     }
     return null
   }
-  while (slots.length && tasks.length < L) {
+  // Nivåets egne ting først: nye ting som vises (og prøv-plassen) hentes helst
+  // blant nivåets egne ting barnet ikke kjenner, så kravet for nivå opp nås.
+  const egne = egneTing(stige, nivaa)
+  const harUkjentEgen = () => [...egne].some((k) => !kjent.has(k))
+  const harUkjentEgenUtenom = (nokkel) => [...egne].some((k) => k !== nokkel && !kjent.has(k))
+  let prov = null
+  const heller = (t, lagNy) => {
+    if (!harUkjentEgen() || egne.has(t.kjent)) return t
+    for (let i = 0; i < 30; i++) {
+      const c = lagNy()
+      if (c.kjent && egne.has(c.kjent) && !kjent.has(c.kjent) && fersk(c) && emneOk(c) && !(prov && c.kjent === prov.kjent)) return c
+    }
+    return t
+  }
+  // Prøv-plassen (runde 6, etappe AA): ett spørsmål om en ukjent ting fra
+  // nivået, med vanlige feilsvar og uten vis. Riktig gjør tingen kjent; feil
+  // trekker ikke stjerner og teller ikke i grensen. Er alt på nivået kjent,
+  // prøves en ting fra nivået over (den gamle smakebiten). Lages først, så
+  // den får plass, og legges sist i oppdraget.
+  const MAKS = stige.nivaer.length
+  const lagProv = () => {
+    for (const n of [nivaa, Math.min(MAKS, nivaa + 1)]) {
+      const lagNy = () => lagOppgave(n, rng, { ekstra: { kjent, foretrekkUkjent: true, vanligeFeil: true } }, stige)
+      for (let i = 0; i < 30; i++) {
+        const t = lagNy()
+        if (t.kjent && !kjent.has(t.kjent) && fersk(t)) return { ...(n === nivaa ? heller(t, lagNy) : t), tag: 'prov' }
+      }
+    }
+    return null
+  }
+  const provSlot = slots.findIndex((p) => p.tag === 'neste')
+  if (provSlot >= 0) {
+    slots.splice(provSlot, 1)
+    prov = lagProv()
+    if (prov) brukt.add(nokkel(prov))
+  }
+  // Tingen på prøv-plassen vises ikke i samme oppdrag.
+  const erProv = (t) => !!prov && t.kjent === prov.kjent
+  const Lrest = prov ? L - 1 : L
+  while (slots.length && tasks.length < Lrest) {
     const p = slots.shift()
-    const kanNy = nye < nyeMaks && L - tasks.length >= 2
-    const t = velg(lag(p, { kjent, foretrekkUkjent: kanNy }), rng, { brukt, sett, emneOk })
+    const kanNy = nye < nyeMaks && Lrest - tasks.length >= 2
+    let t = velg(lag(p, { kjent, foretrekkUkjent: kanNy }), rng, { brukt, sett, emneOk, avvis: (x) => erProv(x) || !fersk(x) })
+    if (erProv(t)) {
+      const t2 = kjentSpm(p)
+      if (t2) leggTil(t2)
+      continue
+    }
     if (t.kjent && !kjent.has(t.kjent)) {
+      if (kanNy && (p.nivaaVelger ? p.nivaa : p.nivaa) === nivaa) t = heller(t, () => lag(p, { kjent, foretrekkUkjent: true })(rng))
       if (kanNy && introduser(p, t)) continue
       const t2 = kjentSpm(p)
       if (t2) leggTil(t2)
@@ -472,13 +556,32 @@ export function byggKunnskapsOppdrag(plan, rng, stige, { L, nivaa, kjent: kjentL
   }
   // Fyll opp med kjente spørsmål fra nivået om slots ble droppet. Går det
   // ikke noen ganger på rad, er det ikke mer å spørre om.
-  for (let bom = 0; bom < 4 && tasks.length < L; ) {
-    const t = velg(lag({ nivaa, tag: 'eget' }, { kjent, foretrekkUkjent: false }), rng, { brukt, sett, emneOk })
-    if ((t.kjent && !kjent.has(t.kjent)) || !alleKjente(t) || !fersk(t) || !emneOk(t)) {
+  for (let bom = 0; bom < 4 && tasks.length < Lrest; ) {
+    const t = velg(lag({ nivaa, tag: 'eget' }, { kjent, foretrekkUkjent: false }), rng, { brukt, sett, emneOk, avvis: (x) => !fersk(x) })
+    if ((t.kjent && !kjent.has(t.kjent)) || !alleKjente(t) || !fersk(t) || !emneOk(t) || (prov && t.kjent === prov.kjent)) {
       bom++
       continue
     }
     leggTil(t)
+  }
+  // Prøv-plassen sist (eller nest sist, om siste oppgave handler om det samme).
+  // Var tingen på prøv-plassen den eneste nye som kunne vises, vises den i
+  // stedet – ellers ville den aldri blitt lært.
+  if (prov && nye === 0 && nyeMaks > 0 && egne.has(prov.kjent) && !harUkjentEgenUtenom(prov.kjent)) {
+    const vis = { ...tilVis(prov), tag: 'eget' }
+    const q = { ...lagOppgaveOm(prov, prov.kjent, kjent, rng, stige), tag: 'eget' }
+    kjent.add(prov.kjent)
+    if (alleKjente(q) && fersk(q)) {
+      leggTil(vis)
+      leggTil(q)
+      nye++
+      prov = null
+    } else kjent.delete(prov.kjent)
+  }
+  if (prov) {
+    const s = tasks[tasks.length - 1]
+    if (!s || s.emne !== prov.emne) tasks.push(prov)
+    else if (tasks.length >= 2 && tasks[tasks.length - 2].emne !== prov.emne) tasks.splice(tasks.length - 1, 0, prov)
   }
   // Rekkefølgen beholdes: en ting vises alltid før det spørres om den.
   return tasks.slice(0, Math.max(L, 2))
@@ -486,7 +589,7 @@ export function byggKunnskapsOppdrag(plan, rng, stige, { L, nivaa, kjent: kjentL
 
 // Sjefsoppgave: fem oppgaver fra nivåene mellom barnets nivå og målet –
 // én fra nivået rett over og to fra hvert av de to neste. Færre nivåer igjen:
-// oppgavene fordeles på de som finnes.
+// oppgavene fordeles på de som finnes. Vanlige feilsvar også i kunnskapsstigene.
 export function buildBoss(nivaa, target, { rng = Math.random, stige = MATTE_STIGE, fag = null } = {}) {
   const MAKS = stige.nivaer.length
   const maal = Math.min(MAKS, target)
@@ -510,7 +613,7 @@ export function buildBoss(nivaa, target, { rng = Math.random, stige = MATTE_STIG
   else fordeling = [5]
   const plan = []
   nivaaer.slice(0, fordeling.length).forEach((n, i) => {
-    for (let k = 0; k < fordeling[i]; k++) plan.push({ nivaa: n, tag: 'sjef', ekstra: stige.kunnskap ? { kjent: new Set(fag?.kjent || []) } : undefined })
+    for (let k = 0; k < fordeling[i]; k++) plan.push({ nivaa: n, tag: 'sjef' })
   })
   let tasks = fyll(plan, rng, stige, { sett, emneMaks: stige.emneMaks || EMNE_MAKS })
   tasks = ordne(tasks, rng, stige, sett, stige.emneMaks || EMNE_MAKS)
