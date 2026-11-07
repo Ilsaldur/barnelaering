@@ -121,9 +121,9 @@ export default function Home({ topics, onPick, onSamling, onGarden, onParents, o
           </span>
         </button>
         {[
-          { id: 'klokke', navn: 'Klokkestigen', emoji: '🕐', farge: 'bg-sky-500', maks: 8 },
-          { id: 'geografi', navn: 'Geografistigen', emoji: '🌍', farge: 'bg-teal-500', maks: 9 },
-          { id: 'engelsk', navn: 'Engelskstigen', emoji: '🇬🇧', farge: 'bg-rose-500', maks: 7 },
+          { id: 'klokke', navn: 'Klokkestigen', emoji: '🕐', farge: 'bg-sky-500', maks: STIGER.klokke?.length || 8 },
+          { id: 'geografi', navn: 'Geografistigen', emoji: '🌍', farge: 'bg-teal-500', maks: STIGER.geografi?.length || 9 },
+          { id: 'engelsk', navn: 'Engelskstigen', emoji: '🇬🇧', farge: 'bg-rose-500', maks: STIGER.engelsk?.length || 7 },
         ].map((f) => (
           <button key={f.id} onClick={() => { sound.click(); onFag(f.id) }} className={`kid-btn ${f.farge} text-white p-3 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-3 min-w-0 hover:scale-[1.02]`}>
             <span className="text-4xl">{f.emoji}</span>

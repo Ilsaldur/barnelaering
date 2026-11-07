@@ -2,7 +2,7 @@
 // (task.lang = 'en-GB'); instruksjonene er på norsk.
 import { pick, shuffle } from '../rng.js'
 import { registerTypeLabels } from '../labels.js'
-import { ORD, SETNINGER, FYLL_INN, SPORSMAAL } from '../../data/engelsk/innhold.js'
+import { ORD, SETNINGER, FYLL_INN, SPORSMAAL, TEKSTER_EN } from '../../data/engelsk/innhold.js'
 
 function pool(grupper) {
   return grupper.flatMap((g) => ORD[g] || [])
@@ -127,6 +127,75 @@ export const GEN_ENGELSK = {
   },
 }
 
+// Setninger som kan settes sammen av brikker: 3–7 ord, ingen ord to ganger.
+export function setningsBrikker(s) {
+  const ord = s.en.trim().split(/\s+/)
+  if (ord.length < 3 || ord.length > 7) return null
+  const sett = new Set(ord.map((w) => w.toLowerCase().replace(/[.!?,]/g, '')))
+  if (sett.size !== ord.length) return null
+  return ord
+}
+export const SETNINGER_BRIKKER = SETNINGER.filter((s) => setningsBrikker(s))
+
+Object.assign(GEN_ENGELSK, {
+  // Nivå 8: les en kort engelsk tekst og svar. Stemmen leser bare spørsmålet;
+  // «Les teksten for meg» leser teksten (regnes som hjelp).
+  les_tekst_en: (_, rng) => {
+    const t = pick(TEKSTER_EN, rng)
+    const q = pick(t.sporsmaal, rng)
+    return {
+      type: 'les_tekst_en',
+      emne: t.id,
+      form: 'valg',
+      prompt: q.q,
+      spoken: q.q,
+      lang: 'en-GB',
+      lesTekst: `${t.tittel}. ${t.tekst}`,
+      visual: { kind: 'tekst', tittel: t.tittel, tekst: t.tekst },
+      answer: q.svar,
+      options: shuffle(q.alternativer, rng),
+      optionsLang: 'en-GB',
+      explain: `The text says: «${q.svar}».`,
+      tekstId: t.id,
+    }
+  },
+  // Nivå 9: skriv det engelske ordet du hører. maks/min = antall bokstaver.
+  stav_en: ({ maks = 99, min = 1, grupper = Object.keys(ORD) }, rng) => {
+    const p = pool(grupper).filter((w) => w.en.length >= min && w.en.length <= maks && !w.en.includes(' '))
+    const w = pick(p.length ? p : pool(grupper), rng)
+    return {
+      type: 'stav_en',
+      emne: w.en,
+      form: 'skriv',
+      kreverLyd: true,
+      prompt: 'Skriv det engelske ordet du hører.',
+      spoken: `Spell the word: ${w.en}. ${w.en}.`,
+      lang: 'en-GB',
+      hørOrd: w.en,
+      visual: { kind: 'ikon', emoji: w.emoji },
+      answer: w.en,
+      explain: `${w.emoji} skrives «${w.en}» (${w.no}).`,
+    }
+  },
+  // Nivå 10: sett ordene i riktig rekkefølge.
+  lag_setning: (_, rng) => {
+    const s = pick(SETNINGER_BRIKKER, rng)
+    const ord = setningsBrikker(s)
+    return {
+      type: 'lag_setning',
+      emne: s.en,
+      form: 'sorter',
+      prompt: 'Sett ordene i riktig rekkefølge.',
+      spoken: 'Sett ordene i riktig rekkefølge, så det blir en engelsk setning.',
+      sorterHint: 'Første ord først …',
+      items: shuffle(ord, rng),
+      answer: ord,
+      explain: `«${s.en}» – ${s.no}`,
+      visual: { kind: 'ikon', emoji: s.svar },
+    }
+  },
+})
+
 export function genEngelsk(type, param = {}, rng = Math.random) {
   const g = GEN_ENGELSK[type]
   if (!g) throw new Error(`Ukjent oppgavetype i engelsk: ${type}`)
@@ -142,4 +211,7 @@ registerTypeLabels({
   setning_bilde_en: 'Enkle engelske setninger',
   fyll_inn: 'Fylle inn ordet som mangler',
   sporsmaal_en: 'Spørsmål og svar på engelsk',
+  les_tekst_en: 'Lese korte engelske tekster',
+  stav_en: 'Stave engelske ord',
+  lag_setning: 'Sette sammen engelske setninger',
 })

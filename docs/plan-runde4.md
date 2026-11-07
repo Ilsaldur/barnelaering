@@ -10,6 +10,7 @@
 | O – Still klokka | Ferdig og pushet. Se `docs/etappeO.md`. | 2026-11-07 |
 | P – Flagg, plassering og småfeil | Ferdig og pushet. Se `docs/etappeP.md`. | 2026-11-07 |
 | Q – Korrektur | Ferdig og pushet. Se `docs/etappeQ.md`. | 2026-11-07 |
+| Engelsk 8–10 (etter ja fra Jon) | Ferdig og pushet. Se `docs/etappe-engelsk8-10.md`. Innhold er UTKAST. | 2026-11-07 |
 
 ---
 

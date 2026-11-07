@@ -252,13 +252,13 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
             } else if (feedback === 'retry' && isPicked) color = 'bg-rose-400'
             const label = typeof opt === 'number' ? fmt(opt) : String(opt)
             const big = label.length <= 3 || task.stor
-            const lang = label.length > 10
+            const langLabel = label.length > 10
             return (
               <button
                 key={String(opt)}
                 disabled={laast}
                 onClick={() => submit(opt)}
-                className={`kid-btn ${color} text-white py-5 md:py-6 px-2 relative min-w-0 break-words [overflow-wrap:anywhere] ${big ? 'text-4xl md:text-5xl' : lang ? 'text-xl md:text-3xl' : 'text-2xl md:text-3xl'} ${done && isAnswer ? 'animate-bouncey' : ''} ${feedback === 'retry' && isPicked ? 'animate-shake' : ''}`}
+                className={`kid-btn ${color} text-white py-5 md:py-6 px-2 relative min-w-0 break-words [overflow-wrap:anywhere] ${big ? 'text-4xl md:text-5xl' : langLabel ? 'text-xl md:text-3xl' : 'text-2xl md:text-3xl'} ${done && isAnswer ? 'animate-bouncey' : ''} ${feedback === 'retry' && isPicked ? 'animate-shake' : ''}`}
               >
                 {task.optionFlagg ? <Flagg kode={String(opt)} navn={task.optionFlagg[opt]} avslort={done} className="w-24 md:w-32 mx-auto" /> : label}
                 {task.optionsLang && (
@@ -354,14 +354,14 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
       {task.form === 'sorter' && (
         <div className="mt-4">
           <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-3 min-h-[3.5rem]">
-            {seq.length === 0 && <span className="text-slate-400 font-bold self-center">Minst først …</span>}
+            {seq.length === 0 && <span className="text-slate-400 font-bold self-center">{task.sorterHint || 'Minst først …'}</span>}
             {seq.map((v, i) => (
-              <span key={i} className={`kid-btn px-4 py-2 text-2xl md:text-3xl text-white ${done ? (task.answer[i] === v ? 'bg-emerald-500' : 'bg-rose-400') : 'bg-sky-500'}`}>
+              <span key={i} className={`kid-btn px-3 py-2 ${String(v).length > 4 ? 'text-lg md:text-2xl' : 'text-2xl md:text-3xl'} text-white ${done ? (task.answer[i] === v ? 'bg-emerald-500' : 'bg-rose-400') : 'bg-sky-500'}`}>
                 {v}
               </span>
             ))}
           </div>
-          {done && feedback === 'solution' && <p className="text-center font-bold text-slate-500 mb-2">Riktig rekkefølge: {task.answer.join(', ')}</p>}
+          {done && feedback === 'solution' && <p className="text-center font-bold text-slate-500 mb-2">Riktig rekkefølge: {task.answer.join(task.sorterHint ? ' ' : ', ')}</p>}
           <div className="flex flex-wrap justify-center gap-2 md:gap-3">
             {task.items.map((v, i) => {
               const used = seq.includes(v)
@@ -375,7 +375,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
                     setSeq(next)
                     if (next.length === task.items.length) submit(next)
                   }}
-                  className={`kid-btn text-3xl md:text-4xl px-5 py-4 ${used ? 'bg-slate-200 text-slate-400' : 'bg-indigo-500 text-white'}`}
+                  className={`kid-btn px-4 py-3 md:px-5 md:py-4 break-words ${String(v).length > 4 ? 'text-xl md:text-2xl' : 'text-3xl md:text-4xl'} ${used ? 'bg-slate-200 text-slate-400' : 'bg-indigo-500 text-white'}`}
                 >
                   {v}
                 </button>
@@ -408,7 +408,7 @@ export function TaskCard({ task, onDone, attempts = 2, hjelpStart = false, index
         >
           {task.hørOrd && (
             <div className="text-center mb-3">
-              <button type="button" onClick={() => speech.speak(`${task.hørOrd}. ${task.hørOrd}.`)} className="kid-btn bg-violet-500 text-white px-5 py-3 text-lg font-extrabold">
+              <button type="button" onClick={() => speech.speak(`${task.hørOrd}. ${task.hørOrd}.`, { lang })} className="kid-btn bg-violet-500 text-white px-5 py-3 text-lg font-extrabold">
                 🔊 Hør ordet igjen
               </button>
             </div>
